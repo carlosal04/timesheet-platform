@@ -2,6 +2,28 @@
 
 All files are UTF-8 and intended for local manual testing of the current EMS backend slice.
 
+## Local secrets
+
+Do not commit real local credentials.
+
+1. Copy [EMS/.env.example](/C:/Codex/TimeSheet/EMS/.env.example) to `EMS/.env`
+2. Replace the placeholder values in `EMS/.env`
+3. Keep `EMS/.env` local only
+
+Example `EMS/.env`:
+
+```dotenv
+EMS_DB_HOST=localhost
+EMS_DB_PORT=54329
+EMS_DB_NAME=ems
+EMS_DB_USER=ems
+EMS_DB_PASSWORD=your_local_db_password
+EMS_BOOTSTRAP_ADMIN_EMAIL=your-admin-email@example.com
+EMS_BOOTSTRAP_ADMIN_PASSWORD=your_local_admin_password
+EMS_BOOTSTRAP_ADMIN_NAME=Local Admin
+EMS_API_BASE_URL=http://localhost:5161
+```
+
 ## Start the API locally
 
 From [EMS](/C:/Codex/TimeSheet/EMS):
@@ -12,23 +34,24 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Start-EmsApiLocal.ps1 -StartP
 
 This script:
 - optionally starts the `postgres` container from `deploy/compose.yaml`
-- sets the bootstrap admin env vars for the current shell
+- loads local values from `EMS/.env` when present
+- sets the bootstrap admin env vars for the current shell when provided
+- sets the API connection string from local env values
 - sets repo-local `.NET` and NuGet cache paths
 - runs the API project
 
-Defaults:
-- email: `admin@example.com`
-- password: `P@ssw0rd123!`
-- name: `Local Admin`
-
-You can override them:
+Optional overrides:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Start-EmsApiLocal.ps1 `
-  -AdminEmail 'admin@example.com' `
-  -AdminPassword 'P@ssw0rd123!' `
+  -AdminEmail 'your-admin-email@example.com' `
+  -AdminPassword 'your_local_admin_password' `
   -AdminName 'Local Admin'
 ```
+
+Notes:
+- `EMS_DB_PASSWORD` is required
+- bootstrap admin values are only required if you want the startup script to seed a local admin user
 
 ## Run the current smoke test flow
 
@@ -53,6 +76,13 @@ Optional parameters:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Test-EmsApiLocal.ps1 `
   -BaseUrl 'http://localhost:5161' `
-  -Email 'admin@example.com' `
-  -Password 'P@ssw0rd123!'
+  -Email 'your-admin-email@example.com' `
+  -Password 'your_local_admin_password'
 ```
+
+If not passed explicitly, the test script loads:
+- `EMS_API_BASE_URL`
+- `EMS_BOOTSTRAP_ADMIN_EMAIL`
+- `EMS_BOOTSTRAP_ADMIN_PASSWORD`
+
+from `EMS/.env`.

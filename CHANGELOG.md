@@ -12,3 +12,6 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Cookie-auth/session foundation and employee read/list endpoints
 - Local API start/test scripts for manual validation
 - GitHub workflow, versioning, and release documentation
+
+### Changed
+- Removed committed runtime credential defaults in favor of local `.env` placeholders and secret-driven scripts

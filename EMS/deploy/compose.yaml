@@ -24,7 +24,10 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__EmploymentManagement: Host=postgres;Port=5432;Database=ems;Username=ems;Password=ems_dev_password
+      ConnectionStrings__EmploymentManagement: Host=postgres;Port=5432;Database=${EMS_DB_NAME:-ems};Username=${EMS_DB_USER:-ems};Password=${EMS_DB_PASSWORD}
+      BootstrapAdmin__Email: ${EMS_BOOTSTRAP_ADMIN_EMAIL:-}
+      BootstrapAdmin__Password: ${EMS_BOOTSTRAP_ADMIN_PASSWORD:-}
+      BootstrapAdmin__Name: ${EMS_BOOTSTRAP_ADMIN_NAME:-Bootstrap Admin}
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,9 +52,9 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: ems
-      POSTGRES_USER: ems
-      POSTGRES_PASSWORD: ems_dev_password
+      POSTGRES_DB: ${EMS_DB_NAME:-ems}
+      POSTGRES_USER: ${EMS_DB_USER:-ems}
+      POSTGRES_PASSWORD: ${EMS_DB_PASSWORD}
     ports:
       - "54329:5432"
     volumes:

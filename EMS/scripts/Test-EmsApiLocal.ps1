@@ -1,10 +1,27 @@
 param(
-    [string]$BaseUrl = "http://localhost:5161",
-    [string]$Email = "admin@example.com",
-    [string]$Password = "P@ssw0rd123!"
+    [string]$BaseUrl,
+    [string]$Email,
+    [string]$Password
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "Load-EmsLocalEnv.ps1")
+
+if ([string]::IsNullOrWhiteSpace($BaseUrl)) {
+    $BaseUrl = if ($env:EMS_API_BASE_URL) { $env:EMS_API_BASE_URL } else { "http://localhost:5161" }
+}
+
+if ([string]::IsNullOrWhiteSpace($Email)) {
+    $Email = $env:EMS_BOOTSTRAP_ADMIN_EMAIL
+}
+
+if ([string]::IsNullOrWhiteSpace($Password)) {
+    $Password = $env:EMS_BOOTSTRAP_ADMIN_PASSWORD
+}
+
+if ([string]::IsNullOrWhiteSpace($Email) -or [string]::IsNullOrWhiteSpace($Password)) {
+    throw "Email and Password are required. Set EMS_BOOTSTRAP_ADMIN_EMAIL and EMS_BOOTSTRAP_ADMIN_PASSWORD in EMS/.env or pass them explicitly."
+}
 
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $loginBody = @{
