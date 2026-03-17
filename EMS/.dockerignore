@@ -1,0 +1,9 @@
+.git
+.gitignore
+.dotnet
+.nuget
+**/bin
+**/obj
+**/TestResults
+deploy/postgres/data
+node_modules

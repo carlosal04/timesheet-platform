@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>TimeSheet.Modules.EmploymentManagement.Api</AssemblyName>
+    <RootNamespace>TimeSheet.Modules.EmploymentManagement.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TimeSheet.Modules.EmploymentManagement.Application\TimeSheet.Modules.EmploymentManagement.Application.csproj" />
+    <ProjectReference Include="..\TimeSheet.Modules.EmploymentManagement.Infrastructure\TimeSheet.Modules.EmploymentManagement.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

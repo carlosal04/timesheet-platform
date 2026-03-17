@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TimeSheet.Modules.EmploymentManagement.Api/TimeSheet.Modules.EmploymentManagement.Api.csproj" />
+    <Project Path="src/TimeSheet.Modules.EmploymentManagement.Application/TimeSheet.Modules.EmploymentManagement.Application.csproj" />
+    <Project Path="src/TimeSheet.Modules.EmploymentManagement.Domain/TimeSheet.Modules.EmploymentManagement.Domain.csproj" />
+    <Project Path="src/TimeSheet.Modules.EmploymentManagement.Infrastructure/TimeSheet.Modules.EmploymentManagement.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TimeSheet.Modules.EmploymentManagement.Api.IntegrationTests/TimeSheet.Modules.EmploymentManagement.Api.IntegrationTests.csproj" />
+    <Project Path="tests/TimeSheet.Modules.EmploymentManagement.Application.Tests/TimeSheet.Modules.EmploymentManagement.Application.Tests.csproj" />
+    <Project Path="tests/TimeSheet.Modules.EmploymentManagement.Domain.Tests/TimeSheet.Modules.EmploymentManagement.Domain.Tests.csproj" />
+    <Project Path="tests/TimeSheet.Modules.EmploymentManagement.Infrastructure.Tests/TimeSheet.Modules.EmploymentManagement.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

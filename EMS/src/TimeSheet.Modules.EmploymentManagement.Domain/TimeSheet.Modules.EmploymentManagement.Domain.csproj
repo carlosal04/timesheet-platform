@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>TimeSheet.Modules.EmploymentManagement.Domain</AssemblyName>
+    <RootNamespace>TimeSheet.Modules.EmploymentManagement.Domain</RootNamespace>
+  </PropertyGroup>
+
+</Project>
