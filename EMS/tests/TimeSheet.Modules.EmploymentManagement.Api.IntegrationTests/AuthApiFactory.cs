@@ -12,7 +12,7 @@ using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 
 namespace TimeSheet.Modules.EmploymentManagement.Api.IntegrationTests;
 
-public sealed class AuthApiFactory : Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program>
+public class AuthApiFactory : Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program>
 {
     private readonly InMemoryDatabaseRoot _databaseRoot = new();
     private readonly string _databaseName = $"ems-auth-tests-{Guid.NewGuid():N}";
@@ -29,12 +29,7 @@ public sealed class AuthApiFactory : Microsoft.AspNetCore.Mvc.Testing.WebApplica
 
         builder.ConfigureAppConfiguration((_, configurationBuilder) =>
         {
-            configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["BootstrapAdmin:Email"] = "admin@example.com",
-                ["BootstrapAdmin:Password"] = "P@ssw0rd123!",
-                ["BootstrapAdmin:Name"] = "Test Admin"
-            });
+            configurationBuilder.AddInMemoryCollection(GetConfigurationOverrides());
         });
 
         builder.ConfigureServices(services =>
@@ -51,6 +46,19 @@ public sealed class AuthApiFactory : Microsoft.AspNetCore.Mvc.Testing.WebApplica
                 options.UseInMemoryDatabase(_databaseName, _databaseRoot);
             });
         });
+    }
+
+    protected virtual IDictionary<string, string?> GetConfigurationOverrides()
+    {
+        return new Dictionary<string, string?>
+        {
+            ["BootstrapAdmin:Email"] = "admin@example.com",
+            ["BootstrapAdmin:Password"] = "P@ssw0rd123!",
+            ["BootstrapAdmin:Name"] = "Test Admin",
+            ["RateLimiting:Authentication:PermitLimit"] = "1000",
+            ["RateLimiting:Authentication:WindowMinutes"] = "1",
+            ["RateLimiting:Authentication:QueueLimit"] = "0"
+        };
     }
 
     public async Task ResetDatabaseAsync()

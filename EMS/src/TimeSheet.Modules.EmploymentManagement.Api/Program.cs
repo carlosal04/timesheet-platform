@@ -101,6 +101,11 @@ builder.Services.AddExceptionHandler<AppProblemExceptionHandler>();
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+builder.Services.Configure<LoginRateLimitOptions>(
+    builder.Configuration.GetSection(LoginRateLimitOptions.SectionName));
+builder.Services.AddSingleton<ILoginRateLimitKeyProvider, ClientNetworkLoginRateLimitKeyProvider>();
+builder.Services.AddSingleton<LoginRateLimiter>();
+builder.Services.AddSingleton<LoginRateLimitFilter>();
 builder.Services.AddEmploymentManagementApplication();
 builder.Services.AddEmploymentManagementInfrastructure(builder.Configuration);
 builder.Services.AddScoped<AuthSessionCookieEvents>();
@@ -216,7 +221,8 @@ app.MapPost("/auth/login", async Task<IResult> (
         });
 
     return TypedResults.Ok(new LoginResponse(result.User.Id, result.User.Email, result.RoleCode));
-}).AllowAnonymous();
+}).AllowAnonymous()
+  .AddEndpointFilter<LoginRateLimitFilter>();
 
 app.MapPost("/auth/logout", async Task<IResult> (
     ClaimsPrincipal principal,

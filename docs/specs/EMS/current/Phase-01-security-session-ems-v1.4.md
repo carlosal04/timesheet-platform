@@ -78,6 +78,10 @@ The system must track failed access attempts and temporarily lock accounts after
 ## 3.7 Rate limiting
 Authentication endpoints must use stricter rate limiting than standard business endpoints.
 
+For the current Phase 1 implementation:
+- `POST /auth/login` is the enforced throttling point
+- account lockout remains a separate control and does not replace endpoint throttling
+
 ## 3.8 Key management
 ASP.NET Core data-protection keys must be persisted and protected so auth cookies remain valid across restarts and scaled instances.
 

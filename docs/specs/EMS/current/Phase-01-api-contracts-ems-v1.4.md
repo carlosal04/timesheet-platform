@@ -64,6 +64,10 @@ Authenticates a user and issues the session cookie.
 - `423` locked out
 - `429` too many attempts
 
+### Required behavior
+- login throttling is enforced on this endpoint
+- other authentication endpoints do not inherit the login throttle automatically
+
 ## 2.2 POST `/auth/logout`
 Revokes the current session and clears the cookie.
 

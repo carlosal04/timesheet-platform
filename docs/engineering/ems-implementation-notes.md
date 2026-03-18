@@ -24,6 +24,7 @@ The current EMS foundation checkpoint includes:
 - authenticated session bootstrap endpoint `GET /auth/session`
 - authenticated session renew endpoint `POST /auth/renew`
 - shared anti-forgery enforcement for authenticated state-changing endpoints, with `POST /auth/login` exempt
+- config-driven login rate limiting on `POST /auth/login`
 - explicit CORS allowlist configuration for approved frontend origins
 - config-driven data-protection key persistence for local and containerized single-instance runtime
 - Serilog host-level logging baseline
@@ -47,7 +48,7 @@ The following items are still pending and should be treated as known implementat
 - role management endpoints are implemented for role list and user-role assignment
 - admin address endpoints are complete for the current admin address surface
 - self-service address endpoints are complete for the current `/me/addresses` surface
-- stricter auth rate limiting and Docker image CVE remediation are not implemented yet
+- Docker image CVE remediation is not implemented yet
 - the frontend-driven session-renew model is partially implemented:
   - `GET /auth/session`
   - `POST /auth/renew`
@@ -89,8 +90,8 @@ Implemented and verified:
 Pending:
 - no remaining business endpoints in the current approved EMS Phase 1 backend contract
 - cross-cutting hardening and runtime-completion items only
-- next auth/session hardening priority:
-  - auth rate limiting
+- next runtime/security hardening priority:
+  - Docker image CVE remediation
 
 ## Frontend coordination rule
 
