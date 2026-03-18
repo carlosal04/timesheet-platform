@@ -15,6 +15,8 @@ using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Common;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Employees;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Users;
 using TimeSheet.Modules.EmploymentManagement.Api.Infrastructure;
+using GetSessionQuery = TimeSheet.Modules.EmploymentManagement.Application.Authentication.GetSession.Query;
+using GetSessionResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.GetSession.Result;
 using ListAuditLogsQuery = TimeSheet.Modules.EmploymentManagement.Application.AuditLogs.List.Query;
 using ListAuditLogsResult = TimeSheet.Modules.EmploymentManagement.Application.AuditLogs.List.Result;
 using CreateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Command;
@@ -234,6 +236,28 @@ app.MapGet("/auth/antiforgery", ([FromServices] IAntiforgery antiforgery, HttpCo
     var tokens = antiforgery.GetAndStoreTokens(httpContext);
     return TypedResults.Ok(new AntiforgeryResponse("X-CSRF-TOKEN", tokens.RequestToken ?? string.Empty));
 });
+
+app.MapGet("/auth/session", async Task<IResult> (
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<GetSessionResult?>(new GetSessionQuery());
+    if (result is null)
+    {
+        return TypedResults.Problem(
+            statusCode: StatusCodes.Status401Unauthorized,
+            title: "Authentication required");
+    }
+
+    return TypedResults.Ok(new SessionResponse(
+        result.UserId,
+        result.Email,
+        result.RoleCode,
+        result.EmployeeId,
+        result.SessionId,
+        result.ExpiresAtUtc,
+        result.IdleTimeoutMinutes));
+}).RequireAuthorization(PolicyNames.AuthenticatedUser);
 
 app.MapGet("/employees", async Task<IResult> (
     ClaimsPrincipal principal,

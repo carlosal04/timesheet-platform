@@ -29,6 +29,16 @@ User role assignment must be stored through a `Role` table and a foreign key fro
 Only active roles are assignable to users.
 Role assignment is an Admin-only security operation.
 
+## 2.6 Renewal model
+Phase 1 uses frontend-driven session renewal for active users only.
+
+Rules:
+- renewal is allowed only while the current session is still valid
+- renewal extends idle timeout from the renewal time
+- renewal does not silently recover an already expired session
+- expired sessions require login again
+- Phase 1 does not use a separate refresh-token model
+
 ---
 
 # 3. Required security controls
@@ -130,6 +140,8 @@ On successful login the system must:
 8. issue an authentication cookie tied to that session
 9. write a `LoginSucceeded` audit event
 
+The login response does not need to expose session timing if a dedicated authenticated session-bootstrap endpoint exists.
+
 ## 5.2 Failed login
 On failed login the system must:
 1. write a `LoginFailed` audit event
@@ -157,6 +169,10 @@ Every protected request must validate all of the following:
 
 If any check fails, the request is rejected and the session should be treated as invalid.
 
+For Phase 1 renewal:
+- authenticated reads may update `LastSeenAtUtc`
+- renewal of `ExpiresAtUtc` happens only through the explicit renewal endpoint, not implicitly on every request
+
 ---
 
 # 7. Logout flow
@@ -167,6 +183,32 @@ On logout the system must:
 3. set a revoke reason such as `UserLogout`
 4. clear the auth cookie
 5. write a `LogoutSucceeded` audit event
+
+## 7.1 Session bootstrap flow
+The API must expose an authenticated session-bootstrap endpoint so the frontend can discover current user identity and session timing after login and on page reload.
+
+Minimum payload:
+- user id
+- email
+- role code
+- employee id when linked
+- session id
+- current `ExpiresAtUtc`
+- configured idle timeout minutes
+
+## 7.2 Renewal flow
+The API must expose an authenticated renewal endpoint.
+
+On successful renewal the system must:
+1. validate the current session and cookie principal
+2. require anti-forgery validation
+3. confirm the session is still active and not expired
+4. extend `ExpiresAtUtc` from the current time using the configured idle timeout
+5. update `LastSeenAtUtc`
+6. reissue the authentication cookie with the new expiry
+7. write a `SessionRenewed` audit event
+
+If the session is already expired, revoked, or invalid, the endpoint must reject the request and the user must log in again.
 
 ---
 
@@ -190,6 +232,8 @@ Recommended revoke reasons:
 - `UserDisabled`
 - `Lockout`
 - `Expired`
+
+Renewal is not a revocation event and must not create a replacement session when the existing session remains valid.
 
 ---
 
@@ -218,9 +262,26 @@ If the frontend and backend are on different origins and the auth cookie must fl
 ## 9.3 Anti-forgery transport
 The frontend must fetch and send the anti-forgery token/header expected by the backend for all state-changing operations.
 
+This includes:
+- logout
+- session renewal
+- employee writes
+- address writes
+- role assignment
+
+`POST /auth/login` is exempt in the current Phase 1 design because anti-forgery bootstrap is authenticated.
+
 ## 9.4 Frontend time handling
 - UTC date-time values are parsed in the frontend and displayed as local time
 - date-only values such as `DateOfBirth` and `HireDate` must remain date-only without timezone shifting
+
+## 9.5 Frontend session-timer guidance
+Frontend behavior should be:
+- bootstrap current session timing from the authenticated session endpoint
+- warn the user shortly before idle expiry
+- call the renewal endpoint only while the session is still valid
+- treat `401` on protected requests as session end and redirect to login
+- if anti-forgery is invalid while auth is still valid, fetch a fresh anti-forgery token and retry once
 
 ---
 
@@ -230,6 +291,7 @@ The following audit events are required:
 - `LoginSucceeded`
 - `LoginFailed`
 - `LogoutSucceeded`
+- `SessionRenewed`
 - `SessionRevoked`
 - `AccessDenied` when explicitly captured
 - `EmployeeCreated`
@@ -255,13 +317,15 @@ Canonical allowed values come from the audit taxonomy matrix.
 
 # 11. Session expiration guidance
 
-Phase 1 must use finite lifetimes.
+Phase 1 must use finite idle lifetimes.
 
 Recommended baseline:
 - moderate finite session lifetime for internal users
 - no indefinite session
 - avoid relying solely on sliding expiration
 - server-side validation remains mandatory even with renewal
+- no separate refresh token for Phase 1
+- no silent session recovery after expiry
 
 Exact duration is environment-configurable and must not be hard-coded in business logic.
 

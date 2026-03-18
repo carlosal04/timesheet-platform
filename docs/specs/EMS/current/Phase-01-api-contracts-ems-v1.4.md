@@ -68,6 +68,71 @@ No body required.
 ### Success
 - Status: `204 No Content`
 
+## 2.3 GET `/auth/antiforgery`
+Returns the anti-forgery request token/header contract for the current authenticated session.
+
+### Success
+- Status: `200 OK`
+```json
+{
+  "headerName": "X-CSRF-TOKEN",
+  "requestToken": "opaque-token-value"
+}
+```
+
+### Errors
+- `401` session missing, expired, revoked, or otherwise invalid
+
+## 2.4 GET `/auth/session`
+Returns the current authenticated user/session snapshot for frontend bootstrap and timer synchronization.
+
+### Success
+- Status: `200 OK`
+```json
+{
+  "userId": "guid",
+  "email": "admin@company.com",
+  "roleCode": "Admin",
+  "employeeId": "guid or null",
+  "sessionId": "guid",
+  "expiresAtUtc": "2026-03-18T15:30:00Z",
+  "idleTimeoutMinutes": 480
+}
+```
+
+### Errors
+- `401` session missing, expired, revoked, or otherwise invalid
+
+## 2.5 POST `/auth/renew`
+Extends the current authenticated session when it is still valid. This endpoint is frontend-driven and is intended for active users nearing idle timeout.
+
+### Request
+No body required.
+
+### Required headers
+- anti-forgery header `X-CSRF-TOKEN`
+
+### Success
+- Status: `200 OK`
+```json
+{
+  "sessionId": "guid",
+  "expiresAtUtc": "2026-03-18T16:00:00Z",
+  "idleTimeoutMinutes": 480
+}
+```
+
+### Errors
+- `400` missing or invalid anti-forgery token
+- `401` session missing, expired, revoked, or otherwise invalid
+
+### Required behavior
+- renewal is allowed only while the current session is still valid
+- renewal keeps the same session identifier
+- renewal extends the session idle timeout from the current time
+- renewal reissues the authentication cookie with the new expiry
+- expired sessions are not silently recovered; the user must log in again
+
 ---
 
 # 3. Employee endpoints
@@ -613,3 +678,6 @@ Returns paginated audit events for Admin.
 1. Browser calls that rely on cookie authentication must send credentials.
 2. UTC date-time values must be rendered by the frontend in local time.
 3. Date-only values such as `dateOfBirth` and `hireDate` must be displayed as date-only values without timezone conversion.
+4. Frontend should use `GET /auth/session` as the bootstrap source for current user identity and session timing after login and on page reload.
+5. Frontend should call `GET /auth/antiforgery` after login/session bootstrap and send `X-CSRF-TOKEN` for all state-changing requests.
+6. Frontend should renew only while the current session is still valid; a `401` means the user must log in again.

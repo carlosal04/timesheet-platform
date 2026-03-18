@@ -23,6 +23,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Role list endpoint `GET /roles`
 - User-role assignment endpoint `PATCH /users/{userId}/role`
 - Audit log read endpoint `GET /audit-logs`
+- Authenticated session bootstrap endpoint `GET /auth/session`
 - Explicit CORS allowlist configuration with frontend-focused integration coverage
 - Config-driven data-protection key persistence for local and container runtime
 - Serilog host-level logging baseline for the EMS API
@@ -51,3 +52,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Documented the Application folder, CQRS naming, and review standards for future modules
 - Documented the repo-local EF migration workflow and production-safe design-time configuration standard
 - Updated EMS implementation notes with an implemented-versus-pending endpoint inventory for frontend coordination
+- Documented the approved Phase 1 session-bootstrap and frontend-driven renew model for upcoming auth hardening work

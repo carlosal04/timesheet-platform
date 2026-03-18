@@ -388,6 +388,19 @@ Each authenticated request:
 3. resolves the user and role
 4. rejects the request if the session is missing, expired, revoked, or version-mismatched
 
+Session renewal is explicit and frontend-driven, not automatic sliding expiration on every request.
+
+Required endpoints:
+- `GET /auth/session` for authenticated session bootstrap
+- `POST /auth/renew` for extending an active session idle timeout
+
+Renewal rules:
+- renew only while the current session is still valid
+- keep the same `UserSession.Id`
+- extend `ExpiresAtUtc` from current server time
+- reissue the cookie with the new expiry
+- do not silently recover an expired session
+
 ## 12.2 Session invalidation triggers
 The current session must become invalid when:
 - the user logs out
@@ -414,6 +427,12 @@ Frontend rules:
 For cookie-authenticated browser calls:
 - the frontend must send credentials
 - state-changing calls must include the anti-forgery token/header expected by the backend
+
+Frontend session model:
+- bootstrap current session state from `GET /auth/session`
+- fetch anti-forgery material from `GET /auth/antiforgery`
+- call `POST /auth/renew` explicitly when the user is active and expiry is near
+- redirect to login when renewal or other protected calls return `401`
 
 ## 13.4 Preferred deployment pattern
 Preferred production and local-compose deployment is reverse-proxied under a shared site boundary.

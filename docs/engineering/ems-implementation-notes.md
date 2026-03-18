@@ -21,6 +21,7 @@ The current EMS foundation checkpoint includes:
 - role list endpoint `GET /roles`
 - user-role assignment endpoint `PATCH /users/{userId}/role`
 - audit log read endpoint `GET /audit-logs`
+- authenticated session bootstrap endpoint `GET /auth/session`
 - explicit CORS allowlist configuration for approved frontend origins
 - config-driven data-protection key persistence for local and containerized single-instance runtime
 - Serilog host-level logging baseline
@@ -45,6 +46,9 @@ The following items are still pending and should be treated as known implementat
 - admin address endpoints are complete for the current admin address surface
 - self-service address endpoints are complete for the current `/me/addresses` surface
 - full anti-forgery coverage review, stricter auth rate limiting, and Docker image CVE remediation are not implemented yet
+- the approved frontend-driven session-renew model is documented but not implemented yet:
+  - `POST /auth/renew`
+  - `SessionRenewed` audit taxonomy
 - data-protection keys now persist for the current local and Docker single-instance runtime, but a shared/protected key-ring strategy would still be needed before multi-instance production deployment
 - soft-delete rows currently capture `DeletedAtUtc`, but the schema does not yet persist `DeletedByUserId` even though the architecture notes mention it
 - self-service address reads intentionally reuse the existing `AddressRead` policy; no separate `OwnAddressRead` policy has been introduced
@@ -58,6 +62,7 @@ Implemented and verified:
 - `POST /auth/login`
 - `POST /auth/logout`
 - `GET /auth/antiforgery`
+- `GET /auth/session`
 - `GET /employees`
 - `GET /employees/{id}`
 - `POST /employees`
@@ -79,6 +84,10 @@ Implemented and verified:
 Pending:
 - no remaining business endpoints in the current approved EMS Phase 1 backend contract
 - cross-cutting hardening and runtime-completion items only
+- next auth/session hardening priority:
+  - `POST /auth/renew`
+  - shared anti-forgery enforcement
+  - auth rate limiting
 
 ## Frontend coordination rule
 
