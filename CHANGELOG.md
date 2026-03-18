@@ -53,6 +53,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Centralized anti-forgery validation in the API pipeline for authenticated unsafe requests while keeping `POST /auth/login` exempt
 - Replaced the login rate-limiter middleware attempt with a login-only endpoint filter backed by a partitioned limiter service
 - Added the `DeletedByUserId` soft-delete columns and populated them from the current authenticated user during employee/address delete flows
+- Hardened the repo EF helper to reuse the local tool and support `-NoBuild` for shells where direct startup-project builds are unstable
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

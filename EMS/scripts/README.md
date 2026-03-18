@@ -96,8 +96,9 @@ This script:
 - loads `EMS/.env` when present
 - composes `ConnectionStrings__EmploymentManagement` from `EMS_DB_*` values when needed
 - sets repo-local `.NET` and NuGet cache paths
-- restores the local `dotnet-ef` tool from [EMS/.config/dotnet-tools.json](/C:/Codex/TimeSheet/EMS/.config/dotnet-tools.json)
+- reuses the already-restored local `dotnet-ef` tool when available and restores it from [EMS/.config/dotnet-tools.json](/C:/Codex/TimeSheet/EMS/.config/dotnet-tools.json) only when needed
 - runs EF commands without relying on a machine-global `dotnet-ef`
+- supports `-NoBuild` to forward `--no-build` to EF when the solution is already built
 
 Examples:
 
@@ -111,6 +112,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-EmsEf.ps1 migrations a
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-EmsEf.ps1 database update --project src\TimeSheet.Modules.EmploymentManagement.Infrastructure\TimeSheet.Modules.EmploymentManagement.Infrastructure.csproj --startup-project src\TimeSheet.Modules.EmploymentManagement.Api\TimeSheet.Modules.EmploymentManagement.Api.csproj
+```
+
+Known-good local workflow when direct startup-project builds are unstable in the current shell:
+
+```powershell
+dotnet build TimeSheet.Modules.EmploymentManagement.slnx --no-restore
+powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-EmsEf.ps1 -NoBuild migrations list --project src\TimeSheet.Modules.EmploymentManagement.Infrastructure\TimeSheet.Modules.EmploymentManagement.Infrastructure.csproj --startup-project src\TimeSheet.Modules.EmploymentManagement.Api\TimeSheet.Modules.EmploymentManagement.Api.csproj
 ```
 
 Notes:

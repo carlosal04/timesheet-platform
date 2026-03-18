@@ -1,4 +1,6 @@
 param(
+    [switch]$NoBuild,
+
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$EfArgs
 )
@@ -41,14 +43,26 @@ if ($env:ConnectionStrings__EmploymentManagement.Contains("SET_LOCAL_")) {
     throw "ConnectionStrings__EmploymentManagement still contains a placeholder value. Update EMS/.env before running EF commands."
 }
 
-$toolManifestPath = Join-Path $emsRoot ".config\\dotnet-tools.json"
-dotnet tool restore --tool-manifest $toolManifestPath --configfile (Join-Path $emsRoot "NuGet.Config")
-if ($LASTEXITCODE -ne 0) {
-    exit $LASTEXITCODE
+$toolReady = $false
+dotnet tool run dotnet-ef -- --version *> $null
+if ($LASTEXITCODE -eq 0) {
+    $toolReady = $true
+}
+
+if (-not $toolReady) {
+    $toolManifestPath = Join-Path $emsRoot ".config\\dotnet-tools.json"
+    dotnet tool restore --tool-manifest $toolManifestPath --configfile (Join-Path $emsRoot "NuGet.Config")
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet tool restore failed. If the local tool is already restored, rerun with the solution built and use -NoBuild to avoid the direct startup-project build path."
+    }
 }
 
 if (-not $EfArgs -or $EfArgs.Count -eq 0) {
     throw "Pass dotnet-ef arguments, for example: migrations list"
+}
+
+if ($NoBuild -and -not ($EfArgs -contains "--no-build")) {
+    $EfArgs += "--no-build"
 }
 
 dotnet tool run dotnet-ef -- @EfArgs

@@ -61,6 +61,7 @@ The following items are still pending and should be treated as known implementat
 - canonical role names are aligned to the approved contract values `Administrator` and `Basic User`
 - successful role changes revoke active sessions for the affected user and emit `SessionRevoked` plus `UserRoleAssigned` audit events
 - local EF migration generation currently succeeds through `dotnet-ef --no-build` after a successful solution build; direct startup-project builds still fail opaquely in this shell
+- the repo EF helper now supports `-NoBuild` and reuses the already-restored local tool before attempting restore
 
 ## Endpoint implementation status
 
