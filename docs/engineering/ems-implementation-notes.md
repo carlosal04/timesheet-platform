@@ -27,6 +27,7 @@ The current EMS foundation checkpoint includes:
 - config-driven login rate limiting on `POST /auth/login`
 - soft-delete metadata now persists both `DeletedAtUtc` and `DeletedByUserId` for employees and addresses
 - Docker frontend static container moved to Chainguard nginx with an image-compatible `nginx -t` healthcheck and a custom root nginx config for clean non-root startup
+- Docker reverse proxy moved to Chainguard nginx with an image-compatible `nginx -t` healthcheck
 - explicit CORS allowlist configuration for approved frontend origins
 - config-driven data-protection key persistence for local and containerized single-instance runtime
 - Serilog host-level logging baseline
@@ -53,7 +54,8 @@ The following items are still pending and should be treated as known implementat
 - Docker image CVE remediation is not implemented yet
 - Docker image CVE remediation is in progress:
   - frontend static container has been moved off `nginx:1.29-alpine` and verified healthy locally
-  - reverse proxy and PostgreSQL image remediation are still pending
+  - reverse proxy has been moved off `nginx:1.29-alpine` and verified healthy locally
+  - PostgreSQL image remediation is still pending
 - the frontend-driven session-renew model is partially implemented:
   - `GET /auth/session`
   - `POST /auth/renew`

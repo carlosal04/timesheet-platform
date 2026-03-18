@@ -1,6 +1,6 @@
 services:
   reverse-proxy:
-    image: nginx:1.29-alpine
+    image: cgr.dev/chainguard/nginx:latest
     depends_on:
       api:
         condition: service_healthy
@@ -11,7 +11,7 @@ services:
     volumes:
       - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
+      test: ["CMD", "/usr/bin/nginx", "-t"]
       interval: 30s
       timeout: 5s
       retries: 3

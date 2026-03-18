@@ -60,7 +60,7 @@ This checklist is the required pre-flight check before scaffolding or implementi
 Current deferred issue:
 - `deploy-api` currently passes the High/Critical image gate
 - `deploy-frontend` has been moved off `nginx:1.29-alpine` and verified healthy locally; the replacement image still needs a fresh post-change scan result recorded
-- `reverse-proxy` still uses `nginx:1.29-alpine` and remains pending remediation for the previously reported `curl` `CVE-2026-3805`
+- `reverse-proxy` has been moved off `nginx:1.29-alpine` and verified healthy locally; the replacement image still needs a fresh post-change scan result recorded
 - `postgres:17-alpine` currently fails due to 1 Critical and 7 High vulnerabilities reported by Docker Scout
 - image replacement or explicit signoff is still required before Phase 1 is considered security-complete
 
