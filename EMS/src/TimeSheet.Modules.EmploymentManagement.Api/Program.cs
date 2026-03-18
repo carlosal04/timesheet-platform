@@ -13,6 +13,8 @@ using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Auth;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Common;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Employees;
 using TimeSheet.Modules.EmploymentManagement.Api.Infrastructure;
+using CreateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Command;
+using CreateEmployeeAddressResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Result;
 using LoginCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Command;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using LoginResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Result;
@@ -252,6 +254,29 @@ app.MapGet("/employees/{employeeId:guid}/addresses/{addressId:guid}", async Task
 
     return result.Address is null ? TypedResults.NotFound() : TypedResults.Ok(result.Address);
 }).RequireAuthorization(PolicyNames.AddressRead);
+
+app.MapPost("/employees/{employeeId:guid}/addresses", async Task<IResult> (
+    Guid employeeId,
+    UpsertAddressRequest request,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<CreateEmployeeAddressResult>(
+        new CreateEmployeeAddressCommand(
+            employeeId,
+            request.AddressType,
+            request.IsPrimary,
+            request.Line1,
+            request.Line2,
+            request.City,
+            request.State,
+            request.ZipCode,
+            request.CountryCode));
+
+    return TypedResults.Created(
+        $"/employees/{result.EmployeeId}/addresses/{result.Id}",
+        new AddressWriteResponse(result.Id, result.EmployeeId));
+}).RequireAuthorization(PolicyNames.AddressWrite);
 
 app.MapPost("/employees", async Task<IResult> (
     CreateEmployeeRequest request,

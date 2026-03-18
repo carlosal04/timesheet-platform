@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Addresses;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Audit;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 using TimeSheet.Modules.EmploymentManagement.Application.Common.Exceptions;
 using CreateCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Command;
 using CreateResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Result;
@@ -25,13 +26,16 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
 {
     private readonly EmploymentManagementDbContext _dbContext;
     private readonly IAuditLogService _auditLogService;
+    private readonly IClock _clock;
 
     public EmployeeAddressService(
         EmploymentManagementDbContext dbContext,
-        IAuditLogService auditLogService)
+        IAuditLogService auditLogService,
+        IClock clock)
     {
         _dbContext = dbContext;
         _auditLogService = auditLogService;
+        _clock = clock;
     }
 
     public async Task<ListResult> ListAsync(ListQuery query, CancellationToken cancellationToken)
@@ -88,9 +92,69 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
         return GetCoreAsync(query, cancellationToken);
     }
 
-    public Task<CreateResult> CreateAsync(CreateCommand command, CancellationToken cancellationToken)
+    public async Task<CreateResult> CreateAsync(CreateCommand command, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet.");
+        var employee = await _dbContext.Employees
+            .SingleOrDefaultAsync(x => x.Id == command.EmployeeId && x.DeletedAtUtc == null, cancellationToken);
+
+        if (employee is null)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressCreated,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.NotFound,
+                    command.EmployeeId),
+                cancellationToken);
+
+            throw ProblemExceptions.NotFound("Employee was not found.");
+        }
+
+        if (command.IsPrimary)
+        {
+            var activePrimaryAddresses = await _dbContext.EmployeeAddresses
+                .Where(x => x.EmployeeId == command.EmployeeId && x.DeletedAtUtc == null && x.IsPrimary)
+                .ToListAsync(cancellationToken);
+
+            foreach (var activePrimaryAddress in activePrimaryAddresses)
+            {
+                activePrimaryAddress.IsPrimary = false;
+            }
+
+            if (activePrimaryAddresses.Count > 0)
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        var address = new Domain.Employees.EmployeeAddress
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = employee.Id,
+            AddressType = command.AddressType.Trim(),
+            IsPrimary = command.IsPrimary,
+            Line1 = command.Line1.Trim(),
+            Line2 = NormalizeOptional(command.Line2),
+            City = command.City.Trim(),
+            State = command.State.Trim(),
+            ZipCode = command.ZipCode.Trim(),
+            CountryCode = command.CountryCode.Trim().ToUpperInvariant(),
+            CreatedAtUtc = _clock.UtcNow
+        };
+
+        _dbContext.EmployeeAddresses.Add(address);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.AddressCreated,
+                AuditEntityTypes.EmployeeAddress,
+                AuditResults.Success,
+                address.Id,
+                new { employee.Id, address.IsPrimary }),
+            cancellationToken);
+
+        return new CreateResult(address.Id, employee.Id);
     }
 
     public Task<UpdateResult> UpdateAsync(UpdateCommand command, CancellationToken cancellationToken)
@@ -166,5 +230,10 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
             cancellationToken);
 
         return address;
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }
