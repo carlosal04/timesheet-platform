@@ -6,6 +6,7 @@ using Polly;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Addresses;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Audit;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Employees;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Roles;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Authentication;
@@ -13,6 +14,7 @@ using TimeSheet.Modules.EmploymentManagement.Infrastructure.Auditing;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Employees;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Initialization;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
+using TimeSheet.Modules.EmploymentManagement.Infrastructure.Roles;
 
 namespace TimeSheet.Modules.EmploymentManagement.Infrastructure;
 
@@ -47,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeReadService, EmployeeReadService>();
         services.AddScoped<IEmployeeWriteService, EmployeeWriteService>();
         services.AddScoped<IEmployeeAddressService, EmployeeAddressService>();
+        services.AddScoped<IRoleReadService, RoleReadService>();
         services.AddScoped<DatabaseInitializer>();
 
         return services;

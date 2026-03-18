@@ -9,6 +9,9 @@ namespace TimeSheet.Modules.EmploymentManagement.Infrastructure.Initialization;
 
 public sealed class DatabaseInitializer
 {
+    private const string AdminRoleName = "Administrator";
+    private const string BasicRoleName = "Basic User";
+
     private readonly EmploymentManagementDbContext _dbContext;
     private readonly IPasswordHashingService _passwordHashingService;
     private readonly BootstrapAdminOptions _bootstrapAdminOptions;
@@ -34,24 +37,8 @@ public sealed class DatabaseInitializer
             await _dbContext.Database.EnsureCreatedAsync(cancellationToken);
         }
 
-        if (!await _dbContext.Roles.AnyAsync(cancellationToken))
-        {
-            _dbContext.Roles.AddRange(
-                new Role
-                {
-                    Id = Guid.NewGuid(),
-                    Code = RoleCodes.Admin,
-                    Name = RoleCodes.Admin,
-                    IsActive = true
-                },
-                new Role
-                {
-                    Id = Guid.NewGuid(),
-                    Code = RoleCodes.Basic,
-                    Name = RoleCodes.Basic,
-                    IsActive = true
-                });
-        }
+        var adminRole = await EnsureRoleAsync(RoleCodes.Admin, AdminRoleName, cancellationToken);
+        await EnsureRoleAsync(RoleCodes.Basic, BasicRoleName, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -61,7 +48,6 @@ public sealed class DatabaseInitializer
         }
 
         var adminEmail = _bootstrapAdminOptions.Email.Trim().ToLowerInvariant();
-        var adminRole = await _dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Admin, cancellationToken);
         var existingAdmin = await _dbContext.Users.SingleOrDefaultAsync(x => x.Email == adminEmail, cancellationToken);
         if (existingAdmin is not null)
         {
@@ -79,5 +65,26 @@ public sealed class DatabaseInitializer
         user.PasswordHash = _passwordHashingService.HashPassword(user, _bootstrapAdminOptions.Password);
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<Role> EnsureRoleAsync(string code, string name, CancellationToken cancellationToken)
+    {
+        var role = await _dbContext.Roles.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
+        if (role is null)
+        {
+            role = new Role
+            {
+                Id = Guid.NewGuid(),
+                Code = code
+            };
+
+            _dbContext.Roles.Add(role);
+        }
+
+        role.Name = name;
+        role.IsActive = true;
+        role.IsSystem = true;
+
+        return role;
     }
 }
