@@ -40,9 +40,14 @@ public sealed class AddressDeleteEndpointsTests : IClassFixture<AuthApiFactory>
         await _factory.ExecuteScopedAsync(async services =>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var adminUserId = await dbContext.Users
+                .Where(x => x.Email == "admin@example.com")
+                .Select(x => x.Id)
+                .SingleAsync();
             var address = await dbContext.EmployeeAddresses.SingleAsync(x => x.Id == addressId);
 
             Assert.NotNull(address.DeletedAtUtc);
+            Assert.Equal(adminUserId, address.DeletedByUserId);
             Assert.False(address.IsPrimary);
             Assert.Contains(
                 dbContext.AuditLogs,
@@ -133,12 +138,17 @@ public sealed class AddressDeleteEndpointsTests : IClassFixture<AuthApiFactory>
         await _factory.ExecuteScopedAsync(async services =>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var adminUserId = await dbContext.Users
+                .Where(x => x.Email == "admin@example.com")
+                .Select(x => x.Id)
+                .SingleAsync();
             var addresses = await dbContext.EmployeeAddresses
                 .Where(x => x.EmployeeId == employeeId)
                 .OrderBy(x => x.CreatedAtUtc)
                 .ToListAsync();
 
             Assert.NotNull(addresses.Single(x => x.Id == deletedPrimaryId).DeletedAtUtc);
+            Assert.Equal(adminUserId, addresses.Single(x => x.Id == deletedPrimaryId).DeletedByUserId);
             Assert.False(addresses.Single(x => x.Id == deletedPrimaryId).IsPrimary);
             Assert.True(addresses.Single(x => x.Id == promotedId).IsPrimary);
             Assert.False(addresses.Single(x => x.Id == otherId).IsPrimary);

@@ -25,6 +25,7 @@ The current EMS foundation checkpoint includes:
 - authenticated session renew endpoint `POST /auth/renew`
 - shared anti-forgery enforcement for authenticated state-changing endpoints, with `POST /auth/login` exempt
 - config-driven login rate limiting on `POST /auth/login`
+- soft-delete metadata now persists both `DeletedAtUtc` and `DeletedByUserId` for employees and addresses
 - explicit CORS allowlist configuration for approved frontend origins
 - config-driven data-protection key persistence for local and containerized single-instance runtime
 - Serilog host-level logging baseline
@@ -55,11 +56,11 @@ The following items are still pending and should be treated as known implementat
   - `SessionRenewed` audit taxonomy
   - shared anti-forgery enforcement now covers renew and the other authenticated state-changing endpoints
 - data-protection keys now persist for the current local and Docker single-instance runtime, but a shared/protected key-ring strategy would still be needed before multi-instance production deployment
-- soft-delete rows currently capture `DeletedAtUtc`, but the schema does not yet persist `DeletedByUserId` even though the architecture notes mention it
 - self-service address reads intentionally reuse the existing `AddressRead` policy; no separate `OwnAddressRead` policy has been introduced
 - dedicated primary-change operations now use the approved `AddressPrimaryChanged` audit taxonomy instead of `AddressUpdated`
 - canonical role names are aligned to the approved contract values `Administrator` and `Basic User`
 - successful role changes revoke active sessions for the affected user and emit `SessionRevoked` plus `UserRoleAssigned` audit events
+- local EF migration generation currently succeeds through `dotnet-ef --no-build` after a successful solution build; direct startup-project builds still fail opaquely in this shell
 
 ## Endpoint implementation status
 

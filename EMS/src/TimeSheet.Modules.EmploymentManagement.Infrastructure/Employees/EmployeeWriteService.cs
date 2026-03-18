@@ -20,15 +20,18 @@ public sealed class EmployeeWriteService : IEmployeeWriteService
     private readonly EmploymentManagementDbContext _dbContext;
     private readonly IClock _clock;
     private readonly IAuditLogService _auditLogService;
+    private readonly ICurrentUserContext _currentUserContext;
 
     public EmployeeWriteService(
         EmploymentManagementDbContext dbContext,
         IClock clock,
-        IAuditLogService auditLogService)
+        IAuditLogService auditLogService,
+        ICurrentUserContext currentUserContext)
     {
         _dbContext = dbContext;
         _clock = clock;
         _auditLogService = auditLogService;
+        _currentUserContext = currentUserContext;
     }
 
     public async Task<CreateResult> CreateAsync(CreateCommand command, CancellationToken cancellationToken)
@@ -229,6 +232,7 @@ public sealed class EmployeeWriteService : IEmployeeWriteService
         }
 
         employee.DeletedAtUtc = _clock.UtcNow;
+        employee.DeletedByUserId = _currentUserContext.UserId;
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         await _auditLogService.WriteAsync(

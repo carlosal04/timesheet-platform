@@ -28,5 +28,7 @@ public sealed class EmployeeAddress
 
     public DateTimeOffset? DeletedAtUtc { get; set; }
 
+    public Guid? DeletedByUserId { get; set; }
+
     public bool IsDeleted => DeletedAtUtc.HasValue;
 }

@@ -22,6 +22,8 @@ public sealed class Employee
 
     public DateTimeOffset? DeletedAtUtc { get; set; }
 
+    public Guid? DeletedByUserId { get; set; }
+
     public ICollection<EmployeeAddress> Addresses { get; set; } = new List<EmployeeAddress>();
 
     public bool IsDeleted => DeletedAtUtc.HasValue;

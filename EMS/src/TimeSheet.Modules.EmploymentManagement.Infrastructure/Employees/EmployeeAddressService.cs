@@ -664,6 +664,7 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
 
         address.IsPrimary = false;
         address.DeletedAtUtc = _clock.UtcNow;
+        address.DeletedByUserId = _currentUserContext.UserId;
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         if (wasPrimary && replacementAddress is not null)

@@ -27,6 +27,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Authenticated session renew endpoint `POST /auth/renew`
 - Shared anti-forgery enforcement for authenticated state-changing EMS API requests
 - Config-driven login rate limiting on `POST /auth/login`
+- Soft-delete metadata persistence for `DeletedByUserId` on employees and addresses
 - Explicit CORS allowlist configuration with frontend-focused integration coverage
 - Config-driven data-protection key persistence for local and container runtime
 - Serilog host-level logging baseline for the EMS API
@@ -51,6 +52,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added explicit session renewal with `SessionRenewed` auditing and renew-response timing data
 - Centralized anti-forgery validation in the API pipeline for authenticated unsafe requests while keeping `POST /auth/login` exempt
 - Replaced the login rate-limiter middleware attempt with a login-only endpoint filter backed by a partitioned limiter service
+- Added the `DeletedByUserId` soft-delete columns and populated them from the current authenticated user during employee/address delete flows
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

@@ -29,6 +29,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
 
         var employeeId = Guid.NewGuid();
         var addressId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
 
         await _factory.ExecuteScopedAsync(async services =>
         {
@@ -38,7 +39,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
 
             var user = new User
             {
-                Id = Guid.NewGuid(),
+                Id = userId,
                 Email = "basic.owndelete@example.com",
                 RoleId = basicRole.Id,
                 EmployeeId = employeeId,
@@ -93,6 +94,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
             var address = await dbContext.EmployeeAddresses.SingleAsync(x => x.Id == addressId);
 
             Assert.NotNull(address.DeletedAtUtc);
+            Assert.Equal(userId, address.DeletedByUserId);
             Assert.Contains(
                 dbContext.AuditLogs,
                 log => log.ActionType == AuditActionTypes.AddressSoftDeleted
@@ -110,6 +112,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         var deletedPrimaryId = Guid.NewGuid();
         var promotedId = Guid.NewGuid();
         var otherId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
 
         await _factory.ExecuteScopedAsync(async services =>
         {
@@ -119,7 +122,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
 
             var user = new User
             {
-                Id = Guid.NewGuid(),
+                Id = userId,
                 Email = "basic.ownprimarydelete@example.com",
                 RoleId = basicRole.Id,
                 EmployeeId = employeeId,
@@ -204,6 +207,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
                 .ToListAsync();
 
             Assert.NotNull(addresses.Single(x => x.Id == deletedPrimaryId).DeletedAtUtc);
+            Assert.Equal(userId, addresses.Single(x => x.Id == deletedPrimaryId).DeletedByUserId);
             Assert.True(addresses.Single(x => x.Id == promotedId).IsPrimary);
             Assert.False(addresses.Single(x => x.Id == otherId).IsPrimary);
             Assert.Contains(

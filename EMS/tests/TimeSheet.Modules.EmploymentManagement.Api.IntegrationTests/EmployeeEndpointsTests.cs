@@ -488,8 +488,13 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         await _factory.ExecuteScopedAsync(async services =>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var adminUserId = await dbContext.Users
+                .Where(x => x.Email == "admin@example.com")
+                .Select(x => x.Id)
+                .SingleAsync();
             var employee = await dbContext.Employees.SingleAsync(x => x.Id == employeeId);
             Assert.NotNull(employee.DeletedAtUtc);
+            Assert.Equal(adminUserId, employee.DeletedByUserId);
             Assert.Contains(
                 dbContext.AuditLogs,
                 log => log.ActionType == AuditActionTypes.EmployeeSoftDeleted
