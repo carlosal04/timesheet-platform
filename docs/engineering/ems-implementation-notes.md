@@ -20,6 +20,7 @@ The current EMS foundation checkpoint includes:
 - self-service address delete endpoint `DELETE /me/addresses/{addressId}`
 - role list endpoint `GET /roles`
 - user-role assignment endpoint `PATCH /users/{userId}/role`
+- audit log read endpoint `GET /audit-logs`
 - Wolverine integrated as the API-to-application boundary for the implemented auth and employee read flows
 - FluentValidation-based request validation for the currently implemented auth and employee read flows
 - Application standardized to vertical slices with `Application/Abstractions/...` for interfaces and short in-slice CQRS naming
@@ -36,11 +37,10 @@ The current EMS foundation checkpoint includes:
 ## Known gaps against the approved Phase 1 architecture/plan
 
 The following items are still pending and should be treated as known implementation gaps, not implied complete work:
-- audit logging is partially implemented and currently covers auth, employee write/delete, and address create/read/update/primary-change/delete/list reads across admin and self-service paths
+- audit logging is partially implemented and currently covers auth/session flows, employee read/write/delete flows, address read/write/delete flows across admin and self-service paths, role assignment outcomes, and audit-log reads
 - role management endpoints are implemented for role list and user-role assignment
 - admin address endpoints are complete for the current admin address surface
 - self-service address endpoints are complete for the current `/me/addresses` surface
-- audit log read endpoint is not implemented yet
 - Serilog, durable production-grade data-protection persistence, and the full cross-cutting hardening set from the approved plan are not implemented yet
 - soft-delete rows currently capture `DeletedAtUtc`, but the schema does not yet persist `DeletedByUserId` even though the architecture notes mention it
 - self-service address reads intentionally reuse the existing `AddressRead` policy; no separate `OwnAddressRead` policy has been introduced
@@ -70,9 +70,11 @@ Implemented and verified:
 - `DELETE /me/addresses/{addressId}`
 - `GET /roles`
 - `PATCH /users/{userId}/role`
+- `GET /audit-logs`
 
 Pending:
-- `GET /audit-logs`
+- no remaining business endpoints in the current approved EMS Phase 1 backend contract
+- cross-cutting hardening and runtime-completion items only
 
 ## Frontend coordination rule
 

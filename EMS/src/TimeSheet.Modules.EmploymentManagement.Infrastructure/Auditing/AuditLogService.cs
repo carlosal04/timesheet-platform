@@ -115,6 +115,27 @@ public sealed class AuditLogService : IAuditLogService
                 x.OccurredAtUtc))
             .ToListAsync(cancellationToken);
 
+        await WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.AuditLogRead,
+                AuditEntityTypes.AuditLog,
+                AuditResults.Success,
+                null,
+                new
+                {
+                    query.ActorUserId,
+                    query.ActionType,
+                    query.EntityType,
+                    query.EntityId,
+                    query.Result,
+                    query.FromUtc,
+                    query.ToUtc,
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalCount = totalCount
+                }),
+            cancellationToken);
+
         return new Result(items, page, pageSize, totalCount);
     }
 }

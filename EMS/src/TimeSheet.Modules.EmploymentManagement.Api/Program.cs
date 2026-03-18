@@ -14,6 +14,8 @@ using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Common;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Employees;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Users;
 using TimeSheet.Modules.EmploymentManagement.Api.Infrastructure;
+using ListAuditLogsQuery = TimeSheet.Modules.EmploymentManagement.Application.AuditLogs.List.Query;
+using ListAuditLogsResult = TimeSheet.Modules.EmploymentManagement.Application.AuditLogs.List.Result;
 using CreateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Command;
 using CreateEmployeeAddressResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Result;
 using DeleteEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Delete.Command;
@@ -377,6 +379,34 @@ app.MapMethods("/users/{userId:guid}/role", ["PATCH"], async Task<IResult> (
     var result = await bus.InvokeAsync<AssignUserRoleResult>(new AssignUserRoleCommand(userId, request.RoleId));
     return TypedResults.Ok(new AssignUserRoleResponse(result.UserId, result.RoleId, result.RoleCode, result.SessionsRevoked));
 }).RequireAuthorization(PolicyNames.UserRoleAssign);
+
+app.MapGet("/audit-logs", async Task<IResult> (
+    int? page,
+    int? pageSize,
+    Guid? actorUserId,
+    string? actionType,
+    string? entityType,
+    Guid? entityId,
+    string? result,
+    DateTimeOffset? fromUtc,
+    DateTimeOffset? toUtc,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var auditLogs = await bus.InvokeAsync<ListAuditLogsResult>(
+        new ListAuditLogsQuery(
+            page ?? 1,
+            pageSize ?? 50,
+            actorUserId,
+            actionType,
+            entityType,
+            entityId,
+            result,
+            fromUtc,
+            toUtc));
+
+    return TypedResults.Ok(auditLogs);
+}).RequireAuthorization(PolicyNames.AuditLogRead);
 
 app.MapPost("/employees", async Task<IResult> (
     CreateEmployeeRequest request,

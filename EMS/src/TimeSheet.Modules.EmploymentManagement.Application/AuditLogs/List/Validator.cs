@@ -13,6 +13,10 @@ public sealed class Validator : AbstractValidator<Query>
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, 100);
 
+        RuleFor(x => x.ActionType)
+            .Must(value => string.IsNullOrWhiteSpace(value) || IsValidActionType(value))
+            .WithMessage("actionType must be a canonical audit action type when provided.");
+
         RuleFor(x => x.EntityType)
             .Must(value => string.IsNullOrWhiteSpace(value) || IsValidEntityType(value))
             .WithMessage("entityType must be a canonical audit entity type when provided.");
@@ -24,6 +28,33 @@ public sealed class Validator : AbstractValidator<Query>
         RuleFor(x => x)
             .Must(x => !x.FromUtc.HasValue || !x.ToUtc.HasValue || x.FromUtc.Value <= x.ToUtc.Value)
             .WithMessage("fromUtc must be earlier than or equal to toUtc.");
+    }
+
+    private static bool IsValidActionType(string value)
+    {
+        return value is AuditActionTypes.LoginSucceeded
+            or AuditActionTypes.LoginFailed
+            or AuditActionTypes.LogoutSucceeded
+            or AuditActionTypes.SessionCreated
+            or AuditActionTypes.SessionRevoked
+            or AuditActionTypes.AccessDenied
+            or AuditActionTypes.AccountLockedOut
+            or AuditActionTypes.UserRoleAssigned
+            or AuditActionTypes.RoleAssignmentRejected
+            or AuditActionTypes.EmployeeCreated
+            or AuditActionTypes.EmployeeRead
+            or AuditActionTypes.EmployeeListRead
+            or AuditActionTypes.EmployeeUpdated
+            or AuditActionTypes.EmployeeSoftDeleted
+            or AuditActionTypes.AddressCreated
+            or AuditActionTypes.AddressRead
+            or AuditActionTypes.AddressListRead
+            or AuditActionTypes.AddressUpdated
+            or AuditActionTypes.AddressPrimaryChanged
+            or AuditActionTypes.AddressSoftDeleted
+            or AuditActionTypes.AuditLogRead
+            or AuditActionTypes.ConfigurationError
+            or AuditActionTypes.UnhandledException;
     }
 
     private static bool IsValidEntityType(string value)
