@@ -28,6 +28,11 @@ Whenever an employee address collection is returned, active addresses are sorted
 1. primary address first
 2. other active addresses by `createdAtUtc ASC`
 
+## 1.4 Anti-forgery
+- all authenticated state-changing requests (`POST`, `PUT`, `PATCH`, `DELETE`) require a valid anti-forgery token and matching anti-forgery cookie
+- `POST /auth/login` is exempt in the current Phase 1 design because anti-forgery bootstrap is authenticated
+- missing or invalid anti-forgery validation returns `400 Bad Request` with `ProblemDetails`
+
 ---
 
 # 2. Authentication endpoints
@@ -67,6 +72,9 @@ No body required.
 
 ### Success
 - Status: `204 No Content`
+
+### Errors
+- `400` missing or invalid anti-forgery token
 
 ## 2.3 GET `/auth/antiforgery`
 Returns the anti-forgery request token/header contract for the current authenticated session.

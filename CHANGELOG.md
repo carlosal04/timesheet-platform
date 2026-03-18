@@ -25,6 +25,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Audit log read endpoint `GET /audit-logs`
 - Authenticated session bootstrap endpoint `GET /auth/session`
 - Authenticated session renew endpoint `POST /auth/renew`
+- Shared anti-forgery enforcement for authenticated state-changing EMS API requests
 - Explicit CORS allowlist configuration with frontend-focused integration coverage
 - Config-driven data-protection key persistence for local and container runtime
 - Serilog host-level logging baseline for the EMS API
@@ -47,6 +48,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Made EMS data-protection key storage config-driven and mounted a durable key volume for the compose runtime
 - Added Serilog as the EMS API logging provider with configuration-driven console output
 - Added explicit session renewal with `SessionRenewed` auditing and renew-response timing data
+- Centralized anti-forgery validation in the API pipeline for authenticated unsafe requests while keeping `POST /auth/login` exempt
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

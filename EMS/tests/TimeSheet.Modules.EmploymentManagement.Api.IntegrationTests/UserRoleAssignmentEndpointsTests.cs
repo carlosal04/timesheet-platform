@@ -67,7 +67,7 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
         {
             Content = JsonContent.Create(new AssignUserRoleRequest(adminRoleId))
         };
-        request.Headers.Add("Cookie", adminCookie);
+        await AntiforgeryTestHelper.AttachAsync(adminClient, adminCookie, request);
 
         var response = await adminClient.SendAsync(request);
 
@@ -153,7 +153,7 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
         {
             Content = JsonContent.Create(new AssignUserRoleRequest(inactiveRoleId))
         };
-        request.Headers.Add("Cookie", adminCookie);
+        await AntiforgeryTestHelper.AttachAsync(adminClient, adminCookie, request);
 
         var response = await adminClient.SendAsync(request);
 
@@ -187,7 +187,7 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
         {
             Content = JsonContent.Create(new AssignUserRoleRequest(basicRoleId))
         };
-        request.Headers.Add("Cookie", adminCookie);
+        await AntiforgeryTestHelper.AttachAsync(adminClient, adminCookie, request);
 
         var response = await adminClient.SendAsync(request);
 

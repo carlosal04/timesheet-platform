@@ -77,7 +77,7 @@ public sealed class AddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFacto
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/employees/{employeeId}/addresses/{addressId}/primary");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -144,7 +144,7 @@ public sealed class AddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFacto
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/employees/{employeeId}/addresses/{addressId}/primary");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -178,7 +178,7 @@ public sealed class AddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFacto
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/employees/{employeeId}/addresses/{Guid.NewGuid()}/primary");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 

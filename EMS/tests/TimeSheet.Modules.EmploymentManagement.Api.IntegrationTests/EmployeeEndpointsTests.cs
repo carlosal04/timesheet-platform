@@ -104,7 +104,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
 
         var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/employees?includePrimaryAddress=true");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -213,7 +213,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
 
         var authCookie = await LoginAsync(client, "basic@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, $"/employees/{employeeId}");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -259,7 +259,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
 
         var authCookie = await LoginAsync(client, "basic.reader@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/employees?includeDeleted=true");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -314,7 +314,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         {
             Content = JsonContent.Create(requestBody)
         };
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -387,7 +387,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
                 EmployeeStatusCodes.Active,
                 null))
         };
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -440,7 +440,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
                 new DateOnly(2024, 1, 15),
                 EmployeeStatusCodes.Inactive))
         };
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -480,7 +480,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
 
         using var firstRequest = new HttpRequestMessage(HttpMethod.Delete, $"/employees/{employeeId}");
-        firstRequest.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, firstRequest);
 
         var firstResponse = await client.SendAsync(firstRequest);
         Assert.Equal(HttpStatusCode.NoContent, firstResponse.StatusCode);
@@ -498,7 +498,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         });
 
         using var secondRequest = new HttpRequestMessage(HttpMethod.Delete, $"/employees/{employeeId}");
-        secondRequest.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, secondRequest);
 
         var secondResponse = await client.SendAsync(secondRequest);
 

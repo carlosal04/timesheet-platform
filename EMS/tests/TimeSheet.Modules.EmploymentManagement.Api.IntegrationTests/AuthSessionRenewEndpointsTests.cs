@@ -26,14 +26,12 @@ public sealed class AuthSessionRenewEndpointsTests : IClassFixture<AuthApiFactor
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
         var sessionBefore = await GetSessionAsync(client, authCookie);
-        var antiforgery = await GetAntiforgeryAsync(client, authCookie);
 
         using var renewRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/renew")
         {
             Content = JsonContent.Create(new { })
         };
-        renewRequest.Headers.Add("Cookie", $"{authCookie}; {antiforgery.Cookie}");
-        renewRequest.Headers.Add(antiforgery.HeaderName, antiforgery.RequestToken);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, renewRequest);
 
         var renewResponse = await client.SendAsync(renewRequest);
 
@@ -64,38 +62,19 @@ public sealed class AuthSessionRenewEndpointsTests : IClassFixture<AuthApiFactor
     }
 
     [Fact]
-    public async Task Renew_WithoutAntiforgery_ReturnsBadRequest()
-    {
-        await _factory.ResetDatabaseAsync();
-
-        using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
-
-        using var renewRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/renew")
-        {
-            Content = JsonContent.Create(new { })
-        };
-        renewRequest.Headers.Add("Cookie", authCookie);
-
-        var renewResponse = await client.SendAsync(renewRequest);
-
-        Assert.Equal(HttpStatusCode.BadRequest, renewResponse.StatusCode);
-    }
-
-    [Fact]
     public async Task Renew_AfterLogout_ReturnsUnauthorized()
     {
         await _factory.ResetDatabaseAsync();
 
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
-        var antiforgery = await GetAntiforgeryAsync(client, authCookie);
+        var antiforgery = await AntiforgeryTestHelper.GetAsync(client, authCookie);
 
         using var logoutRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/logout")
         {
             Content = JsonContent.Create(new { })
         };
-        logoutRequest.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, logoutRequest);
 
         var logoutResponse = await client.SendAsync(logoutRequest);
         Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);
@@ -140,24 +119,6 @@ public sealed class AuthSessionRenewEndpointsTests : IClassFixture<AuthApiFactor
         var payload = await response.Content.ReadFromJsonAsync<SessionResponse>();
         Assert.NotNull(payload);
         return payload!;
-    }
-
-    private static async Task<(string HeaderName, string RequestToken, string Cookie)> GetAntiforgeryAsync(HttpClient client, string authCookie)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/auth/antiforgery");
-        request.Headers.Add("Cookie", authCookie);
-
-        var response = await client.SendAsync(request);
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var payload = await response.Content.ReadFromJsonAsync<AntiforgeryResponse>();
-        Assert.NotNull(payload);
-
-        var antiforgeryCookie = response.Headers.GetValues("Set-Cookie")
-            .Select(value => value.Split(';', 2, StringSplitOptions.TrimEntries)[0])
-            .Single(value => !value.StartsWith(AuthCookieName + "=", StringComparison.OrdinalIgnoreCase));
-
-        return (payload!.HeaderName, payload.RequestToken, antiforgeryCookie);
     }
 
     private static string ExtractCookie(HttpResponseMessage response)

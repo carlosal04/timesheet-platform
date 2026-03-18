@@ -42,7 +42,7 @@ public sealed class AddressCreateEndpointsTests : IClassFixture<AuthApiFactory>
                 "15222",
                 "US"))
         };
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -122,7 +122,7 @@ public sealed class AddressCreateEndpointsTests : IClassFixture<AuthApiFactory>
                 "15213",
                 "US"))
         };
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -184,7 +184,7 @@ public sealed class AddressCreateEndpointsTests : IClassFixture<AuthApiFactory>
                 "15222",
                 "US"))
         };
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 

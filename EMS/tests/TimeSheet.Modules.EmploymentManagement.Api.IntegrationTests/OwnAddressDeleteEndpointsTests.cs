@@ -81,7 +81,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "basic.owndelete@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/me/addresses/{addressId}");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -189,7 +189,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "basic.ownprimarydelete@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/me/addresses/{deletedPrimaryId}");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -292,7 +292,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "basic.forbiddendelete@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/me/addresses/{otherAddressId}");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -362,7 +362,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "basic.deletedownaddress@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/me/addresses/{addressId}");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 

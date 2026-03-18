@@ -158,6 +158,7 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
+app.UseMiddleware<AuthenticatedAntiforgeryMiddleware>();
 app.UseAuthorization();
 
 using (var scope = app.Services.CreateScope())
@@ -262,23 +263,11 @@ app.MapGet("/auth/session", async Task<IResult> (
 }).RequireAuthorization(PolicyNames.AuthenticatedUser);
 
 app.MapPost("/auth/renew", async Task<IResult> (
-    [FromServices] IAntiforgery antiforgery,
     ClaimsPrincipal principal,
     IMessageBus bus,
     HttpContext httpContext,
     CancellationToken cancellationToken) =>
 {
-    try
-    {
-        await antiforgery.ValidateRequestAsync(httpContext);
-    }
-    catch (AntiforgeryValidationException)
-    {
-        return TypedResults.Problem(
-            statusCode: StatusCodes.Status400BadRequest,
-            title: "Invalid anti-forgery token");
-    }
-
     var result = await bus.InvokeAsync<RenewResult?>(new RenewCommand());
     if (result is null)
     {

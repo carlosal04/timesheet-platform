@@ -116,7 +116,7 @@ public sealed class AuthSessionStateEndpointsTests : IClassFixture<AuthApiFactor
         {
             Content = JsonContent.Create(new { })
         };
-        logoutRequest.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, logoutRequest);
 
         var logoutResponse = await client.SendAsync(logoutRequest);
         Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);

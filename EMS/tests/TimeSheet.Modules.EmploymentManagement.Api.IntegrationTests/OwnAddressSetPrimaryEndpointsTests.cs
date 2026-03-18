@@ -96,7 +96,7 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "basic.ownprimary@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/me/addresses/{newPrimaryId}/primary");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -192,7 +192,7 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "basic.forbiddenprimary@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/me/addresses/{otherAddressId}/primary");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
@@ -262,7 +262,7 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "basic.deletedprimary@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/me/addresses/{addressId}/primary");
-        request.Headers.Add("Cookie", authCookie);
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
         var response = await client.SendAsync(request);
 
