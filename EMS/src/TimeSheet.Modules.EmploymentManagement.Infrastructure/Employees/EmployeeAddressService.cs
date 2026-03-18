@@ -112,19 +112,7 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
 
         if (command.IsPrimary)
         {
-            var activePrimaryAddresses = await _dbContext.EmployeeAddresses
-                .Where(x => x.EmployeeId == command.EmployeeId && x.DeletedAtUtc == null && x.IsPrimary)
-                .ToListAsync(cancellationToken);
-
-            foreach (var activePrimaryAddress in activePrimaryAddresses)
-            {
-                activePrimaryAddress.IsPrimary = false;
-            }
-
-            if (activePrimaryAddresses.Count > 0)
-            {
-                await _dbContext.SaveChangesAsync(cancellationToken);
-            }
+            await ClearActivePrimaryAddressesAsync(command.EmployeeId, excludedAddressId: null, cancellationToken);
         }
 
         var address = new Domain.Employees.EmployeeAddress
@@ -157,9 +145,70 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
         return new CreateResult(address.Id, employee.Id);
     }
 
-    public Task<UpdateResult> UpdateAsync(UpdateCommand command, CancellationToken cancellationToken)
+    public async Task<UpdateResult> UpdateAsync(UpdateCommand command, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet.");
+        var employee = await _dbContext.Employees
+            .SingleOrDefaultAsync(x => x.Id == command.EmployeeId && x.DeletedAtUtc == null, cancellationToken);
+
+        if (employee is null)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressUpdated,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.NotFound,
+                    command.AddressId),
+                cancellationToken);
+
+            throw ProblemExceptions.NotFound("Employee was not found.");
+        }
+
+        var address = await _dbContext.EmployeeAddresses
+            .SingleOrDefaultAsync(
+                x => x.EmployeeId == command.EmployeeId
+                    && x.Id == command.AddressId
+                    && x.DeletedAtUtc == null,
+                cancellationToken);
+
+        if (address is null)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressUpdated,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.NotFound,
+                    command.AddressId),
+                cancellationToken);
+
+            throw ProblemExceptions.NotFound("Address was not found.");
+        }
+
+        if (command.IsPrimary)
+        {
+            await ClearActivePrimaryAddressesAsync(command.EmployeeId, command.AddressId, cancellationToken);
+        }
+
+        address.AddressType = command.AddressType.Trim();
+        address.IsPrimary = command.IsPrimary;
+        address.Line1 = command.Line1.Trim();
+        address.Line2 = NormalizeOptional(command.Line2);
+        address.City = command.City.Trim();
+        address.State = command.State.Trim();
+        address.ZipCode = command.ZipCode.Trim();
+        address.CountryCode = command.CountryCode.Trim().ToUpperInvariant();
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.AddressUpdated,
+                AuditEntityTypes.EmployeeAddress,
+                AuditResults.Success,
+                address.Id,
+                new { employee.Id, address.IsPrimary }),
+            cancellationToken);
+
+        return new UpdateResult(address.Id, employee.Id);
     }
 
     public Task SetPrimaryAsync(SetPrimaryCommand command, CancellationToken cancellationToken)
@@ -235,5 +284,26 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private async Task ClearActivePrimaryAddressesAsync(
+        Guid employeeId,
+        Guid? excludedAddressId,
+        CancellationToken cancellationToken)
+    {
+        var activePrimaryAddresses = await _dbContext.EmployeeAddresses
+            .Where(x => x.EmployeeId == employeeId && x.DeletedAtUtc == null && x.IsPrimary)
+            .Where(x => !excludedAddressId.HasValue || x.Id != excludedAddressId.Value)
+            .ToListAsync(cancellationToken);
+
+        foreach (var activePrimaryAddress in activePrimaryAddresses)
+        {
+            activePrimaryAddress.IsPrimary = false;
+        }
+
+        if (activePrimaryAddresses.Count > 0)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 }

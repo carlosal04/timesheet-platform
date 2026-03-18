@@ -23,6 +23,8 @@ using GetEmployeeAddressByIdQuery = TimeSheet.Modules.EmploymentManagement.Appli
 using GetEmployeeAddressByIdResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.GetById.Result;
 using ListEmployeeAddressesQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Query;
 using ListEmployeeAddressesResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Result;
+using UpdateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Update.Command;
+using UpdateEmployeeAddressResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Update.Result;
 using CreateEmployeeCommand = TimeSheet.Modules.EmploymentManagement.Application.Employees.Create.Command;
 using CreateEmployeeAddress = TimeSheet.Modules.EmploymentManagement.Application.Employees.Create.Address;
 using CreateEmployeeResult = TimeSheet.Modules.EmploymentManagement.Application.Employees.Create.Result;
@@ -276,6 +278,29 @@ app.MapPost("/employees/{employeeId:guid}/addresses", async Task<IResult> (
     return TypedResults.Created(
         $"/employees/{result.EmployeeId}/addresses/{result.Id}",
         new AddressWriteResponse(result.Id, result.EmployeeId));
+}).RequireAuthorization(PolicyNames.AddressWrite);
+
+app.MapPut("/employees/{employeeId:guid}/addresses/{addressId:guid}", async Task<IResult> (
+    Guid employeeId,
+    Guid addressId,
+    UpsertAddressRequest request,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<UpdateEmployeeAddressResult>(
+        new UpdateEmployeeAddressCommand(
+            employeeId,
+            addressId,
+            request.AddressType,
+            request.IsPrimary,
+            request.Line1,
+            request.Line2,
+            request.City,
+            request.State,
+            request.ZipCode,
+            request.CountryCode));
+
+    return TypedResults.Ok(new AddressWriteResponse(result.Id, result.EmployeeId));
 }).RequireAuthorization(PolicyNames.AddressWrite);
 
 app.MapPost("/employees", async Task<IResult> (
