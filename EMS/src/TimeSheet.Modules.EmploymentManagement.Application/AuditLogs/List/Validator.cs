@@ -36,6 +36,7 @@ public sealed class Validator : AbstractValidator<Query>
             or AuditActionTypes.LoginFailed
             or AuditActionTypes.LogoutSucceeded
             or AuditActionTypes.SessionCreated
+            or AuditActionTypes.SessionRenewed
             or AuditActionTypes.SessionRevoked
             or AuditActionTypes.AccessDenied
             or AuditActionTypes.AccountLockedOut

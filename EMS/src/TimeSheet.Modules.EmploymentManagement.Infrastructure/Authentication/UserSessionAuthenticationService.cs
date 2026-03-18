@@ -4,6 +4,7 @@ using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Audit;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login;
+using RenewResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Renew.Result;
 using TimeSheet.Modules.EmploymentManagement.Domain.Auditing;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
@@ -139,6 +140,51 @@ public sealed class UserSessionAuthenticationService : IUserSessionAuthenticatio
             cancellationToken);
 
         return Result.Success(user, session, user.Role.Code);
+    }
+
+    public async Task<RenewResult?> RenewAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken)
+    {
+        var nowUtc = _clock.UtcNow;
+
+        var user = await _dbContext.Users
+            .Include(x => x.Role)
+            .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+        if (user is null || user.Role is null || !user.IsActive || !user.Role.IsActive || user.IsLockedOut(nowUtc))
+        {
+            return null;
+        }
+
+        var session = await _dbContext.UserSessions
+            .SingleOrDefaultAsync(x => x.Id == sessionId && x.UserId == userId, cancellationToken);
+
+        if (session is null || !session.IsActive(nowUtc) || session.SessionVersion != user.SessionVersion)
+        {
+            return null;
+        }
+
+        var previousExpiresAtUtc = session.ExpiresAtUtc;
+        session.LastSeenAtUtc = nowUtc;
+        session.ExpiresAtUtc = nowUtc.AddMinutes(_authOptions.SessionLifetimeMinutes);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.SessionRenewed,
+                AuditEntityTypes.UserSession,
+                AuditResults.Success,
+                session.Id,
+                new
+                {
+                    PreviousExpiresAtUtc = previousExpiresAtUtc,
+                    NewExpiresAtUtc = session.ExpiresAtUtc
+                },
+                user.Id,
+                session.Id),
+            cancellationToken);
+
+        return new RenewResult(session.Id, session.ExpiresAtUtc, _authOptions.SessionLifetimeMinutes);
     }
 
     public async Task LogoutAsync(Guid sessionId, CancellationToken cancellationToken)

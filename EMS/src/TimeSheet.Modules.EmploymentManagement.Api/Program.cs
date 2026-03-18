@@ -27,6 +27,8 @@ using LoginCommand = TimeSheet.Modules.EmploymentManagement.Application.Authenti
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using LoginResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Result;
 using LogoutCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Logout.Command;
+using RenewCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Renew.Command;
+using RenewResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Renew.Result;
 using GetEmployeeAddressByIdQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.GetById.Query;
 using GetEmployeeAddressByIdResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.GetById.Result;
 using ListEmployeeAddressesQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Query;
@@ -254,6 +256,48 @@ app.MapGet("/auth/session", async Task<IResult> (
         result.Email,
         result.RoleCode,
         result.EmployeeId,
+        result.SessionId,
+        result.ExpiresAtUtc,
+        result.IdleTimeoutMinutes));
+}).RequireAuthorization(PolicyNames.AuthenticatedUser);
+
+app.MapPost("/auth/renew", async Task<IResult> (
+    [FromServices] IAntiforgery antiforgery,
+    ClaimsPrincipal principal,
+    IMessageBus bus,
+    HttpContext httpContext,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        await antiforgery.ValidateRequestAsync(httpContext);
+    }
+    catch (AntiforgeryValidationException)
+    {
+        return TypedResults.Problem(
+            statusCode: StatusCodes.Status400BadRequest,
+            title: "Invalid anti-forgery token");
+    }
+
+    var result = await bus.InvokeAsync<RenewResult?>(new RenewCommand());
+    if (result is null)
+    {
+        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return TypedResults.Problem(
+            statusCode: StatusCodes.Status401Unauthorized,
+            title: "Authentication required");
+    }
+
+    await httpContext.SignInAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        principal,
+        new AuthenticationProperties
+        {
+            IsPersistent = true,
+            ExpiresUtc = result.ExpiresAtUtc
+        });
+
+    return TypedResults.Ok(new RenewSessionResponse(
         result.SessionId,
         result.ExpiresAtUtc,
         result.IdleTimeoutMinutes));

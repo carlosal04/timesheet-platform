@@ -24,6 +24,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - User-role assignment endpoint `PATCH /users/{userId}/role`
 - Audit log read endpoint `GET /audit-logs`
 - Authenticated session bootstrap endpoint `GET /auth/session`
+- Authenticated session renew endpoint `POST /auth/renew`
 - Explicit CORS allowlist configuration with frontend-focused integration coverage
 - Config-driven data-protection key persistence for local and container runtime
 - Serilog host-level logging baseline for the EMS API
@@ -45,6 +46,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added config-driven CORS allowlist behavior for approved frontend origins with credential support
 - Made EMS data-protection key storage config-driven and mounted a durable key volume for the compose runtime
 - Added Serilog as the EMS API logging provider with configuration-driven console output
+- Added explicit session renewal with `SessionRenewed` auditing and renew-response timing data
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

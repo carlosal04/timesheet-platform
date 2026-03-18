@@ -6,6 +6,7 @@ public static class AuditActionTypes
     public const string LoginFailed = "LoginFailed";
     public const string LogoutSucceeded = "LogoutSucceeded";
     public const string SessionCreated = "SessionCreated";
+    public const string SessionRenewed = "SessionRenewed";
     public const string SessionRevoked = "SessionRevoked";
     public const string AccessDenied = "AccessDenied";
     public const string AccountLockedOut = "AccountLockedOut";
