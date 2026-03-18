@@ -18,6 +18,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Employee address primary-change endpoint `PATCH /employees/{employeeId}/addresses/{addressId}/primary`
 - Employee address delete endpoint `DELETE /employees/{employeeId}/addresses/{addressId}`
 - Self-service address list endpoint `GET /me/addresses`
+- Self-service address primary-change endpoint `PATCH /me/addresses/{addressId}/primary`
 - Wolverine-backed CQRS handlers for auth and employee read requests
 - FluentValidation validators and API-side validation error handling for implemented requests
 - Local API start/test scripts for manual validation
@@ -29,6 +30,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Standardized EMS Application to a vertical-slice CQRS layout with `Abstractions`-based interfaces and short in-slice names
 - Moved EMS persistence to a repo-local EF Core migration workflow with environment-driven design-time configuration and `MigrateAsync()` startup initialization
 - Configured repo-local Data Protection key storage for the current local/test runtime
+- Aligned dedicated address primary-change auditing to the approved `AddressPrimaryChanged` taxonomy
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

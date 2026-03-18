@@ -223,7 +223,7 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
         {
             await _auditLogService.WriteAsync(
                 new AuditWriteEntry(
-                    AuditActionTypes.AddressUpdated,
+                    AuditActionTypes.AddressPrimaryChanged,
                     AuditEntityTypes.EmployeeAddress,
                     AuditResults.NotFound,
                     command.AddressId),
@@ -241,7 +241,7 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
         {
             await _auditLogService.WriteAsync(
                 new AuditWriteEntry(
-                    AuditActionTypes.AddressUpdated,
+                    AuditActionTypes.AddressPrimaryChanged,
                     AuditEntityTypes.EmployeeAddress,
                     AuditResults.NotFound,
                     command.AddressId),
@@ -254,7 +254,7 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
         {
             await _auditLogService.WriteAsync(
                 new AuditWriteEntry(
-                    AuditActionTypes.AddressUpdated,
+                    AuditActionTypes.AddressPrimaryChanged,
                     AuditEntityTypes.EmployeeAddress,
                     AuditResults.Conflict,
                     command.AddressId),
@@ -288,7 +288,7 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
 
         await _auditLogService.WriteAsync(
             new AuditWriteEntry(
-                AuditActionTypes.AddressUpdated,
+                AuditActionTypes.AddressPrimaryChanged,
                 AuditEntityTypes.EmployeeAddress,
                 AuditResults.Success,
                 targetAddress.Id,
@@ -324,9 +324,84 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
         return await ListAsync(new ListQuery(_currentUserContext.EmployeeId.Value, false), cancellationToken);
     }
 
-    public Task SetOwnPrimaryAsync(SetOwnPrimaryCommand command, CancellationToken cancellationToken)
+    public async Task SetOwnPrimaryAsync(SetOwnPrimaryCommand command, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet.");
+        if (!_currentUserContext.EmployeeId.HasValue)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressPrimaryChanged,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.Denied,
+                    command.AddressId,
+                    new { Reason = "MissingEmployeeLink" }),
+                cancellationToken);
+
+            throw ProblemExceptions.Forbidden("User is not linked to an employee profile.");
+        }
+
+        var employeeId = _currentUserContext.EmployeeId.Value;
+        var employeeExists = await _dbContext.Employees
+            .AnyAsync(x => x.Id == employeeId && x.DeletedAtUtc == null, cancellationToken);
+
+        if (!employeeExists)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressPrimaryChanged,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.NotFound,
+                    command.AddressId,
+                    new { Reason = "LinkedEmployeeNotVisible", EmployeeId = employeeId }),
+                cancellationToken);
+
+            throw ProblemExceptions.NotFound("Address was not found.");
+        }
+
+        var targetAddress = await _dbContext.EmployeeAddresses
+            .SingleOrDefaultAsync(x => x.Id == command.AddressId, cancellationToken);
+
+        if (targetAddress is null)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressPrimaryChanged,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.NotFound,
+                    command.AddressId),
+                cancellationToken);
+
+            throw ProblemExceptions.NotFound("Address was not found.");
+        }
+
+        if (targetAddress.EmployeeId != employeeId)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressPrimaryChanged,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.Denied,
+                    command.AddressId,
+                    new { Reason = "OwnershipMismatch", EmployeeId = employeeId, AddressEmployeeId = targetAddress.EmployeeId }),
+                cancellationToken);
+
+            throw ProblemExceptions.Forbidden("Address does not belong to the authenticated user's linked employee profile.");
+        }
+
+        if (targetAddress.DeletedAtUtc is not null)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressPrimaryChanged,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.Conflict,
+                    command.AddressId),
+                cancellationToken);
+
+            throw ProblemExceptions.Conflict("Address is soft-deleted.");
+        }
+
+        await SetPrimaryAsync(new SetPrimaryCommand(employeeId, command.AddressId), cancellationToken);
     }
 
     public Task DeleteOwnAsync(DeleteOwnCommand command, CancellationToken cancellationToken)

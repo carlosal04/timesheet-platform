@@ -94,7 +94,7 @@ public sealed class AddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFacto
             Assert.True(addresses.Single(x => x.Id == addressId).IsPrimary);
             Assert.Contains(
                 dbContext.AuditLogs,
-                log => log.ActionType == AuditActionTypes.AddressUpdated
+                log => log.ActionType == AuditActionTypes.AddressPrimaryChanged
                     && log.EntityId == addressId
                     && log.Result == AuditResults.Success);
         });
