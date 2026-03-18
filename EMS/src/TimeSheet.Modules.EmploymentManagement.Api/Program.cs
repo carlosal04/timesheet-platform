@@ -8,10 +8,17 @@ using TimeSheet.Modules.EmploymentManagement.Api.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Auth;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Application.Employees;
+using TimeSheet.Modules.EmploymentManagement.Application;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure;
+using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseWolverine(options =>
+{
+    options.Discovery.IncludeAssembly(typeof(TimeSheet.Modules.EmploymentManagement.Application.AssemblyMarker).Assembly);
+});
 
 builder.Services.AddProblemDetails();
 builder.Services.AddHttpContextAccessor();
@@ -55,7 +62,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy" })).AllowAnonymo
 
 app.MapPost("/auth/login", async Task<IResult> (
     LoginRequest request,
-    IUserSessionAuthenticationService authService,
+    IMessageBus bus,
     HttpContext httpContext,
     CancellationToken cancellationToken) =>
 {
@@ -64,7 +71,7 @@ app.MapPost("/auth/login", async Task<IResult> (
         return TypedResults.Problem(statusCode: StatusCodes.Status400BadRequest, title: "Invalid login request");
     }
 
-    var result = await authService.LoginAsync(request.Email, request.Password, cancellationToken);
+    var result = await bus.InvokeAsync<LoginResult>(new LoginCommand(request.Email, request.Password));
     if (!result.Succeeded || result.User is null || result.Session is null || result.RoleCode is null)
     {
         return TypedResults.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Invalid credentials");
@@ -95,14 +102,14 @@ app.MapPost("/auth/login", async Task<IResult> (
 
 app.MapPost("/auth/logout", async Task<IResult> (
     ClaimsPrincipal principal,
-    IUserSessionAuthenticationService authService,
+    IMessageBus bus,
     HttpContext httpContext,
     CancellationToken cancellationToken) =>
 {
     var sessionIdValue = principal.FindFirstValue("session_id");
     if (Guid.TryParse(sessionIdValue, out var sessionId))
     {
-        await authService.LogoutAsync(sessionId, cancellationToken);
+        await bus.InvokeAsync(new LogoutCommand(sessionId));
     }
 
     await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -117,7 +124,7 @@ app.MapGet("/auth/antiforgery", ([FromServices] IAntiforgery antiforgery, HttpCo
 
 app.MapGet("/employees", async Task<IResult> (
     ClaimsPrincipal principal,
-    [FromServices] IEmployeeReadService employeeReadService,
+    IMessageBus bus,
     int? page,
     int? pageSize,
     string? name,
@@ -134,8 +141,8 @@ app.MapGet("/employees", async Task<IResult> (
         return TypedResults.Forbid();
     }
 
-    var result = await employeeReadService.ListAsync(
-        new EmployeeListRequest(
+    var result = await bus.InvokeAsync<PagedResult<EmployeeSummaryView>>(
+        new ListEmployeesQuery(
             page ?? 1,
             pageSize ?? 25,
             name,
@@ -143,19 +150,18 @@ app.MapGet("/employees", async Task<IResult> (
             hireDateFrom,
             hireDateTo,
             includeDeletedValue,
-            includePrimaryAddress ?? false),
-        cancellationToken);
+            includePrimaryAddress ?? false));
 
     return TypedResults.Ok(result);
 }).RequireAuthorization("EmployeeRead");
 
 app.MapGet("/employees/{id:guid}", async Task<IResult> (
     Guid id,
-    [FromServices] IEmployeeReadService employeeReadService,
+    IMessageBus bus,
     CancellationToken cancellationToken) =>
 {
-    var employee = await employeeReadService.GetAsync(id, cancellationToken);
-    return employee is null ? TypedResults.NotFound() : TypedResults.Ok(employee);
+    var result = await bus.InvokeAsync<GetEmployeeByIdResult>(new GetEmployeeByIdQuery(id));
+    return result.Employee is null ? TypedResults.NotFound() : TypedResults.Ok(result.Employee);
 }).RequireAuthorization("EmployeeRead");
 
 app.Run();

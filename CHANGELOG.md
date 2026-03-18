@@ -10,8 +10,13 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - EMS Phase 1 backend foundation skeleton under `EMS/`
 - Docker-based local runtime baseline for EMS
 - Cookie-auth/session foundation and employee read/list endpoints
+- Wolverine-backed CQRS handlers for auth and employee read requests
 - Local API start/test scripts for manual validation
 - GitHub workflow, versioning, and release documentation
 
 ### Changed
 - Removed committed runtime credential defaults in favor of local `.env` placeholders and secret-driven scripts
+- Added standard outbound HTTP resilience registration in Infrastructure
+
+### Documentation
+- Added EMS implementation notes to track current checkpoint status and known gaps such as missing FluentValidation

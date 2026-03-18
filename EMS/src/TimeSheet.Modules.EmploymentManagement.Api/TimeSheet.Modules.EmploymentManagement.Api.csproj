@@ -10,4 +10,9 @@
     <ProjectReference Include="..\TimeSheet.Modules.EmploymentManagement.Infrastructure\TimeSheet.Modules.EmploymentManagement.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="WolverineFx" />
+    <PackageReference Include="WolverineFx.Http" />
+  </ItemGroup>
+
 </Project>

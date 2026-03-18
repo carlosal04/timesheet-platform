@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
+using Polly;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Application.Employees;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Authentication;
@@ -22,6 +24,15 @@ public static class DependencyInjection
             var connectionString = configuration.GetConnectionString("EmploymentManagement");
             options.UseNpgsql(connectionString);
         });
+
+        services.AddHttpClient("ems-default")
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.MaxRetryAttempts = 3;
+                options.Retry.BackoffType = DelayBackoffType.Exponential;
+                options.Retry.UseJitter = false;
+                options.Retry.Delay = TimeSpan.FromSeconds(2);
+            });
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IPasswordHashingService, PasswordHashingService>();
