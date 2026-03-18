@@ -21,6 +21,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Self-service address primary-change endpoint `PATCH /me/addresses/{addressId}/primary`
 - Self-service address delete endpoint `DELETE /me/addresses/{addressId}`
 - Role list endpoint `GET /roles`
+- User-role assignment endpoint `PATCH /users/{userId}/role`
 - Wolverine-backed CQRS handlers for auth and employee read requests
 - FluentValidation validators and API-side validation error handling for implemented requests
 - Local API start/test scripts for manual validation
@@ -34,6 +35,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Configured repo-local Data Protection key storage for the current local/test runtime
 - Aligned dedicated address primary-change auditing to the approved `AddressPrimaryChanged` taxonomy
 - Aligned canonical role names to the approved API contract values
+- Added role-change session revocation for active sessions
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

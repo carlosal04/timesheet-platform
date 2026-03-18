@@ -19,6 +19,7 @@ The current EMS foundation checkpoint includes:
 - self-service address primary-change endpoint `PATCH /me/addresses/{addressId}/primary`
 - self-service address delete endpoint `DELETE /me/addresses/{addressId}`
 - role list endpoint `GET /roles`
+- user-role assignment endpoint `PATCH /users/{userId}/role`
 - Wolverine integrated as the API-to-application boundary for the implemented auth and employee read flows
 - FluentValidation-based request validation for the currently implemented auth and employee read flows
 - Application standardized to vertical slices with `Application/Abstractions/...` for interfaces and short in-slice CQRS naming
@@ -36,7 +37,7 @@ The current EMS foundation checkpoint includes:
 
 The following items are still pending and should be treated as known implementation gaps, not implied complete work:
 - audit logging is partially implemented and currently covers auth, employee write/delete, and address create/read/update/primary-change/delete/list reads across admin and self-service paths
-- role assignment endpoint is not implemented yet
+- role management endpoints are implemented for role list and user-role assignment
 - admin address endpoints are complete for the current admin address surface
 - self-service address endpoints are complete for the current `/me/addresses` surface
 - audit log read endpoint is not implemented yet
@@ -45,6 +46,7 @@ The following items are still pending and should be treated as known implementat
 - self-service address reads intentionally reuse the existing `AddressRead` policy; no separate `OwnAddressRead` policy has been introduced
 - dedicated primary-change operations now use the approved `AddressPrimaryChanged` audit taxonomy instead of `AddressUpdated`
 - canonical role names are aligned to the approved contract values `Administrator` and `Basic User`
+- successful role changes revoke active sessions for the affected user and emit `SessionRevoked` plus `UserRoleAssigned` audit events
 
 ## Endpoint implementation status
 
@@ -67,9 +69,9 @@ Implemented and verified:
 - `PATCH /me/addresses/{addressId}/primary`
 - `DELETE /me/addresses/{addressId}`
 - `GET /roles`
+- `PATCH /users/{userId}/role`
 
 Pending:
-- `PATCH /users/{userId}/role`
 - `GET /audit-logs`
 
 ## Frontend coordination rule

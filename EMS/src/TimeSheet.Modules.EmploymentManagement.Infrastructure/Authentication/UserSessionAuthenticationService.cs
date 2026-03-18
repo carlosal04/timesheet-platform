@@ -176,6 +176,42 @@ public sealed class UserSessionAuthenticationService : IUserSessionAuthenticatio
             cancellationToken);
     }
 
+    public async Task<int> RevokeActiveSessionsAsync(Guid userId, string reason, CancellationToken cancellationToken)
+    {
+        var nowUtc = _clock.UtcNow;
+        var activeSessions = await _dbContext.UserSessions
+            .Where(x => x.UserId == userId && x.RevokedAtUtc == null && x.ExpiresAtUtc > nowUtc)
+            .ToListAsync(cancellationToken);
+
+        if (activeSessions.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (var activeSession in activeSessions)
+        {
+            activeSession.Revoke(reason, nowUtc);
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        foreach (var revokedSession in activeSessions)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.SessionRevoked,
+                    AuditEntityTypes.UserSession,
+                    AuditResults.Success,
+                    revokedSession.Id,
+                    new { Reason = reason },
+                    userId,
+                    revokedSession.Id),
+                cancellationToken);
+        }
+
+        return activeSessions.Count;
+    }
+
     private Task WriteFailedLoginAuditAsync(Guid? userId, string email, string result, CancellationToken cancellationToken)
     {
         return _auditLogService.WriteAsync(
