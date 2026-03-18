@@ -12,6 +12,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Cookie-auth/session foundation and employee read/list endpoints
 - Employee create/update/delete endpoints with validation and auditing
 - Employee address list endpoint `GET /employees/{employeeId}/addresses`
+- Employee address detail endpoint `GET /employees/{employeeId}/addresses/{addressId}`
 - Wolverine-backed CQRS handlers for auth and employee read requests
 - FluentValidation validators and API-side validation error handling for implemented requests
 - Local API start/test scripts for manual validation

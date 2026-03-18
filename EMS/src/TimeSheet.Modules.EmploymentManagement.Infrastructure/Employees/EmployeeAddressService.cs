@@ -85,7 +85,7 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
 
     public Task<GetByIdAddress?> GetAsync(GetByIdQuery query, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet.");
+        return GetCoreAsync(query, cancellationToken);
     }
 
     public Task<CreateResult> CreateAsync(CreateCommand command, CancellationToken cancellationToken)
@@ -121,5 +121,50 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
     public Task DeleteOwnAsync(DeleteOwnCommand command, CancellationToken cancellationToken)
     {
         throw new NotSupportedException("Not implemented yet.");
+    }
+
+    private async Task<GetByIdAddress?> GetCoreAsync(GetByIdQuery query, CancellationToken cancellationToken)
+    {
+        var employeeExists = await _dbContext.Employees
+            .AnyAsync(x => x.Id == query.EmployeeId && x.DeletedAtUtc == null, cancellationToken);
+
+        if (!employeeExists)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressRead,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.NotFound,
+                    query.AddressId),
+                cancellationToken);
+
+            throw ProblemExceptions.NotFound("Employee was not found.");
+        }
+
+        var address = await _dbContext.EmployeeAddresses
+            .AsNoTracking()
+            .Where(x => x.EmployeeId == query.EmployeeId && x.Id == query.AddressId && x.DeletedAtUtc == null)
+            .Select(x => new GetByIdAddress(
+                x.Id,
+                x.EmployeeId,
+                x.AddressType,
+                x.IsPrimary,
+                x.Line1,
+                x.Line2,
+                x.City,
+                x.State,
+                x.ZipCode,
+                x.CountryCode))
+            .SingleOrDefaultAsync(cancellationToken);
+
+        await _auditLogService.WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.AddressRead,
+                AuditEntityTypes.EmployeeAddress,
+                address is null ? AuditResults.NotFound : AuditResults.Success,
+                query.AddressId),
+            cancellationToken);
+
+        return address;
     }
 }

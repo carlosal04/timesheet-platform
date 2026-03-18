@@ -17,6 +17,8 @@ using LoginCommand = TimeSheet.Modules.EmploymentManagement.Application.Authenti
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using LoginResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Result;
 using LogoutCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Logout.Command;
+using GetEmployeeAddressByIdQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.GetById.Query;
+using GetEmployeeAddressByIdResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.GetById.Result;
 using ListEmployeeAddressesQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Query;
 using ListEmployeeAddressesResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Result;
 using CreateEmployeeCommand = TimeSheet.Modules.EmploymentManagement.Application.Employees.Create.Command;
@@ -237,6 +239,18 @@ app.MapGet("/employees/{employeeId:guid}/addresses", async Task<IResult> (
         new ListEmployeeAddressesQuery(employeeId, includeDeletedValue));
 
     return TypedResults.Ok(result);
+}).RequireAuthorization(PolicyNames.AddressRead);
+
+app.MapGet("/employees/{employeeId:guid}/addresses/{addressId:guid}", async Task<IResult> (
+    Guid employeeId,
+    Guid addressId,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<GetEmployeeAddressByIdResult>(
+        new GetEmployeeAddressByIdQuery(employeeId, addressId));
+
+    return result.Address is null ? TypedResults.NotFound() : TypedResults.Ok(result.Address);
 }).RequireAuthorization(PolicyNames.AddressRead);
 
 app.MapPost("/employees", async Task<IResult> (
