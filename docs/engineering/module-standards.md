@@ -123,6 +123,17 @@ Rules:
 - if cookie-authenticated browser clients are expected, allow credentials explicitly and keep the approved origins config-driven
 - verify both allowed-origin and disallowed-origin behavior with focused integration coverage
 
+## 6.2 Logging
+
+Current standard:
+- Serilog
+
+Rules:
+- API hosts should register Serilog from configuration at startup
+- default runtime logging should include a console sink unless an approved environment-specific sink replaces it
+- keep log enrichment and minimum levels config-driven
+- never log passwords, cookies, anti-forgery tokens, or connection secrets
+
 ## 7. Containerization
 
 Default module runtime expectations:

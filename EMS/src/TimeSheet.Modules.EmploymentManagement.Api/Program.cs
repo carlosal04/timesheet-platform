@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using TimeSheet.Modules.EmploymentManagement.Api.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Api.Authorization;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Addresses;
@@ -75,6 +76,14 @@ var allowedCorsOrigins = builder.Configuration
     .ToArray() ?? [];
 
 Directory.CreateDirectory(dataProtectionKeysPath);
+
+builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
 
 builder.Host.UseWolverine(options =>
 {
