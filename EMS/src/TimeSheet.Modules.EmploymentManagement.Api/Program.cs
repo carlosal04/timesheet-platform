@@ -52,6 +52,8 @@ using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure;
 using Wolverine;
 
+const string FrontendCorsPolicy = "Frontend";
+
 var builder = WebApplication.CreateBuilder(args);
 var dataProtectionKeysPath = Path.GetFullPath(Path.Combine(
     builder.Environment.ContentRootPath,
@@ -59,6 +61,12 @@ var dataProtectionKeysPath = Path.GetFullPath(Path.Combine(
     "..",
     ".local",
     "data-protection-keys"));
+var allowedCorsOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()?
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray() ?? [];
 
 Directory.CreateDirectory(dataProtectionKeysPath);
 
@@ -78,6 +86,21 @@ builder.Services.AddEmploymentManagementApplication();
 builder.Services.AddEmploymentManagementInfrastructure(builder.Configuration);
 builder.Services.AddScoped<AuthSessionCookieEvents>();
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ProblemDetailsAuthorizationMiddlewareResultHandler>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        if (allowedCorsOrigins.Length == 0)
+        {
+            return;
+        }
+
+        policy.WithOrigins(allowedCorsOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -114,6 +137,7 @@ builder.Services.AddAuthorizationBuilder()
 var app = builder.Build();
 
 app.UseExceptionHandler();
+app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 

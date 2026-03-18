@@ -115,6 +115,14 @@ Rules:
   - the relevant script or runtime docs
 - scripts must read sensitive values from env vars or local secret files, not hardcoded defaults
 
+## 6.1 Browser integration configuration
+
+Rules:
+- CORS must use an explicit origin allowlist
+- wildcard origins are forbidden when credentials are enabled
+- if cookie-authenticated browser clients are expected, allow credentials explicitly and keep the approved origins config-driven
+- verify both allowed-origin and disallowed-origin behavior with focused integration coverage
+
 ## 7. Containerization
 
 Default module runtime expectations:

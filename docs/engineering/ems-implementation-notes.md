@@ -21,6 +21,7 @@ The current EMS foundation checkpoint includes:
 - role list endpoint `GET /roles`
 - user-role assignment endpoint `PATCH /users/{userId}/role`
 - audit log read endpoint `GET /audit-logs`
+- explicit CORS allowlist configuration for approved frontend origins
 - Wolverine integrated as the API-to-application boundary for the implemented auth and employee read flows
 - FluentValidation-based request validation for the currently implemented auth and employee read flows
 - Application standardized to vertical slices with `Application/Abstractions/...` for interfaces and short in-slice CQRS naming
@@ -41,7 +42,7 @@ The following items are still pending and should be treated as known implementat
 - role management endpoints are implemented for role list and user-role assignment
 - admin address endpoints are complete for the current admin address surface
 - self-service address endpoints are complete for the current `/me/addresses` surface
-- Serilog, durable production-grade data-protection persistence, and the full cross-cutting hardening set from the approved plan are not implemented yet
+- Serilog, durable production-grade data-protection persistence, full anti-forgery coverage review, stricter auth rate limiting, and Docker image CVE remediation are not implemented yet
 - soft-delete rows currently capture `DeletedAtUtc`, but the schema does not yet persist `DeletedByUserId` even though the architecture notes mention it
 - self-service address reads intentionally reuse the existing `AddressRead` policy; no separate `OwnAddressRead` policy has been introduced
 - dedicated primary-change operations now use the approved `AddressPrimaryChanged` audit taxonomy instead of `AddressUpdated`
