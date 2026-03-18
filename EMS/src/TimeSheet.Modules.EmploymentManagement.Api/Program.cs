@@ -16,6 +16,7 @@ using TimeSheet.Modules.EmploymentManagement.Api.Infrastructure;
 using CreateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Command;
 using CreateEmployeeAddressResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Result;
 using DeleteEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Delete.Command;
+using DeleteMyEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.DeleteOwn.Command;
 using LoginCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Command;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using LoginResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Result;
@@ -343,6 +344,15 @@ app.MapMethods("/me/addresses/{addressId:guid}/primary", ["PATCH"], async Task<I
     await bus.InvokeAsync(new SetMyEmployeeAddressPrimaryCommand(addressId));
     return TypedResults.NoContent();
 }).RequireAuthorization(PolicyNames.OwnAddressPrimaryManage);
+
+app.MapDelete("/me/addresses/{addressId:guid}", async Task<IResult> (
+    Guid addressId,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    await bus.InvokeAsync(new DeleteMyEmployeeAddressCommand(addressId));
+    return TypedResults.NoContent();
+}).RequireAuthorization(PolicyNames.OwnAddressDelete);
 
 app.MapPost("/employees", async Task<IResult> (
     CreateEmployeeRequest request,

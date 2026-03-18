@@ -17,6 +17,7 @@ The current EMS foundation checkpoint includes:
 - employee address delete endpoint `DELETE /employees/{employeeId}/addresses/{addressId}`
 - self-service address list endpoint `GET /me/addresses`
 - self-service address primary-change endpoint `PATCH /me/addresses/{addressId}/primary`
+- self-service address delete endpoint `DELETE /me/addresses/{addressId}`
 - Wolverine integrated as the API-to-application boundary for the implemented auth and employee read flows
 - FluentValidation-based request validation for the currently implemented auth and employee read flows
 - Application standardized to vertical slices with `Application/Abstractions/...` for interfaces and short in-slice CQRS naming
@@ -36,8 +37,7 @@ The following items are still pending and should be treated as known implementat
 - audit logging is partially implemented and currently covers auth, employee write/delete, and address create/read/update/primary-change/delete/list reads across admin and self-service paths
 - role management endpoints are not implemented yet
 - admin address endpoints are complete for the current admin address surface
-- self-service address flows under `/me/addresses` are partially implemented
-- self-service address mutation endpoints under `/me/addresses` are not implemented yet
+- self-service address endpoints are complete for the current `/me/addresses` surface
 - audit log read endpoint is not implemented yet
 - Serilog, durable production-grade data-protection persistence, and the full cross-cutting hardening set from the approved plan are not implemented yet
 - soft-delete rows currently capture `DeletedAtUtc`, but the schema does not yet persist `DeletedByUserId` even though the architecture notes mention it
@@ -63,9 +63,9 @@ Implemented and verified:
 - `DELETE /employees/{employeeId}/addresses/{addressId}`
 - `GET /me/addresses`
 - `PATCH /me/addresses/{addressId}/primary`
+- `DELETE /me/addresses/{addressId}`
 
 Pending:
-- `DELETE /me/addresses/{addressId}`
 - `GET /roles`
 - `PATCH /users/{userId}/role`
 - `GET /audit-logs`
