@@ -53,11 +53,23 @@ The following items are still pending and should be treated as known implementat
 - self-service address endpoints are complete for the current `/me/addresses` surface
 - Docker image CVE remediation is not implemented yet
 - Docker image CVE remediation is in progress:
-  - frontend static container has been moved off `nginx:1.29-alpine` and verified healthy locally
-  - reverse proxy has been moved off `nginx:1.29-alpine` and verified healthy locally
-  - PostgreSQL has been moved off `postgres:17-alpine` to `postgres:17-bookworm` and still needs runtime verification in Compose plus a fresh post-change scan result
+  - frontend static container has been moved off `nginx:1.29-alpine`, verified healthy locally, and now passes the High/Critical Docker Scout gate
+  - reverse proxy has been moved off `nginx:1.29-alpine`, verified healthy locally, and its current Chainguard nginx image now passes the High/Critical Docker Scout gate
+  - API image currently passes the High/Critical Docker Scout gate
+  - PostgreSQL has been moved off `postgres:17-alpine` to `postgres:17-bookworm`, verified healthy locally in Compose, and migration compatibility was proven against a disposable Bookworm container
   - standalone PostgreSQL 17 Bookworm runtime and `pg_isready` healthcheck compatibility were verified locally
   - the previous Compose verification failure was traced to a Windows excluded TCP port range that covers the old local defaults `54329` and `54331`; the repo default local PostgreSQL host port has been moved to `15432`
+  - Docker Scout can now be run in this repo by setting `DOCKER_CONFIG` to a repo-local path under `EMS/.docker-config`
+  - `postgres:17-bookworm` still fails the High/Critical gate with 1 Critical and 7 High vulnerabilities
+  - the only clean PostgreSQL candidate verified so far is `cgr.dev/chainguard/postgres:latest`, which currently resolves to PostgreSQL 18.3
+  - PostgreSQL 18 is now explicitly approved for EMS because the module is still greenfield
+  - the approved PostgreSQL 18 image must be pinned by digest rather than using a floating tag
+  - the PostgreSQL 18 move must use a fresh local volume; existing PostgreSQL 17 development volumes are disposable and must not be reused in place
+  - the pinned PostgreSQL 18 image swap is now in place in `compose.yaml`
+  - pinned PostgreSQL 18 healthcheck verification succeeded locally on a fresh temporary Compose volume
+  - EF migration verification now succeeds against PostgreSQL 18 on a fresh temporary Compose volume
+  - containerized application smoke verification against PostgreSQL 18 now succeeds for health, login, session bootstrap, and employee list
+  - the standalone local-host PG18 smoke path in this shell proved unreliable because the direct local host probe was distorted by the startup method and Wolverine discovery noise; the containerized runtime path is the trusted verification path for this upgrade
 - the frontend-driven session-renew model is partially implemented:
   - `GET /auth/session`
   - `POST /auth/renew`

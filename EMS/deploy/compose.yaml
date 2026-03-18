@@ -53,7 +53,7 @@ services:
       start_period: 10s
 
   postgres:
-    image: postgres:17-bookworm
+    image: cgr.dev/chainguard/postgres@sha256:5306d83b500d1275fae83e5790d8790ccda93cf1622f831122412909b1db3f8d
     environment:
       POSTGRES_DB: ${EMS_DB_NAME:-ems}
       POSTGRES_USER: ${EMS_DB_USER:-ems}

@@ -45,6 +45,12 @@ Phase 1 uses a containerized runtime for both local development and deployment-a
 - one frontend web container serving built Vue assets
 - one PostgreSQL container
 
+Approved runtime decision for the current greenfield phase:
+- the PostgreSQL container baseline is approved to move from PostgreSQL 17 to PostgreSQL 18 in order to clear the High/Critical image gate
+- the PostgreSQL production image reference must be pinned by digest rather than a floating tag
+- local PostgreSQL 17 development volumes are disposable and must not be reused in place with a PostgreSQL 18 container
+- any local move from PostgreSQL 17 to PostgreSQL 18 must use a fresh volume, rebuild, and migration-based schema initialization
+
 Container images must:
 - expose explicit health checks
 - be reviewed for known vulnerabilities before use in the phase
@@ -455,3 +461,11 @@ If separate origins are used:
 - the API container must expose health endpoints suitable for container health checks
 - the frontend container must report healthy when the static site is being served
 - the PostgreSQL container must use a database readiness check
+
+## 13.6 PostgreSQL major-version change rule
+Because EMS is still a greenfield module, the approved PostgreSQL 18 move is treated as a runtime-baseline decision rather than a data-migration project.
+
+Required guardrails:
+- do not silently float to PostgreSQL 18 through `latest`; use a pinned digest
+- do not mount an existing PostgreSQL 17 data directory into a PostgreSQL 18 container
+- validate the upgrade path with a fresh volume, health checks, EF migrations, and application smoke tests before considering the runtime baseline complete

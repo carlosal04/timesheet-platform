@@ -13,6 +13,7 @@ TestResults/
 .dotnet/
 .nuget/
 .local/
+EMS/.docker-config/
 
 # Logs and temp output
 *.log

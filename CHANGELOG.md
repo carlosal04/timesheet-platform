@@ -63,6 +63,9 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated the PostgreSQL container healthcheck to use the configured `EMS_DB_USER` and `EMS_DB_NAME` values instead of hardcoded defaults
 - Updated the PostgreSQL published host port mapping to honor `EMS_DB_PORT`
 - Changed the default local PostgreSQL host port from `54329` to `15432` to avoid excluded Windows port ranges during Docker publish
+- Switched the Compose PostgreSQL baseline to a pinned Chainguard PostgreSQL 18 digest and verified the healthcheck on a fresh temporary volume
+- Verified EF migrations against the pinned PostgreSQL 18 image on a fresh temporary volume
+- Verified the containerized EMS API smoke flow against the pinned PostgreSQL 18 runtime for health, login, session bootstrap, and employee list
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
@@ -71,3 +74,5 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Documented the repo-local EF migration workflow and production-safe design-time configuration standard
 - Updated EMS implementation notes with an implemented-versus-pending endpoint inventory for frontend coordination
 - Documented the approved Phase 1 session-bootstrap and frontend-driven renew model for upcoming auth hardening work
+- Documented the approved greenfield move to PostgreSQL 18 with digest pinning and fresh-volume verification requirements
+- Added a shared Docker image CVE remediation runbook for future agents and modules

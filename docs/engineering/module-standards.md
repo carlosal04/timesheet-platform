@@ -145,6 +145,7 @@ Default module runtime expectations:
 Rules:
 - keep Dockerfiles and compose files under the module root or module deployment folder
 - document any known image/CVE exceptions explicitly
+- follow the shared Docker remediation workflow in [docker-image-cve-remediation-runbook.md](/C:/Codex/TimeSheet/docs/engineering/docker-image-cve-remediation-runbook.md)
 
 ## 8. Testing
 

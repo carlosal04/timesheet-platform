@@ -55,15 +55,20 @@ This checklist is the required pre-flight check before scaffolding or implementi
 - [x] reverse-proxy container strategy confirmed
 - [x] health check approach confirmed for backend, frontend, proxy, and database
 - [x] image scanning tool confirmed for CVE review
-- [ ] no selected image with unfixed High or Critical CVEs is approved without explicit signoff
+- [x] no selected image with unfixed High or Critical CVEs is approved without explicit signoff
 
-Current deferred issue:
+Current verification notes:
 - `deploy-api` currently passes the High/Critical image gate
-- `deploy-frontend` has been moved off `nginx:1.29-alpine` and verified healthy locally; the replacement image still needs a fresh post-change scan result recorded
-- `reverse-proxy` has been moved off `nginx:1.29-alpine` and verified healthy locally; the replacement image still needs a fresh post-change scan result recorded
-- `postgres` has been moved off `postgres:17-alpine` to `postgres:17-bookworm`; runtime verification and a fresh post-change scan result are still pending
+- `deploy-frontend` currently passes the High/Critical image gate
+- `reverse-proxy` currently passes the High/Critical image gate
+- the pinned PostgreSQL 18 image has been switched into `compose.yaml` and passed health verification on a fresh temporary Compose volume
+- PostgreSQL migration verification succeeds on a fresh temporary Compose volume
+- containerized application smoke verification against PostgreSQL 18 succeeds for health, login, session bootstrap, and employee list
 - local Windows verification also required moving the default published PostgreSQL host port from `54329` to `15432` because the original range was excluded on this machine
-- image replacement or explicit signoff is still required before Phase 1 is considered security-complete
+- PostgreSQL 18 has now been explicitly approved for EMS because the module is still greenfield and the clean verified candidate currently resolves to PostgreSQL 18.3
+- the approved PostgreSQL 18 runtime image must be pinned by digest rather than a floating `latest` tag
+- any existing local PostgreSQL 17 data volume must be treated as disposable and recreated rather than reused in place
+- remaining follow-up is documentation of the final CVE remediation and verification runbook for future agents
 
 ---
 
