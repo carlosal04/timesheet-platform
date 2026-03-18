@@ -44,6 +44,22 @@ public sealed class AuthEndpointsTests : IClassFixture<AuthApiFactory>
     }
 
     [Fact]
+    public async Task Login_WithInvalidPayload_ReturnsBadRequest()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var response = await client.PostAsJsonAsync("/auth/login", new LoginRequest(string.Empty, string.Empty));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Logout_RevokesCurrentSession()
     {
         await _factory.ResetDatabaseAsync();

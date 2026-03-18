@@ -4,6 +4,8 @@
 
 This repository uses a production-oriented Git and GitHub workflow. Follow these rules for all code, docs, release, and hotfix changes.
 
+For reusable module implementation standards, also follow [docs/engineering/module-standards.md](/C:/Codex/TimeSheet/docs/engineering/module-standards.md).
+
 ## Branches
 
 Permanent branches:

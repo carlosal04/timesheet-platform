@@ -260,6 +260,26 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task GetEmployees_WithInvalidQuery_ReturnsBadRequest()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/employees?page=0&pageSize=101&status=Unknown");
+        request.Headers.Add("Cookie", authCookie);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private static async Task<string> LoginAsync(HttpClient client, string email, string password)
     {
         var response = await client.PostAsJsonAsync("/auth/login", new LoginRequest(email, password));

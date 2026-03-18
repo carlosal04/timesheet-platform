@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TimeSheet.Modules.EmploymentManagement.Api.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Auth;
+using TimeSheet.Modules.EmploymentManagement.Api.Infrastructure;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Application.Employees;
 using TimeSheet.Modules.EmploymentManagement.Application;
@@ -21,8 +22,10 @@ builder.Host.UseWolverine(options =>
 });
 
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+builder.Services.AddEmploymentManagementApplication();
 builder.Services.AddEmploymentManagementInfrastructure(builder.Configuration);
 builder.Services.AddScoped<AuthSessionCookieEvents>();
 
@@ -66,11 +69,6 @@ app.MapPost("/auth/login", async Task<IResult> (
     HttpContext httpContext,
     CancellationToken cancellationToken) =>
 {
-    if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-    {
-        return TypedResults.Problem(statusCode: StatusCodes.Status400BadRequest, title: "Invalid login request");
-    }
-
     var result = await bus.InvokeAsync<LoginResult>(new LoginCommand(request.Email, request.Password));
     if (!result.Succeeded || result.User is null || result.Session is null || result.RoleCode is null)
     {

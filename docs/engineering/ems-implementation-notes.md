@@ -8,6 +8,7 @@ The current EMS foundation checkpoint includes:
 - cookie authentication with persisted user sessions
 - employee read/list endpoints
 - Wolverine integrated as the API-to-application boundary for the implemented auth and employee read flows
+- FluentValidation-based request validation for the currently implemented auth and employee read flows
 - central package management, shared build props, and `*.slnx`
 - local secret handling through `EMS/.env` with committed placeholders in `EMS/.env.example`
 
@@ -20,7 +21,7 @@ The current EMS foundation checkpoint includes:
 ## Known gaps against the approved Phase 1 architecture/plan
 
 The following items are still pending and should be treated as known implementation gaps, not implied complete work:
-- FluentValidation is not implemented yet
+- CQRS request/handler naming conventions need standardization to match the preferred repository pattern
 - EF Core migrations are not implemented yet; the current initializer still uses `EnsureCreated`
 - audit logging is not implemented yet
 - role management endpoints are not implemented yet
