@@ -23,6 +23,7 @@ using GetEmployeeAddressByIdQuery = TimeSheet.Modules.EmploymentManagement.Appli
 using GetEmployeeAddressByIdResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.GetById.Result;
 using ListEmployeeAddressesQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Query;
 using ListEmployeeAddressesResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Result;
+using SetEmployeeAddressPrimaryCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.SetPrimary.Command;
 using UpdateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Update.Command;
 using UpdateEmployeeAddressResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Update.Result;
 using CreateEmployeeCommand = TimeSheet.Modules.EmploymentManagement.Application.Employees.Create.Command;
@@ -302,6 +303,16 @@ app.MapPut("/employees/{employeeId:guid}/addresses/{addressId:guid}", async Task
 
     return TypedResults.Ok(new AddressWriteResponse(result.Id, result.EmployeeId));
 }).RequireAuthorization(PolicyNames.AddressWrite);
+
+app.MapMethods("/employees/{employeeId:guid}/addresses/{addressId:guid}/primary", ["PATCH"], async Task<IResult> (
+    Guid employeeId,
+    Guid addressId,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    await bus.InvokeAsync(new SetEmployeeAddressPrimaryCommand(employeeId, addressId));
+    return TypedResults.NoContent();
+}).RequireAuthorization(PolicyNames.AddressPrimaryManageAny);
 
 app.MapPost("/employees", async Task<IResult> (
     CreateEmployeeRequest request,

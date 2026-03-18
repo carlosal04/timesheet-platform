@@ -211,9 +211,90 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
         return new UpdateResult(address.Id, employee.Id);
     }
 
-    public Task SetPrimaryAsync(SetPrimaryCommand command, CancellationToken cancellationToken)
+    public async Task SetPrimaryAsync(SetPrimaryCommand command, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet.");
+        var employeeExists = await _dbContext.Employees
+            .AnyAsync(x => x.Id == command.EmployeeId && x.DeletedAtUtc == null, cancellationToken);
+
+        if (!employeeExists)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressUpdated,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.NotFound,
+                    command.AddressId),
+                cancellationToken);
+
+            throw ProblemExceptions.NotFound("Employee was not found.");
+        }
+
+        var targetAddress = await _dbContext.EmployeeAddresses
+            .SingleOrDefaultAsync(
+                x => x.EmployeeId == command.EmployeeId && x.Id == command.AddressId,
+                cancellationToken);
+
+        if (targetAddress is null)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressUpdated,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.NotFound,
+                    command.AddressId),
+                cancellationToken);
+
+            throw ProblemExceptions.NotFound("Address was not found.");
+        }
+
+        if (targetAddress.DeletedAtUtc is not null)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressUpdated,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.Conflict,
+                    command.AddressId),
+                cancellationToken);
+
+            throw ProblemExceptions.Conflict("Address is soft-deleted.");
+        }
+
+        var previousPrimaryId = await _dbContext.EmployeeAddresses
+            .Where(x => x.EmployeeId == command.EmployeeId && x.DeletedAtUtc == null && x.IsPrimary)
+            .Select(x => (Guid?)x.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (!targetAddress.IsPrimary)
+        {
+            if (_dbContext.Database.IsRelational())
+            {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                await ClearActivePrimaryAddressesAsync(command.EmployeeId, command.AddressId, cancellationToken);
+                targetAddress.IsPrimary = true;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            else
+            {
+                await ClearActivePrimaryAddressesAsync(command.EmployeeId, command.AddressId, cancellationToken);
+                targetAddress.IsPrimary = true;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        await _auditLogService.WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.AddressUpdated,
+                AuditEntityTypes.EmployeeAddress,
+                AuditResults.Success,
+                targetAddress.Id,
+                new
+                {
+                    PreviousPrimaryAddressId = previousPrimaryId,
+                    NewPrimaryAddressId = targetAddress.Id
+                }),
+            cancellationToken);
     }
 
     public Task DeleteAsync(DeleteCommand command, CancellationToken cancellationToken)

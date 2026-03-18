@@ -13,6 +13,7 @@ The current EMS foundation checkpoint includes:
 - employee address detail endpoint `GET /employees/{employeeId}/addresses/{addressId}`
 - employee address create endpoint `POST /employees/{employeeId}/addresses`
 - employee address update endpoint `PUT /employees/{employeeId}/addresses/{addressId}`
+- employee address primary-change endpoint `PATCH /employees/{employeeId}/addresses/{addressId}/primary`
 - Wolverine integrated as the API-to-application boundary for the implemented auth and employee read flows
 - FluentValidation-based request validation for the currently implemented auth and employee read flows
 - Application standardized to vertical slices with `Application/Abstractions/...` for interfaces and short in-slice CQRS naming
@@ -29,9 +30,9 @@ The current EMS foundation checkpoint includes:
 ## Known gaps against the approved Phase 1 architecture/plan
 
 The following items are still pending and should be treated as known implementation gaps, not implied complete work:
-- audit logging is partially implemented and currently covers auth, employee write/delete, and address create/read/update/list reads
+- audit logging is partially implemented and currently covers auth, employee write/delete, and address create/read/update/primary-change/list reads
 - role management endpoints are not implemented yet
-- admin address endpoints other than `GET /employees/{employeeId}/addresses`, `GET /employees/{employeeId}/addresses/{addressId}`, `POST /employees/{employeeId}/addresses`, and `PUT /employees/{employeeId}/addresses/{addressId}` are not implemented yet
+- admin address endpoints other than `GET /employees/{employeeId}/addresses`, `GET /employees/{employeeId}/addresses/{addressId}`, `POST /employees/{employeeId}/addresses`, `PUT /employees/{employeeId}/addresses/{addressId}`, and `PATCH /employees/{employeeId}/addresses/{addressId}/primary` are not implemented yet
 - self-service address flows under `/me/addresses` are not implemented yet
 - audit log read endpoint is not implemented yet
 - Serilog, durable production-grade data-protection persistence, and the full cross-cutting hardening set from the approved plan are not implemented yet
@@ -51,9 +52,9 @@ Implemented and verified:
 - `GET /employees/{employeeId}/addresses/{addressId}`
 - `POST /employees/{employeeId}/addresses`
 - `PUT /employees/{employeeId}/addresses/{addressId}`
+- `PATCH /employees/{employeeId}/addresses/{addressId}/primary`
 
 Pending:
-- `PATCH /employees/{employeeId}/addresses/{addressId}/primary`
 - `DELETE /employees/{employeeId}/addresses/{addressId}`
 - `GET /me/addresses`
 - `PATCH /me/addresses/{addressId}/primary`
