@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
-using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 
 namespace TimeSheet.Modules.EmploymentManagement.Api.Authentication;
 

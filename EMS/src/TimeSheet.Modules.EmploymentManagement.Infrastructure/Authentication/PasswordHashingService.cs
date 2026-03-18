@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Identity;
-using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 
 namespace TimeSheet.Modules.EmploymentManagement.Infrastructure.Authentication;

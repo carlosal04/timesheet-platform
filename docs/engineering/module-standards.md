@@ -43,6 +43,21 @@ Rules:
 - Domain owns business invariants and core entities
 - Infrastructure implements persistence, hashing, HTTP clients, and other external concerns
 
+### Application layout standard
+
+Application must use a vertical-slice layout plus a single abstractions root.
+
+Expected pattern:
+- `Application/Abstractions/<Concern>/...`
+- `Application/<Area>/<UseCase>/...`
+
+Rules:
+- all Application interfaces belong under `Application/Abstractions/`
+- do not create feature-local `Interfaces` folders
+- use PascalCase for area and use-case folders
+- keep `AssemblyMarker.cs` and `DependencyInjection.cs` at Application root
+- use a clearly named shared folder only when a cross-slice contract is genuinely necessary
+
 ## 3. Messaging and request handling
 
 Current standard:
@@ -52,6 +67,15 @@ Rules:
 - API should dispatch commands/queries through Wolverine rather than call business services directly
 - use application request/handler pairs for each use case
 - keep handlers small and focused on one use case
+- inside a slice, use short CQRS names:
+  - `Command`
+  - `Query`
+  - `Handler`
+  - `Validator`
+  - `Result`
+  - `Item` or `Response` only when the role is explicit
+- rely on namespaces to carry context rather than repeating long type names in the file name
+- when choosing between descriptive and short names, prefer short names inside the slice folder
 
 ## 4. Validation
 
@@ -111,7 +135,17 @@ Rules:
 - prove the skeleton builds and tests early before large feature work
 - use small, reviewable test additions
 
-## 9. Documentation
+## 9. Review standard
+
+Reviewers should verify:
+- each use case lives in one vertical slice folder
+- each Application interface lives under `Application/Abstractions/`
+- API endpoints dispatch through Wolverine instead of calling Infrastructure directly
+- validators are slice-local and validate the request used by that slice
+- namespaces and file names follow the short in-slice CQRS convention
+- any exception to the standard is documented before merge
+
+## 10. Documentation
 
 Rules:
 - update docs when architecture, workflow, runtime, or security assumptions change
@@ -119,7 +153,7 @@ Rules:
 - at the end of a phase, archive completed current specs only after approval
 - keep standards and release guidance reusable for future modules
 
-## 10. Git and release standards
+## 11. Git and release standards
 
 Rules:
 - follow [CONTRIBUTING.md](/C:/Codex/TimeSheet/CONTRIBUTING.md)
@@ -128,14 +162,14 @@ Rules:
 - use production-safe branch naming
 - keep PRs small and verifiable
 
-## 11. Encoding and file hygiene
+## 12. Encoding and file hygiene
 
 Rules:
 - text files must be UTF-8
 - line endings are controlled by `.gitattributes`
 - do not commit local IDE artifacts, build output, caches, or local secret files
 
-## 12. Working agreement
+## 13. Working agreement
 
 Rules:
 - create the skeleton before implementing feature depth

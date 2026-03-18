@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
+using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 

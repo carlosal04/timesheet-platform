@@ -7,8 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using TimeSheet.Modules.EmploymentManagement.Api.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Auth;
 using TimeSheet.Modules.EmploymentManagement.Api.Infrastructure;
-using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
-using TimeSheet.Modules.EmploymentManagement.Application.Employees;
+using LoginCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Command;
+using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
+using LoginResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Result;
+using LogoutCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Logout.Command;
+using GetEmployeeByIdQuery = TimeSheet.Modules.EmploymentManagement.Application.Employees.GetById.Query;
+using GetEmployeeByIdResult = TimeSheet.Modules.EmploymentManagement.Application.Employees.GetById.Result;
+using ListEmployeesQuery = TimeSheet.Modules.EmploymentManagement.Application.Employees.List.Query;
+using ListEmployeesResult = TimeSheet.Modules.EmploymentManagement.Application.Employees.List.Result;
 using TimeSheet.Modules.EmploymentManagement.Application;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure;
@@ -139,7 +145,7 @@ app.MapGet("/employees", async Task<IResult> (
         return TypedResults.Forbid();
     }
 
-    var result = await bus.InvokeAsync<PagedResult<EmployeeSummaryView>>(
+    var result = await bus.InvokeAsync<ListEmployeesResult>(
         new ListEmployeesQuery(
             page ?? 1,
             pageSize ?? 25,

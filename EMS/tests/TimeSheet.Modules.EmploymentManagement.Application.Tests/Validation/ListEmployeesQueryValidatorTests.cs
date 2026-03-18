@@ -1,16 +1,16 @@
 using FluentValidation.TestHelper;
-using TimeSheet.Modules.EmploymentManagement.Application.Employees;
+using TimeSheet.Modules.EmploymentManagement.Application.Employees.List;
 
 namespace TimeSheet.Modules.EmploymentManagement.Application.Tests.Validation;
 
 public sealed class ListEmployeesQueryValidatorTests
 {
-    private readonly ListEmployeesQueryValidator _validator = new();
+    private readonly Validator _validator = new();
 
     [Fact]
     public void Should_Reject_Invalid_Paging_And_Status()
     {
-        var result = _validator.TestValidate(new ListEmployeesQuery(
+        var result = _validator.TestValidate(new Query(
             0,
             101,
             null,
@@ -28,7 +28,7 @@ public sealed class ListEmployeesQueryValidatorTests
     [Fact]
     public void Should_Reject_Invalid_HireDate_Range()
     {
-        var result = _validator.TestValidate(new ListEmployeesQuery(
+        var result = _validator.TestValidate(new Query(
             1,
             25,
             null,

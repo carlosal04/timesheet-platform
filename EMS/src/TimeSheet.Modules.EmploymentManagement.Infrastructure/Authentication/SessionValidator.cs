@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 
 namespace TimeSheet.Modules.EmploymentManagement.Infrastructure.Authentication;

@@ -1,4 +1,4 @@
-using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 
 namespace TimeSheet.Modules.EmploymentManagement.Infrastructure.Authentication;
 

@@ -2,9 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using EmployeeDetail = TimeSheet.Modules.EmploymentManagement.Application.Employees.GetById.Employee;
+using EmployeeListResult = TimeSheet.Modules.EmploymentManagement.Application.Employees.List.Result;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Auth;
-using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
-using TimeSheet.Modules.EmploymentManagement.Application.Employees;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 using TimeSheet.Modules.EmploymentManagement.Domain.Employees;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
@@ -104,7 +105,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var payload = await response.Content.ReadFromJsonAsync<PagedResult<EmployeeSummaryView>>();
+        var payload = await response.Content.ReadFromJsonAsync<EmployeeListResult>();
         Assert.NotNull(payload);
         Assert.Single(payload!.Items);
         Assert.Equal(1, payload.TotalCount);
@@ -213,7 +214,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var payload = await response.Content.ReadFromJsonAsync<EmployeeDetailView>();
+        var payload = await response.Content.ReadFromJsonAsync<EmployeeDetail>();
         Assert.NotNull(payload);
         Assert.Equal(employeeId, payload!.Id);
         Assert.Equal(2, payload.Addresses.Count);

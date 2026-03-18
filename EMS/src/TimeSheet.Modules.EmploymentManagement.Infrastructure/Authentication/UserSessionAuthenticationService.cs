@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using TimeSheet.Modules.EmploymentManagement.Application.Authentication;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
+using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
+using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 
@@ -25,7 +27,7 @@ public sealed class UserSessionAuthenticationService : IUserSessionAuthenticatio
         _authOptions = authOptions.Value;
     }
 
-    public async Task<LoginResult> LoginAsync(string email, string password, CancellationToken cancellationToken)
+    public async Task<Result> LoginAsync(string email, string password, CancellationToken cancellationToken)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
         var nowUtc = _clock.UtcNow;
@@ -42,14 +44,14 @@ public sealed class UserSessionAuthenticationService : IUserSessionAuthenticatio
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
 
-            return LoginResult.Failure("invalid_credentials");
+            return Result.Failure("invalid_credentials");
         }
 
         if (!_passwordHashingService.VerifyPassword(user, password))
         {
             user.RecordFailedAccess(_authOptions.LockoutThreshold, TimeSpan.FromMinutes(_authOptions.LockoutMinutes), nowUtc);
             await _dbContext.SaveChangesAsync(cancellationToken);
-            return LoginResult.Failure("invalid_credentials");
+            return Result.Failure("invalid_credentials");
         }
 
         user.ResetFailedAccess();
@@ -77,7 +79,7 @@ public sealed class UserSessionAuthenticationService : IUserSessionAuthenticatio
         _dbContext.UserSessions.Add(session);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return LoginResult.Success(user, session, user.Role.Code);
+        return Result.Success(user, session, user.Role.Code);
     }
 
     public async Task LogoutAsync(Guid sessionId, CancellationToken cancellationToken)

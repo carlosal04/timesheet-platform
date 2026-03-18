@@ -9,6 +9,7 @@ The current EMS foundation checkpoint includes:
 - employee read/list endpoints
 - Wolverine integrated as the API-to-application boundary for the implemented auth and employee read flows
 - FluentValidation-based request validation for the currently implemented auth and employee read flows
+- Application standardized to vertical slices with `Application/Abstractions/...` for interfaces and short in-slice CQRS naming
 - central package management, shared build props, and `*.slnx`
 - local secret handling through `EMS/.env` with committed placeholders in `EMS/.env.example`
 
@@ -21,13 +22,22 @@ The current EMS foundation checkpoint includes:
 ## Known gaps against the approved Phase 1 architecture/plan
 
 The following items are still pending and should be treated as known implementation gaps, not implied complete work:
-- CQRS request/handler naming conventions need standardization to match the preferred repository pattern
 - EF Core migrations are not implemented yet; the current initializer still uses `EnsureCreated`
 - audit logging is not implemented yet
 - role management endpoints are not implemented yet
 - employee write/delete flows are not implemented yet
 - address CRUD and self-service address flows are not implemented yet
 - Serilog, data-protection persistence, and the full cross-cutting hardening set from the approved plan are not implemented yet
+
+## Review checklist for future EMS changes
+
+Use this checklist when reviewing new EMS use cases:
+- Application interfaces belong under `Application/Abstractions/`
+- use cases live under `Application/<Area>/<UseCase>/`
+- slice-local CQRS names are short: `Command`, `Query`, `Handler`, `Validator`, `Result`
+- Wolverine remains the API-to-Application dispatch boundary
+- validators stay in the same slice as the request they validate
+- any deviation from the module standard is recorded here before merge
 
 ## Working rule
 

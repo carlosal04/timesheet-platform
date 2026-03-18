@@ -18,8 +18,9 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 ### Changed
 - Removed committed runtime credential defaults in favor of local `.env` placeholders and secret-driven scripts
 - Added standard outbound HTTP resilience registration in Infrastructure
+- Standardized EMS Application to a vertical-slice CQRS layout with `Abstractions`-based interfaces and short in-slice names
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
 - Added reusable module engineering standards for future modules
-- Recorded the remaining CQRS naming-standardization gap in EMS implementation notes
+- Documented the Application folder, CQRS naming, and review standards for future modules
