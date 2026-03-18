@@ -37,6 +37,7 @@ This script:
 - loads local values from `EMS/.env` when present
 - sets the bootstrap admin env vars for the current shell when provided
 - sets the API connection string from local env values
+- uses the configured local data-protection key path from app settings unless overridden through standard ASP.NET Core configuration
 - sets repo-local `.NET` and NuGet cache paths
 - runs the API project
 

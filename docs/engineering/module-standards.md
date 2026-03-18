@@ -129,6 +129,7 @@ Default module runtime expectations:
 - local development should support Docker-based execution where applicable
 - container healthchecks are required
 - image CVE review is part of the delivery process
+- cookie-authenticated modules must persist ASP.NET Core data-protection keys outside ephemeral container filesystems
 
 Rules:
 - keep Dockerfiles and compose files under the module root or module deployment folder

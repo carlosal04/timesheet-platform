@@ -55,12 +55,18 @@ using Wolverine;
 const string FrontendCorsPolicy = "Frontend";
 
 var builder = WebApplication.CreateBuilder(args);
-var dataProtectionKeysPath = Path.GetFullPath(Path.Combine(
-    builder.Environment.ContentRootPath,
-    "..",
-    "..",
-    ".local",
-    "data-protection-keys"));
+var configuredDataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+var dataProtectionKeysPath = string.IsNullOrWhiteSpace(configuredDataProtectionKeysPath)
+    ? Path.GetFullPath(Path.Combine(
+        builder.Environment.ContentRootPath,
+        "..",
+        "..",
+        ".local",
+        "data-protection-keys"))
+    : Path.GetFullPath(
+        Path.IsPathRooted(configuredDataProtectionKeysPath)
+            ? configuredDataProtectionKeysPath
+            : Path.Combine(builder.Environment.ContentRootPath, configuredDataProtectionKeysPath));
 var allowedCorsOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
     .Get<string[]>()?

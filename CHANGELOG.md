@@ -24,6 +24,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - User-role assignment endpoint `PATCH /users/{userId}/role`
 - Audit log read endpoint `GET /audit-logs`
 - Explicit CORS allowlist configuration with frontend-focused integration coverage
+- Config-driven data-protection key persistence for local and container runtime
 - Wolverine-backed CQRS handlers for auth and employee read requests
 - FluentValidation validators and API-side validation error handling for implemented requests
 - Local API start/test scripts for manual validation
@@ -40,6 +41,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added role-change session revocation for active sessions
 - Added canonical `actionType` validation and `AuditLogRead` event emission for audit-log queries
 - Added config-driven CORS allowlist behavior for approved frontend origins with credential support
+- Made EMS data-protection key storage config-driven and mounted a durable key volume for the compose runtime
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

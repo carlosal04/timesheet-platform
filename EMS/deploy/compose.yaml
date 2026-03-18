@@ -28,9 +28,12 @@ services:
       BootstrapAdmin__Email: ${EMS_BOOTSTRAP_ADMIN_EMAIL:-}
       BootstrapAdmin__Password: ${EMS_BOOTSTRAP_ADMIN_PASSWORD:-}
       BootstrapAdmin__Name: ${EMS_BOOTSTRAP_ADMIN_NAME:-Bootstrap Admin}
+      DataProtection__KeysPath: /var/lib/ems/data-protection-keys
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - data-protection-keys:/var/lib/ems/data-protection-keys
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 30s
@@ -68,3 +71,4 @@ services:
 
 volumes:
   postgres-data:
+  data-protection-keys:
