@@ -19,8 +19,10 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Removed committed runtime credential defaults in favor of local `.env` placeholders and secret-driven scripts
 - Added standard outbound HTTP resilience registration in Infrastructure
 - Standardized EMS Application to a vertical-slice CQRS layout with `Abstractions`-based interfaces and short in-slice names
+- Moved EMS persistence to a repo-local EF Core migration workflow with environment-driven design-time configuration and `MigrateAsync()` startup initialization
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
 - Added reusable module engineering standards for future modules
 - Documented the Application folder, CQRS naming, and review standards for future modules
+- Documented the repo-local EF migration workflow and production-safe design-time configuration standard

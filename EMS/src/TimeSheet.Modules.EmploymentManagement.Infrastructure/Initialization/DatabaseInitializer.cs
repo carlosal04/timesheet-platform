@@ -25,7 +25,14 @@ public sealed class DatabaseInitializer
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        await _dbContext.Database.EnsureCreatedAsync(cancellationToken);
+        if (_dbContext.Database.IsRelational())
+        {
+            await _dbContext.Database.MigrateAsync(cancellationToken);
+        }
+        else
+        {
+            await _dbContext.Database.EnsureCreatedAsync(cancellationToken);
+        }
 
         if (!await _dbContext.Roles.AnyAsync(cancellationToken))
         {

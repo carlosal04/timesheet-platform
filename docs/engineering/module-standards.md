@@ -100,6 +100,9 @@ Rules:
 - avoid `EnsureCreated` as the long-term schema strategy
 - put DbContext and mappings in Infrastructure
 - keep domain entities persistence-friendly but domain-owned
+- use a repo-local EF CLI tool manifest rather than depending on a machine-global `dotnet-ef`
+- design-time DbContext creation must be environment-driven and fail fast when connection settings are missing
+- do not hardcode design-time connection strings in source
 
 ## 6. Configuration and secrets
 

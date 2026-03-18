@@ -86,3 +86,32 @@ If not passed explicitly, the test script loads:
 - `EMS_BOOTSTRAP_ADMIN_PASSWORD`
 
 from `EMS/.env`.
+
+## EF migrations
+
+Use the repo-local EF toolchain through [Invoke-EmsEf.ps1](/C:/Codex/TimeSheet/EMS/scripts/Invoke-EmsEf.ps1).
+
+This script:
+- loads `EMS/.env` when present
+- composes `ConnectionStrings__EmploymentManagement` from `EMS_DB_*` values when needed
+- sets repo-local `.NET` and NuGet cache paths
+- restores the local `dotnet-ef` tool from [EMS/.config/dotnet-tools.json](/C:/Codex/TimeSheet/EMS/.config/dotnet-tools.json)
+- runs EF commands without relying on a machine-global `dotnet-ef`
+
+Examples:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-EmsEf.ps1 migrations list --project src\TimeSheet.Modules.EmploymentManagement.Infrastructure\TimeSheet.Modules.EmploymentManagement.Infrastructure.csproj --startup-project src\TimeSheet.Modules.EmploymentManagement.Api\TimeSheet.Modules.EmploymentManagement.Api.csproj
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-EmsEf.ps1 migrations add AddEmployeesWriteModels --project src\TimeSheet.Modules.EmploymentManagement.Infrastructure\TimeSheet.Modules.EmploymentManagement.Infrastructure.csproj --startup-project src\TimeSheet.Modules.EmploymentManagement.Api\TimeSheet.Modules.EmploymentManagement.Api.csproj --output-dir Persistence\Migrations
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-EmsEf.ps1 database update --project src\TimeSheet.Modules.EmploymentManagement.Infrastructure\TimeSheet.Modules.EmploymentManagement.Infrastructure.csproj --startup-project src\TimeSheet.Modules.EmploymentManagement.Api\TimeSheet.Modules.EmploymentManagement.Api.csproj
+```
+
+Notes:
+- set real DB values in local `EMS/.env` before running update commands
+- if `ConnectionStrings__EmploymentManagement` or `EMS_DB_*` values are missing or still placeholders, the script fails fast by design
