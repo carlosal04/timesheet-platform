@@ -55,7 +55,9 @@ The following items are still pending and should be treated as known implementat
 - Docker image CVE remediation is in progress:
   - frontend static container has been moved off `nginx:1.29-alpine` and verified healthy locally
   - reverse proxy has been moved off `nginx:1.29-alpine` and verified healthy locally
-  - PostgreSQL image remediation is still pending
+  - PostgreSQL has been moved off `postgres:17-alpine` to `postgres:17-bookworm` and still needs runtime verification in Compose plus a fresh post-change scan result
+  - standalone PostgreSQL 17 Bookworm runtime and `pg_isready` healthcheck compatibility were verified locally
+  - the previous Compose verification failure was traced to a Windows excluded TCP port range that covers the old local defaults `54329` and `54331`; the repo default local PostgreSQL host port has been moved to `15432`
 - the frontend-driven session-renew model is partially implemented:
   - `GET /auth/session`
   - `POST /auth/renew`

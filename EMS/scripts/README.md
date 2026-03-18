@@ -14,7 +14,7 @@ Example `EMS/.env`:
 
 ```dotenv
 EMS_DB_HOST=localhost
-EMS_DB_PORT=54329
+EMS_DB_PORT=15432
 EMS_DB_NAME=ems
 EMS_DB_USER=ems
 EMS_DB_PASSWORD=your_local_db_password

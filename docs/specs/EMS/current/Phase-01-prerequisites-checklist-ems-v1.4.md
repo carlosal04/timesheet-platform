@@ -61,7 +61,8 @@ Current deferred issue:
 - `deploy-api` currently passes the High/Critical image gate
 - `deploy-frontend` has been moved off `nginx:1.29-alpine` and verified healthy locally; the replacement image still needs a fresh post-change scan result recorded
 - `reverse-proxy` has been moved off `nginx:1.29-alpine` and verified healthy locally; the replacement image still needs a fresh post-change scan result recorded
-- `postgres:17-alpine` currently fails due to 1 Critical and 7 High vulnerabilities reported by Docker Scout
+- `postgres` has been moved off `postgres:17-alpine` to `postgres:17-bookworm`; runtime verification and a fresh post-change scan result are still pending
+- local Windows verification also required moving the default published PostgreSQL host port from `54329` to `15432` because the original range was excluded on this machine
 - image replacement or explicit signoff is still required before Phase 1 is considered security-complete
 
 ---

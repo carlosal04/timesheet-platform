@@ -30,6 +30,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Soft-delete metadata persistence for `DeletedByUserId` on employees and addresses
 - Frontend static container moved from Alpine nginx to Chainguard nginx
 - Reverse-proxy container moved from Alpine nginx to Chainguard nginx
+- PostgreSQL container moved from `postgres:17-alpine` to `postgres:17-bookworm`
 - Explicit CORS allowlist configuration with frontend-focused integration coverage
 - Config-driven data-protection key persistence for local and container runtime
 - Serilog host-level logging baseline for the EMS API
@@ -59,6 +60,9 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated the frontend container healthcheck to use `nginx -t` for compatibility with the new runtime image
 - Added a frontend root nginx config override to remove the non-root startup warning on the Chainguard image
 - Updated the reverse-proxy container healthcheck to use `nginx -t` for compatibility with the new runtime image
+- Updated the PostgreSQL container healthcheck to use the configured `EMS_DB_USER` and `EMS_DB_NAME` values instead of hardcoded defaults
+- Updated the PostgreSQL published host port mapping to honor `EMS_DB_PORT`
+- Changed the default local PostgreSQL host port from `54329` to `15432` to avoid excluded Windows port ranges during Docker publish
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

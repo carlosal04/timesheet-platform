@@ -11,7 +11,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot "Load-EmsLocalEnv.ps1")
 
 $dbHost = if ($env:EMS_DB_HOST) { $env:EMS_DB_HOST } else { "localhost" }
-$dbPort = if ($env:EMS_DB_PORT) { $env:EMS_DB_PORT } else { "54329" }
+$dbPort = if ($env:EMS_DB_PORT) { $env:EMS_DB_PORT } else { "15432" }
 $dbName = if ($env:EMS_DB_NAME) { $env:EMS_DB_NAME } else { "ems" }
 $dbUser = if ($env:EMS_DB_USER) { $env:EMS_DB_USER } else { "ems" }
 $dbPassword = $env:EMS_DB_PASSWORD
