@@ -27,15 +27,18 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
     private readonly EmploymentManagementDbContext _dbContext;
     private readonly IAuditLogService _auditLogService;
     private readonly IClock _clock;
+    private readonly ICurrentUserContext _currentUserContext;
 
     public EmployeeAddressService(
         EmploymentManagementDbContext dbContext,
         IAuditLogService auditLogService,
-        IClock clock)
+        IClock clock,
+        ICurrentUserContext currentUserContext)
     {
         _dbContext = dbContext;
         _auditLogService = auditLogService;
         _clock = clock;
+        _currentUserContext = currentUserContext;
     }
 
     public async Task<ListResult> ListAsync(ListQuery query, CancellationToken cancellationToken)
@@ -302,9 +305,23 @@ public sealed class EmployeeAddressService : IEmployeeAddressService
         return DeleteCoreAsync(command, cancellationToken);
     }
 
-    public Task<ListResult> ListOwnAsync(ListMineQuery query, CancellationToken cancellationToken)
+    public async Task<ListResult> ListOwnAsync(ListMineQuery query, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet.");
+        if (!_currentUserContext.EmployeeId.HasValue)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.AddressListRead,
+                    AuditEntityTypes.EmployeeAddress,
+                    AuditResults.Denied,
+                    null,
+                    new { Reason = "MissingEmployeeLink" }),
+                cancellationToken);
+
+            throw ProblemExceptions.Forbidden("User is not linked to an employee profile.");
+        }
+
+        return await ListAsync(new ListQuery(_currentUserContext.EmployeeId.Value, false), cancellationToken);
     }
 
     public Task SetOwnPrimaryAsync(SetOwnPrimaryCommand command, CancellationToken cancellationToken)

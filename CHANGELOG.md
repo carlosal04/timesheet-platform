@@ -17,6 +17,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Employee address update endpoint `PUT /employees/{employeeId}/addresses/{addressId}`
 - Employee address primary-change endpoint `PATCH /employees/{employeeId}/addresses/{addressId}/primary`
 - Employee address delete endpoint `DELETE /employees/{employeeId}/addresses/{addressId}`
+- Self-service address list endpoint `GET /me/addresses`
 - Wolverine-backed CQRS handlers for auth and employee read requests
 - FluentValidation validators and API-side validation error handling for implemented requests
 - Local API start/test scripts for manual validation

@@ -24,6 +24,7 @@ using GetEmployeeAddressByIdQuery = TimeSheet.Modules.EmploymentManagement.Appli
 using GetEmployeeAddressByIdResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.GetById.Result;
 using ListEmployeeAddressesQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Query;
 using ListEmployeeAddressesResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.List.Result;
+using ListMyEmployeeAddressesQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.ListMine.Query;
 using SetEmployeeAddressPrimaryCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.SetPrimary.Command;
 using UpdateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Update.Command;
 using UpdateEmployeeAddressResult = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Update.Result;
@@ -324,6 +325,14 @@ app.MapDelete("/employees/{employeeId:guid}/addresses/{addressId:guid}", async T
     await bus.InvokeAsync(new DeleteEmployeeAddressCommand(employeeId, addressId));
     return TypedResults.NoContent();
 }).RequireAuthorization(PolicyNames.AddressDeleteAny);
+
+app.MapGet("/me/addresses", async Task<IResult> (
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<ListEmployeeAddressesResult>(new ListMyEmployeeAddressesQuery());
+    return TypedResults.Ok(result);
+}).RequireAuthorization(PolicyNames.AddressRead);
 
 app.MapPost("/employees", async Task<IResult> (
     CreateEmployeeRequest request,
