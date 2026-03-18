@@ -3,10 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Addresses;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Audit;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Employees;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Authentication;
+using TimeSheet.Modules.EmploymentManagement.Infrastructure.Auditing;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Employees;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Initialization;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
@@ -36,10 +39,14 @@ public static class DependencyInjection
             });
 
         services.AddScoped<IClock, SystemClock>();
+        services.AddScoped<ICurrentUserContext, CurrentUserContext>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IPasswordHashingService, PasswordHashingService>();
         services.AddScoped<IUserSessionAuthenticationService, UserSessionAuthenticationService>();
         services.AddScoped<ISessionValidator, SessionValidator>();
         services.AddScoped<IEmployeeReadService, EmployeeReadService>();
+        services.AddScoped<IEmployeeWriteService, EmployeeWriteService>();
+        services.AddScoped<IEmployeeAddressService, EmployeeAddressService>();
         services.AddScoped<DatabaseInitializer>();
 
         return services;

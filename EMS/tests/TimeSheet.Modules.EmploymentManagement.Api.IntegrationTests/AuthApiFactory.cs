@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Initialization;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 
@@ -18,6 +20,12 @@ public sealed class AuthApiFactory : Microsoft.AspNetCore.Mvc.Testing.WebApplica
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.ConfigureLogging(logging =>
+        {
+            logging.ClearProviders();
+            logging.AddConsole();
+            logging.SetMinimumLevel(LogLevel.Debug);
+        });
 
         builder.ConfigureAppConfiguration((_, configurationBuilder) =>
         {
@@ -34,6 +42,9 @@ public sealed class AuthApiFactory : Microsoft.AspNetCore.Mvc.Testing.WebApplica
             services.RemoveAll<DbContextOptions<EmploymentManagementDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<EmploymentManagementDbContext>>();
             services.RemoveAll<EmploymentManagementDbContext>();
+
+            services.AddDataProtection()
+                .UseEphemeralDataProtectionProvider();
 
             services.AddDbContext<EmploymentManagementDbContext>(options =>
             {

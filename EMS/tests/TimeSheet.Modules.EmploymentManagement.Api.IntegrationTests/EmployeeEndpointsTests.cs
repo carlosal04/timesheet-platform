@@ -1,11 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using EmployeeDetail = TimeSheet.Modules.EmploymentManagement.Application.Employees.GetById.Employee;
 using EmployeeListResult = TimeSheet.Modules.EmploymentManagement.Application.Employees.List.Result;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Auth;
+using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Common;
+using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Employees;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
+using TimeSheet.Modules.EmploymentManagement.Domain.Auditing;
 using TimeSheet.Modules.EmploymentManagement.Domain.Employees;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
@@ -279,6 +284,225 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateEmployee_CreatesEmployeeAndAuditEntries()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
+        var requestBody = new CreateEmployeeRequest(
+            "Ava",
+            "Jones",
+            "ava.jones@company.com",
+            "5553334444",
+            new DateOnly(1990, 5, 9),
+            new DateOnly(2024, 1, 15),
+            EmployeeStatusCodes.Active,
+            [
+                new("Home", true, "100 Main St", null, "Pittsburgh", "PA", "15222", "US")
+            ]);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/employees")
+        {
+            Content = JsonContent.Create(requestBody)
+        };
+        request.Headers.Add("Cookie", authCookie);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<IdResponse>();
+        Assert.NotNull(payload);
+
+        await _factory.ExecuteScopedAsync(async services =>
+        {
+            var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var employee = await dbContext.Employees
+                .Include(x => x.Addresses)
+                .SingleAsync(x => x.Id == payload!.Id);
+
+            Assert.Equal("ava.jones@company.com", employee.Email);
+            Assert.Single(employee.Addresses);
+            Assert.Contains(
+                dbContext.AuditLogs,
+                log => log.ActionType == AuditActionTypes.EmployeeCreated
+                    && log.EntityId == employee.Id
+                    && log.Result == AuditResults.Success);
+            Assert.Contains(
+                dbContext.AuditLogs,
+                log => log.ActionType == AuditActionTypes.AddressCreated
+                    && log.Result == AuditResults.Success);
+        });
+    }
+
+    [Fact]
+    public async Task CreateEmployee_ForBasicUser_ReturnsForbiddenProblemDetails()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        await _factory.ExecuteScopedAsync(async services =>
+        {
+            var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
+            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "basic.creator@example.com",
+                RoleId = basicRole.Id,
+                IsActive = true
+            };
+
+            user.PasswordHash = passwordHashingService.HashPassword(user, "P@ssw0rd123!");
+            dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync();
+        });
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var authCookie = await LoginAsync(client, "basic.creator@example.com", "P@ssw0rd123!");
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/employees")
+        {
+            Content = JsonContent.Create(new CreateEmployeeRequest(
+                "Ava",
+                "Jones",
+                "ava.jones@company.com",
+                "5553334444",
+                new DateOnly(1990, 5, 9),
+                new DateOnly(2024, 1, 15),
+                EmployeeStatusCodes.Active,
+                null))
+        };
+        request.Headers.Add("Cookie", authCookie);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal(StatusCodes.Status403Forbidden, problem!.Status);
+    }
+
+    [Fact]
+    public async Task UpdateEmployee_ForDeletedEmployee_ReturnsNotFound()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        var employeeId = Guid.NewGuid();
+        await _factory.SeedAsync(async dbContext =>
+        {
+            dbContext.Employees.Add(new Employee
+            {
+                Id = employeeId,
+                FirstName = "Ava",
+                LastName = "Jones",
+                Email = "ava.jones@company.com",
+                Phone = "5553334444",
+                DateOfBirth = new DateOnly(1990, 5, 9),
+                HireDate = new DateOnly(2024, 1, 15),
+                Status = EmployeeStatusCodes.Active,
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+                DeletedAtUtc = DateTimeOffset.UtcNow
+            });
+
+            await Task.CompletedTask;
+        });
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/employees/{employeeId}")
+        {
+            Content = JsonContent.Create(new UpdateEmployeeRequest(
+                "Ava",
+                "Stone",
+                "ava.jones@company.com",
+                "5559990000",
+                new DateOnly(1990, 5, 9),
+                new DateOnly(2024, 1, 15),
+                EmployeeStatusCodes.Inactive))
+        };
+        request.Headers.Add("Cookie", authCookie);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteEmployee_SoftDeletesAndSecondDeleteConflicts()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        var employeeId = Guid.NewGuid();
+        await _factory.SeedAsync(async dbContext =>
+        {
+            dbContext.Employees.Add(new Employee
+            {
+                Id = employeeId,
+                FirstName = "Ava",
+                LastName = "Jones",
+                Email = "ava.jones@company.com",
+                Phone = "5553334444",
+                DateOfBirth = new DateOnly(1990, 5, 9),
+                HireDate = new DateOnly(2024, 1, 15),
+                Status = EmployeeStatusCodes.Active,
+                CreatedAtUtc = DateTimeOffset.UtcNow
+            });
+
+            await Task.CompletedTask;
+        });
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
+
+        using var firstRequest = new HttpRequestMessage(HttpMethod.Delete, $"/employees/{employeeId}");
+        firstRequest.Headers.Add("Cookie", authCookie);
+
+        var firstResponse = await client.SendAsync(firstRequest);
+        Assert.Equal(HttpStatusCode.NoContent, firstResponse.StatusCode);
+
+        await _factory.ExecuteScopedAsync(async services =>
+        {
+            var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var employee = await dbContext.Employees.SingleAsync(x => x.Id == employeeId);
+            Assert.NotNull(employee.DeletedAtUtc);
+            Assert.Contains(
+                dbContext.AuditLogs,
+                log => log.ActionType == AuditActionTypes.EmployeeSoftDeleted
+                    && log.EntityId == employeeId
+                    && log.Result == AuditResults.Success);
+        });
+
+        using var secondRequest = new HttpRequestMessage(HttpMethod.Delete, $"/employees/{employeeId}");
+        secondRequest.Headers.Add("Cookie", authCookie);
+
+        var secondResponse = await client.SendAsync(secondRequest);
+
+        Assert.Equal(HttpStatusCode.Conflict, secondResponse.StatusCode);
     }
 
     private static async Task<string> LoginAsync(HttpClient client, string email, string password)

@@ -524,13 +524,6 @@ Assigns or changes the role of a user. Admin only.
 }
 ```
 
-Alternative request form accepted only if the API chooses canonical code-based assignment:
-```json
-{
-  "roleCode": "Admin"
-}
-```
-
 ### Success
 - Status: `200 OK`
 ```json

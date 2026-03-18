@@ -10,6 +10,8 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - EMS Phase 1 backend foundation skeleton under `EMS/`
 - Docker-based local runtime baseline for EMS
 - Cookie-auth/session foundation and employee read/list endpoints
+- Employee create/update/delete endpoints with validation and auditing
+- Employee address list endpoint `GET /employees/{employeeId}/addresses`
 - Wolverine-backed CQRS handlers for auth and employee read requests
 - FluentValidation validators and API-side validation error handling for implemented requests
 - Local API start/test scripts for manual validation
@@ -20,9 +22,11 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added standard outbound HTTP resilience registration in Infrastructure
 - Standardized EMS Application to a vertical-slice CQRS layout with `Abstractions`-based interfaces and short in-slice names
 - Moved EMS persistence to a repo-local EF Core migration workflow with environment-driven design-time configuration and `MigrateAsync()` startup initialization
+- Configured repo-local Data Protection key storage for the current local/test runtime
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
 - Added reusable module engineering standards for future modules
 - Documented the Application folder, CQRS naming, and review standards for future modules
 - Documented the repo-local EF migration workflow and production-safe design-time configuration standard
+- Updated EMS implementation notes with an implemented-versus-pending endpoint inventory for frontend coordination

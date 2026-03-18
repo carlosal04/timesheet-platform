@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TimeSheet.Modules.EmploymentManagement.Domain.Auditing;
 using TimeSheet.Modules.EmploymentManagement.Domain.Employees;
 using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 
@@ -21,6 +22,8 @@ public sealed class EmploymentManagementDbContext : DbContext
 
     public DbSet<EmployeeAddress> EmployeeAddresses => Set<EmployeeAddress>();
 
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Role>(entity =>
@@ -29,6 +32,7 @@ public sealed class EmploymentManagementDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Code).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.IsSystem).HasDefaultValue(true);
             entity.HasIndex(x => x.Code).IsUnique();
         });
 
@@ -89,6 +93,21 @@ public sealed class EmploymentManagementDbContext : DbContext
             entity.HasIndex(x => new { x.EmployeeId, x.IsPrimary, x.DeletedAtUtc })
                 .HasFilter("\"IsPrimary\" = TRUE AND \"DeletedAtUtc\" IS NULL")
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.ToTable("audit_logs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ActionType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CorrelationId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.MetadataJson).HasColumnType("jsonb");
+            entity.HasIndex(x => x.OccurredAtUtc);
+            entity.HasIndex(x => x.ActorUserId);
+            entity.HasIndex(x => new { x.EntityType, x.EntityId });
+            entity.HasIndex(x => new { x.ActionType, x.Result });
         });
     }
 }

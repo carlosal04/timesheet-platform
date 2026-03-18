@@ -12,6 +12,7 @@ Thumbs.db
 TestResults/
 .dotnet/
 .nuget/
+.local/
 
 # Logs and temp output
 *.log

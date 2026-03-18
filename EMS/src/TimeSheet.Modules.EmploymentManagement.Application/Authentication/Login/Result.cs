@@ -4,13 +4,14 @@ namespace TimeSheet.Modules.EmploymentManagement.Application.Authentication.Logi
 
 public sealed class Result
 {
-    private Result(bool succeeded, string? errorCode, User? user, UserSession? session, string? roleCode)
+    private Result(bool succeeded, string? errorCode, User? user, UserSession? session, string? roleCode, Guid? employeeId)
     {
         Succeeded = succeeded;
         ErrorCode = errorCode;
         User = user;
         Session = session;
         RoleCode = roleCode;
+        EmployeeId = employeeId;
     }
 
     public bool Succeeded { get; }
@@ -23,13 +24,15 @@ public sealed class Result
 
     public string? RoleCode { get; }
 
+    public Guid? EmployeeId { get; }
+
     public static Result Success(User user, UserSession session, string roleCode)
     {
-        return new Result(true, null, user, session, roleCode);
+        return new Result(true, null, user, session, roleCode, user.EmployeeId);
     }
 
     public static Result Failure(string errorCode)
     {
-        return new Result(false, errorCode, null, null, null);
+        return new Result(false, errorCode, null, null, null, null);
     }
 }

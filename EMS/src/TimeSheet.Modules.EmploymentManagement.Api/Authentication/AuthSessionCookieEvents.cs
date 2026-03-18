@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
+using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 
 namespace TimeSheet.Modules.EmploymentManagement.Api.Authentication;
 
@@ -31,7 +32,7 @@ public sealed class AuthSessionCookieEvents : CookieAuthenticationEvents
         }
 
         var userIdValue = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-        var sessionIdValue = principal.FindFirstValue("session_id");
+        var sessionIdValue = principal.FindFirstValue(CustomClaimTypes.SessionId);
         if (!Guid.TryParse(userIdValue, out var userId) || !Guid.TryParse(sessionIdValue, out var sessionId))
         {
             context.RejectPrincipal();
@@ -63,6 +64,21 @@ public sealed class AuthSessionCookieEvents : CookieAuthenticationEvents
             }
 
             identity.AddClaim(new Claim(ClaimTypes.Role, result.RoleCode!));
+        }
+
+        var existingEmployeeId = identity.FindFirst(CustomClaimTypes.EmployeeId);
+        var employeeIdValue = result.EmployeeId?.ToString();
+        if (existingEmployeeId?.Value != employeeIdValue)
+        {
+            if (existingEmployeeId is not null)
+            {
+                identity.RemoveClaim(existingEmployeeId);
+            }
+
+            if (employeeIdValue is not null)
+            {
+                identity.AddClaim(new Claim(CustomClaimTypes.EmployeeId, employeeIdValue));
+            }
         }
     }
 }

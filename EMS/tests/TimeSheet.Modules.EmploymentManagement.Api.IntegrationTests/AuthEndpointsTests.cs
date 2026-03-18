@@ -27,7 +27,7 @@ public sealed class AuthEndpointsTests : IClassFixture<AuthApiFactory>
 
         var response = await client.PostAsJsonAsync("/auth/login", new LoginRequest("admin@example.com", "P@ssw0rd123!"));
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await AssertStatusCodeAsync(response, HttpStatusCode.OK);
         Assert.Contains("set-cookie", response.Headers.Select(x => x.Key), StringComparer.OrdinalIgnoreCase);
         var authCookie = ExtractCookie(response);
 
@@ -56,7 +56,7 @@ public sealed class AuthEndpointsTests : IClassFixture<AuthApiFactory>
 
         var response = await client.PostAsJsonAsync("/auth/login", new LoginRequest(string.Empty, string.Empty));
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertStatusCodeAsync(response, HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public sealed class AuthEndpointsTests : IClassFixture<AuthApiFactory>
         });
 
         var loginResponse = await client.PostAsJsonAsync("/auth/login", new LoginRequest("admin@example.com", "P@ssw0rd123!"));
-        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+        await AssertStatusCodeAsync(loginResponse, HttpStatusCode.OK);
         var authCookie = ExtractCookie(loginResponse);
 
         using var logoutRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/logout")
@@ -81,7 +81,7 @@ public sealed class AuthEndpointsTests : IClassFixture<AuthApiFactory>
         logoutRequest.Headers.Add("Cookie", authCookie);
 
         var logoutResponse = await client.SendAsync(logoutRequest);
-        Assert.Equal(HttpStatusCode.OK, logoutResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);
 
         using var protectedRequest = new HttpRequestMessage(HttpMethod.Get, "/auth/antiforgery");
         protectedRequest.Headers.Add("Cookie", authCookie);
@@ -96,5 +96,18 @@ public sealed class AuthEndpointsTests : IClassFixture<AuthApiFactory>
             .Single(value => value.StartsWith(AuthCookieName + "=", StringComparison.OrdinalIgnoreCase));
 
         return header.Split(';', 2, StringSplitOptions.TrimEntries)[0];
+    }
+
+    private static async Task AssertStatusCodeAsync(HttpResponseMessage response, HttpStatusCode expectedStatusCode)
+    {
+        if (response.StatusCode == expectedStatusCode)
+        {
+            return;
+        }
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.True(
+            response.StatusCode == expectedStatusCode,
+            $"Expected {(int)expectedStatusCode} {expectedStatusCode} but received {(int)response.StatusCode} {response.StatusCode}.{Environment.NewLine}{body}");
     }
 }

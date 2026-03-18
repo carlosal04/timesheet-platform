@@ -9,4 +9,6 @@ public sealed class Role
     public string Name { get; set; } = string.Empty;
 
     public bool IsActive { get; set; } = true;
+
+    public bool IsSystem { get; set; } = true;
 }
