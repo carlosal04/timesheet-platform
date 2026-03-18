@@ -28,6 +28,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Shared anti-forgery enforcement for authenticated state-changing EMS API requests
 - Config-driven login rate limiting on `POST /auth/login`
 - Soft-delete metadata persistence for `DeletedByUserId` on employees and addresses
+- Frontend static container moved from Alpine nginx to Chainguard nginx
 - Explicit CORS allowlist configuration with frontend-focused integration coverage
 - Config-driven data-protection key persistence for local and container runtime
 - Serilog host-level logging baseline for the EMS API
@@ -54,6 +55,8 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Replaced the login rate-limiter middleware attempt with a login-only endpoint filter backed by a partitioned limiter service
 - Added the `DeletedByUserId` soft-delete columns and populated them from the current authenticated user during employee/address delete flows
 - Hardened the repo EF helper to reuse the local tool and support `-NoBuild` for shells where direct startup-project builds are unstable
+- Updated the frontend container healthcheck to use `nginx -t` for compatibility with the new runtime image
+- Added a frontend root nginx config override to remove the non-root startup warning on the Chainguard image
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps

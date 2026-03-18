@@ -46,7 +46,7 @@ services:
       context: ..
       dockerfile: deploy/frontend/Dockerfile
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
+      test: ["CMD", "/usr/bin/nginx", "-t"]
       interval: 30s
       timeout: 5s
       retries: 3
