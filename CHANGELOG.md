@@ -66,6 +66,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Switched the Compose PostgreSQL baseline to a pinned Chainguard PostgreSQL 18 digest and verified the healthcheck on a fresh temporary volume
 - Verified EF migrations against the pinned PostgreSQL 18 image on a fresh temporary volume
 - Verified the containerized EMS API smoke flow against the pinned PostgreSQL 18 runtime for health, login, session bootstrap, and employee list
+- Pinned the frontend, reverse-proxy, and API Docker image references to the verified digests used by the current EMS runtime baseline
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
@@ -76,3 +77,5 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Documented the approved Phase 1 session-bootstrap and frontend-driven renew model for upcoming auth hardening work
 - Documented the approved greenfield move to PostgreSQL 18 with digest pinning and fresh-volume verification requirements
 - Added a shared Docker image CVE remediation runbook for future agents and modules
+- Corrected EMS notes and prerequisites so the repo status matches the completed CVE baseline and the current shell-level .NET verification issue
+- Added a backend-ready summary so UI planning can start from the repo instead of stale notes or chat history

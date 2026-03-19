@@ -1,11 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk@sha256:2b0e46d490f5b53a8dc07fbf636cdf5b90796878a256e1ce5b441e8d9675c5f4 AS build
 WORKDIR /src
 
 COPY . .
 RUN dotnet restore TimeSheet.Modules.EmploymentManagement.slnx --configfile NuGet.Config
 RUN dotnet publish src/TimeSheet.Modules.EmploymentManagement.Api/TimeSheet.Modules.EmploymentManagement.Api.csproj -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/aspnet@sha256:49dce27611d8fe4fbe50483ea9438abd18ccb0198d0737af231335244d0c9b94 AS final
 WORKDIR /app
 
 RUN apk add --no-cache wget

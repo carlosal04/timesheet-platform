@@ -29,6 +29,9 @@ This checklist is the required pre-flight check before scaffolding or implementi
 - [x] shared build settings will use `Directory.Build.props`
 - [x] solution format will use `*.slnx`
 
+Current local tooling note:
+- if solution-level `dotnet build` fails with `MSB4276` for `Microsoft.NET.SDK.WorkloadAutoImportPropsLocator` or `Microsoft.NET.SDK.WorkloadManifestTargetsLocator`, repair or reinstall the `.NET SDK 10.0.200` / Visual Studio-managed .NET 10 installation before treating the shell as verification-ready
+
 ---
 
 # 4. Frontend tooling
@@ -68,7 +71,8 @@ Current verification notes:
 - PostgreSQL 18 has now been explicitly approved for EMS because the module is still greenfield and the clean verified candidate currently resolves to PostgreSQL 18.3
 - the approved PostgreSQL 18 runtime image must be pinned by digest rather than a floating `latest` tag
 - any existing local PostgreSQL 17 data volume must be treated as disposable and recreated rather than reused in place
-- remaining follow-up is documentation of the final CVE remediation and verification runbook for future agents
+- the final CVE remediation and verification runbook is documented in `docs/engineering/docker-image-cve-remediation-runbook.md`
+- the current frontend, reverse-proxy, PostgreSQL, and API runtime image references are pinned to the verified artifacts used by the EMS Docker baseline
 
 ---
 

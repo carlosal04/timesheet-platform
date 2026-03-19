@@ -2,7 +2,7 @@
 
 ## Current checkpoint status
 
-The current EMS foundation checkpoint includes:
+The current EMS foundation checkpoint implements the approved Phase 1 backend contract under `EMS/`:
 - backend solution skeleton under `EMS/`
 - Docker-based local runtime baseline
 - cookie authentication with persisted user sessions
@@ -31,57 +31,51 @@ The current EMS foundation checkpoint includes:
 - explicit CORS allowlist configuration for approved frontend origins
 - config-driven data-protection key persistence for local and containerized single-instance runtime
 - Serilog host-level logging baseline
-- Wolverine integrated as the API-to-application boundary for the implemented auth and employee read flows
-- FluentValidation-based request validation for the currently implemented auth and employee read flows
+- Wolverine integrated as the API-to-application boundary for the implemented EMS request flows
+- FluentValidation-based request validation for the currently implemented EMS request flows
 - Application standardized to vertical slices with `Application/Abstractions/...` for interfaces and short in-slice CQRS naming
 - repo-local EF tooling with a local `dotnet-ef` manifest and an initial baseline migration
 - central package management, shared build props, and `*.slnx`
 - local secret handling through `EMS/.env` with committed placeholders in `EMS/.env.example`
 
-## Verified at this checkpoint
+## Verified runtime baseline
 
-- solution restore succeeds
-- solution build succeeds
-- current tests pass
+- the current approved endpoint set in `docs/specs/EMS/current/Phase-01-api-contracts-ems-v1.4.md` matches the endpoint surface in `EMS/src/TimeSheet.Modules.EmploymentManagement.Api/Program.cs`
+- Docker CVE remediation is complete for the current approved baseline
+- `03737bd` is the checkpoint that finalized the current Docker CVE remediation baseline
+- `deploy-api` passes the High/Critical image gate
+- `deploy-frontend` passes the High/Critical image gate
+- `reverse-proxy` passes the High/Critical image gate
+- the approved PostgreSQL 18 runtime image is pinned by digest in `EMS/deploy/compose.yaml`
+- PostgreSQL 18 healthcheck verification succeeded locally on a fresh temporary Compose volume
+- EF migration verification succeeded against PostgreSQL 18 on a fresh temporary Compose volume
+- containerized application smoke verification against PostgreSQL 18 succeeded for health, login, session bootstrap, and employee list
+- local Windows verification required moving the default published PostgreSQL host port from `54329` to `15432` because the original range was excluded on this machine
+- the standalone local-host PostgreSQL 18 smoke path in this shell proved unreliable; the trusted verification path for the PostgreSQL 18 upgrade is the containerized runtime path
 
-## Known gaps against the approved Phase 1 architecture/plan
+## Audit coverage notes
 
-The following items are still pending and should be treated as known implementation gaps, not implied complete work:
-- audit logging is partially implemented and currently covers auth/session flows, employee read/write/delete flows, address read/write/delete flows across admin and self-service paths, role assignment outcomes, and audit-log reads
-- role management endpoints are implemented for role list and user-role assignment
-- admin address endpoints are complete for the current admin address surface
-- self-service address endpoints are complete for the current `/me/addresses` surface
-- Docker image CVE remediation is not implemented yet
-- Docker image CVE remediation is in progress:
-  - frontend static container has been moved off `nginx:1.29-alpine`, verified healthy locally, and now passes the High/Critical Docker Scout gate
-  - reverse proxy has been moved off `nginx:1.29-alpine`, verified healthy locally, and its current Chainguard nginx image now passes the High/Critical Docker Scout gate
-  - API image currently passes the High/Critical Docker Scout gate
-  - PostgreSQL has been moved off `postgres:17-alpine` to `postgres:17-bookworm`, verified healthy locally in Compose, and migration compatibility was proven against a disposable Bookworm container
-  - standalone PostgreSQL 17 Bookworm runtime and `pg_isready` healthcheck compatibility were verified locally
-  - the previous Compose verification failure was traced to a Windows excluded TCP port range that covers the old local defaults `54329` and `54331`; the repo default local PostgreSQL host port has been moved to `15432`
-  - Docker Scout can now be run in this repo by setting `DOCKER_CONFIG` to a repo-local path under `EMS/.docker-config`
-  - `postgres:17-bookworm` still fails the High/Critical gate with 1 Critical and 7 High vulnerabilities
-  - the only clean PostgreSQL candidate verified so far is `cgr.dev/chainguard/postgres:latest`, which currently resolves to PostgreSQL 18.3
-  - PostgreSQL 18 is now explicitly approved for EMS because the module is still greenfield
-  - the approved PostgreSQL 18 image must be pinned by digest rather than using a floating tag
-  - the PostgreSQL 18 move must use a fresh local volume; existing PostgreSQL 17 development volumes are disposable and must not be reused in place
-  - the pinned PostgreSQL 18 image swap is now in place in `compose.yaml`
-  - pinned PostgreSQL 18 healthcheck verification succeeded locally on a fresh temporary Compose volume
-  - EF migration verification now succeeds against PostgreSQL 18 on a fresh temporary Compose volume
-  - containerized application smoke verification against PostgreSQL 18 now succeeds for health, login, session bootstrap, and employee list
-  - the standalone local-host PG18 smoke path in this shell proved unreliable because the direct local host probe was distorted by the startup method and Wolverine discovery noise; the containerized runtime path is the trusted verification path for this upgrade
-- the frontend-driven session-renew model is partially implemented:
-  - `GET /auth/session`
-  - `POST /auth/renew`
-  - `SessionRenewed` audit taxonomy
-  - shared anti-forgery enforcement now covers renew and the other authenticated state-changing endpoints
+- the minimum required Phase 1 audit set from `docs/specs/EMS/current/Phase-01-audit-taxonomy-matrix-ems-v1.4.md` is implemented for auth/session flows, employee writes/deletes, address reads/writes/deletes across admin and self-service paths, role assignment outcomes, authorization denials, and audit-log reads
+- employee read/list audit taxonomy values exist, but employee read/list endpoints do not currently emit those audit events
+- employee read/list auditing is not part of the minimum required Phase 1 audit set and should not be treated as implemented unless explicitly added later
+
+## Known environment and tooling issues
+
+- in this shell, solution-level `dotnet build` and `dotnet test` currently fail before compilation under `.NET SDK 10.0.200` with `MSB4276` workload SDK resolver errors
+- the missing resolver directories reported by MSBuild are:
+  - `Microsoft.NET.SDK.WorkloadAutoImportPropsLocator`
+  - `Microsoft.NET.SDK.WorkloadManifestTargetsLocator`
+- this is a shell or machine toolchain issue, not an identified EMS product-code regression
+- the current repair path is to repair or reinstall the `.NET SDK 10.0.200` / Visual Studio-managed .NET 10 installation until those resolver SDK folders are restored and solution-level `dotnet build` works again
+- local EF migration generation currently succeeds through `dotnet-ef --no-build` after a successful build path, and the repo EF helper reuses the already-restored local tool before attempting restore
+
+## Current hardening follow-ups
+
+- no remaining business endpoints are pending in the current approved EMS Phase 1 backend contract
+- no remaining Docker CVE remediation work is pending for the current approved baseline
+- the frontend, reverse-proxy, PostgreSQL, and API Docker image references are now pinned to the verified artifacts used for the current runtime baseline
 - data-protection keys now persist for the current local and Docker single-instance runtime, but a shared/protected key-ring strategy would still be needed before multi-instance production deployment
-- self-service address reads intentionally reuse the existing `AddressRead` policy; no separate `OwnAddressRead` policy has been introduced
-- dedicated primary-change operations now use the approved `AddressPrimaryChanged` audit taxonomy instead of `AddressUpdated`
-- canonical role names are aligned to the approved contract values `Administrator` and `Basic User`
-- successful role changes revoke active sessions for the affected user and emit `SessionRevoked` plus `UserRoleAssigned` audit events
-- local EF migration generation currently succeeds through `dotnet-ef --no-build` after a successful solution build; direct startup-project builds still fail opaquely in this shell
-- the repo EF helper now supports `-NoBuild` and reuses the already-restored local tool before attempting restore
+- approved phase-completion changes still need to be reflected in EMS markdown before archiving
 
 ## Endpoint implementation status
 
@@ -112,8 +106,40 @@ Implemented and verified:
 Pending:
 - no remaining business endpoints in the current approved EMS Phase 1 backend contract
 - cross-cutting hardening and runtime-completion items only
-- next runtime/security hardening priority:
-  - Docker image CVE remediation
+- next hardening priorities:
+  - local shell/toolchain verification stability
+  - backend freeze and handoff readiness for frontend planning
+
+## Backend-ready summary for UI planning
+
+Use `docs/specs/EMS/current/Phase-01-api-contracts-ems-v1.4.md` as the canonical frontend contract.
+
+Current backend-ready summary:
+- implemented endpoint surface:
+  - auth: `POST /auth/login`, `POST /auth/logout`, `GET /auth/antiforgery`, `GET /auth/session`, `POST /auth/renew`
+  - employees: `GET /employees`, `GET /employees/{id}`, `POST /employees`, `PUT /employees/{id}`, `DELETE /employees/{id}`
+  - admin addresses: `GET /employees/{employeeId}/addresses`, `GET /employees/{employeeId}/addresses/{addressId}`, `POST /employees/{employeeId}/addresses`, `PUT /employees/{employeeId}/addresses/{addressId}`, `PATCH /employees/{employeeId}/addresses/{addressId}/primary`, `DELETE /employees/{employeeId}/addresses/{addressId}`
+  - self-service addresses: `GET /me/addresses`, `PATCH /me/addresses/{addressId}/primary`, `DELETE /me/addresses/{addressId}`
+  - admin reads: `GET /roles`, `PATCH /users/{userId}/role`, `GET /audit-logs`
+- auth and session model:
+  - cookie authentication with persisted `UserSession`
+  - idle-timeout session model with frontend-driven renew through `POST /auth/renew`
+  - `GET /auth/session` is the canonical session-bootstrap endpoint for page load and post-login bootstrap
+- anti-forgery behavior:
+  - all authenticated state-changing requests require a valid anti-forgery token and cookie pair
+  - `POST /auth/login` is exempt in the approved Phase 1 design
+  - `GET /auth/antiforgery` returns the header contract using `X-CSRF-TOKEN`
+- expected status posture:
+  - `400` for validation failures and invalid anti-forgery
+  - `401` for unauthenticated, expired, or revoked session access
+  - `403` for explicit denied ownership or authorization outcomes where the contract requires denial instead of hiding
+  - `404` for hidden or missing resources where the contract requires not found
+  - `409` for business conflicts such as repeated soft-delete or invalid role-change conflicts
+  - `429` for the login rate limit on `POST /auth/login`
+- runtime assumptions the frontend should know:
+  - the Docker runtime baseline is verified with pinned frontend, reverse-proxy, PostgreSQL 18, and API image references
+  - the trusted verification path for PostgreSQL 18 is the containerized runtime path, not the noisy direct local-host shell probe
+  - current local shell-level `dotnet build` and `dotnet test` are blocked by the documented `.NET 10.0.200` toolchain issue until the SDK installation is repaired
 
 ## Frontend coordination rule
 
