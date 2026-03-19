@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/app/PageHeader.vue'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import ProblemStatePanel from '@/components/shared/ProblemStatePanel.vue'
 import { findEmployee } from '@/mocks/ems'
-import { getEmployeeById } from '@/services/api/employees'
+import { deleteEmployee, getEmployeeById } from '@/services/api/employees'
 import { isApiProblemError, isProblemStatus } from '@/services/api/http'
 import { useSessionStore } from '@/stores/session'
 import type { EmployeeRecord } from '@/types/ems'
@@ -15,6 +16,8 @@ const session = useSessionStore()
 const employee = ref<EmployeeRecord | null>(null)
 const loading = ref(true)
 const problem = ref<null | { code: string; title: string; description: string }>(null)
+const showingDeleteConfirm = ref(false)
+const usingMockFallback = ref(false)
 
 const fallbackEmployee = computed(() => findEmployee(String(route.params.id)))
 
@@ -24,6 +27,7 @@ async function loadEmployee() {
 
   try {
     employee.value = await getEmployeeById(String(route.params.id))
+    usingMockFallback.value = false
   } catch (error) {
     if (isProblemStatus(error, 401)) {
       session.handleUnauthorized()
@@ -34,10 +38,12 @@ async function loadEmployee() {
 
     if (isProblemStatus(error, 404) && fallbackEmployee.value) {
       employee.value = fallbackEmployee.value
+      usingMockFallback.value = true
       return
     }
 
     employee.value = null
+    usingMockFallback.value = false
 
     if (isApiProblemError(error)) {
       problem.value = {
@@ -58,16 +64,51 @@ async function loadEmployee() {
   }
 }
 
+async function confirmDelete() {
+  if (!employee.value || usingMockFallback.value) {
+    return
+  }
+
+  loading.value = true
+  problem.value = null
+
+  try {
+    await deleteEmployee(employee.value.id)
+    await router.replace({ name: 'employees' })
+  } catch (error) {
+    if (isProblemStatus(error, 401)) {
+      session.handleUnauthorized()
+      await router.replace({ name: 'login', query: { redirect: route.fullPath } })
+      return
+    }
+
+    if (isApiProblemError(error)) {
+      problem.value = {
+        code: String(error.status || 409),
+        title: error.problem.title ?? 'Unable to delete employee',
+        description: error.problem.detail ?? 'The employee could not be deleted.',
+      }
+      return
+    }
+
+    problem.value = {
+      code: '500',
+      title: 'Unable to delete employee',
+      description: 'The employee could not be deleted.',
+    }
+  } finally {
+    showingDeleteConfirm.value = false
+    loading.value = false
+  }
+}
+
 watch(
   () => route.params.id,
   () => {
     void loadEmployee()
   },
+  { immediate: true },
 )
-
-onMounted(() => {
-  void loadEmployee()
-})
 </script>
 
 <template>
@@ -91,9 +132,12 @@ onMounted(() => {
         <RouterLink to="/employees">
           <UButton color="neutral" variant="soft">Back to list</UButton>
         </RouterLink>
-        <RouterLink :to="`/employees/${employee.id}/edit`">
+        <RouterLink v-if="!usingMockFallback" :to="`/employees/${employee.id}/edit`">
           <UButton>Edit employee</UButton>
         </RouterLink>
+        <UButton v-if="!usingMockFallback" color="error" variant="soft" @click="showingDeleteConfirm = true">
+          Delete employee
+        </UButton>
       </template>
     </PageHeader>
 
@@ -112,10 +156,14 @@ onMounted(() => {
       <div class="section-card panel">
         <div class="panel__header">
           <h3>Addresses</h3>
-          <RouterLink :to="`/employees/${employee.id}/addresses`">
+          <RouterLink v-if="usingMockFallback" :to="`/employees/${employee.id}/addresses`">
             <UButton color="neutral" variant="soft">Manage addresses</UButton>
           </RouterLink>
         </div>
+        <p v-if="!usingMockFallback" class="text-muted">
+          Address management is still on the next frontend integration slice. The current detail page already
+          shows the live address data returned by the EMS API.
+        </p>
         <div class="address-grid">
           <article v-for="address in employee.addresses" :key="address.id" class="address-card">
             <span v-if="address.isPrimary" class="status-pill status-pill--brand">Primary</span>
@@ -135,6 +183,13 @@ onMounted(() => {
     code="404"
     title="Employee not found"
     description="The requested employee is missing or hidden in the current posture."
+  />
+
+  <ConfirmDialog
+    v-model="showingDeleteConfirm"
+    title="Delete employee"
+    description="This performs the approved soft-delete path and removes the employee from active reads."
+    @confirm="confirmDelete"
   />
 </template>
 

@@ -74,6 +74,20 @@ export interface EmployeeListPage {
   totalCount: number
 }
 
+export interface EmployeeWriteInput {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  dateOfBirth: string
+  hireDate: string
+  status: EmployeeRecord['status']
+}
+
+interface IdResponse {
+  id: string
+}
+
 function toQueryString(query: EmployeeListQuery) {
   const params = new URLSearchParams()
 
@@ -150,4 +164,44 @@ export async function listEmployees(query: EmployeeListQuery): Promise<EmployeeL
 export async function getEmployeeById(employeeId: string): Promise<EmployeeRecord> {
   const response = await apiRequest<EmployeeDetailResponse>(`/employees/${employeeId}`)
   return toEmployeeRecord(response)
+}
+
+export async function createEmployee(input: EmployeeWriteInput): Promise<string> {
+  const response = await apiRequest<IdResponse>('/employees', {
+    method: 'POST',
+    body: {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      phone: input.phone,
+      dateOfBirth: input.dateOfBirth,
+      hireDate: input.hireDate,
+      status: input.status,
+    },
+  })
+
+  return response.id
+}
+
+export async function updateEmployee(employeeId: string, input: EmployeeWriteInput): Promise<string> {
+  const response = await apiRequest<IdResponse>(`/employees/${employeeId}`, {
+    method: 'PUT',
+    body: {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      phone: input.phone,
+      dateOfBirth: input.dateOfBirth,
+      hireDate: input.hireDate,
+      status: input.status,
+    },
+  })
+
+  return response.id
+}
+
+export async function deleteEmployee(employeeId: string): Promise<void> {
+  await apiRequest<void>(`/employees/${employeeId}`, {
+    method: 'DELETE',
+  })
 }

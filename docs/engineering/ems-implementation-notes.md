@@ -204,6 +204,12 @@ The current EMS frontend foundation under `ui/` implements:
   - backend-driven pagination/filter state for the list page
   - unauthorized redirect back to `/login` when employee reads lose the current session
   - mock fallback kept only for untouched placeholder employee routes that still reference fixture ids
+- real employee write integration with:
+  - `POST /employees` for the create form
+  - `PUT /employees/{id}` for the edit form
+  - `DELETE /employees/{id}` from the employee detail screen
+  - real `400/404/409` handling through shared problem and validation states
+  - detail-page posture adjusted so real employee records do not link into not-yet-integrated address management screens
 - shared frontend states and primitives for:
   - loading skeleton
   - empty state
@@ -220,7 +226,6 @@ Verified frontend foundation baseline:
 - the built frontend container passes `/healthz` and the nginx healthcheck
 
 Current frontend pending work:
-- integrate employee write flows
 - integrate address, roles, and audit-log backend flows
 - verify the full frontend/backend runtime through the reverse proxy after real API integration
 
