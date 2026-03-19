@@ -151,6 +151,76 @@ The active API contract under `docs/specs/EMS/current/Phase-01-api-contracts-ems
 
 Implementation notes must continue to track what is already implemented versus what is still pending so frontend work can distinguish between approved contract and current backend availability.
 
+## Frontend design-first gate
+
+Before creating `ui/`, the EMS frontend must pass a design-review gate using:
+- `docs/engineering/ems-ui-screen-pack.md`
+- `docs/engineering/ems-ui-screen-pack.html`
+
+This gate exists so frontend implementation starts from approved screens instead of chat context.
+
+Current gate status:
+- high-fidelity screen pack prepared and approved
+- `ui/` scaffold is now created from the approved screen pack
+- `ui/.editorconfig` keeps LF line endings
+- the approved frontend renew posture remains a 30-minute warning window before expiry, with explicit renew through `POST /auth/renew` while the session is still valid
+
+## Frontend foundation status
+
+The current EMS frontend foundation under `ui/` implements:
+- Vite + Vue + TypeScript scaffold created with Router, Pinia, Vitest, ESLint, and Prettier
+- Nuxt UI core integrated for the Vue/Vite app, with Tailwind and a semantic light/dark token layer
+- client-side theme selection with:
+  - system theme on first visit
+  - user override remembered in local storage
+  - top-bar toggle in the authenticated shell
+- desktop-first authenticated shell with:
+  - top bar
+  - role-aware left navigation
+  - session-warning banner
+  - shared page-header pattern
+- real auth/session integration with:
+  - `POST /auth/login`
+  - `POST /auth/logout`
+  - `GET /auth/session`
+  - `GET /auth/antiforgery`
+  - `POST /auth/renew`
+  - role-aware route guards backed by session bootstrap on reload
+  - countdown-driven 30-minute warning window
+  - explicit renew action against the real backend
+  - redirect back to `/login` on logout or unauthorized session loss
+  - centralized anti-forgery bootstrap and one-time refresh/retry support for authenticated state-changing requests
+- mock-mode route coverage for:
+  - employees list
+  - employee detail
+  - employee create/edit
+  - employee addresses
+  - my addresses
+  - roles
+  - audit logs
+  - `403`
+  - `404`
+- shared frontend states and primitives for:
+  - loading skeleton
+  - empty state
+  - validation summary
+  - problem-state panel
+  - confirmation dialog
+- local Vite proxy support for `/api` via `VITE_DEV_API_TARGET`
+
+Verified frontend foundation baseline:
+- `npm run build` passes in `ui/`
+- `npm run lint` passes in `ui/`
+- `npm run test:unit -- --run` passes in `ui/`
+- the frontend Docker image now builds from `ui/` rather than the placeholder static site
+- the built frontend container passes `/healthz` and the nginx healthcheck
+
+Current frontend pending work:
+- replace mock employee data with `GET /employees`
+- integrate employee detail and write flows
+- integrate address, roles, and audit-log backend flows
+- verify the full frontend/backend runtime through the reverse proxy after real API integration
+
 ## Review checklist for future EMS changes
 
 Use this checklist when reviewing new EMS use cases:

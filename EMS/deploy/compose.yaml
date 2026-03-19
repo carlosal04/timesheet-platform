@@ -43,8 +43,8 @@ services:
 
   frontend:
     build:
-      context: ..
-      dockerfile: deploy/frontend/Dockerfile
+      context: ../..
+      dockerfile: EMS/deploy/frontend/Dockerfile
     healthcheck:
       test: ["CMD", "/usr/bin/nginx", "-t"]
       interval: 30s

@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMS UI Screen Pack</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-dark: #0f172a;
+      --text: #0f172a;
+      --muted: #5b6b83;
+      --line: #dbe4ef;
+      --brand: #0f766e;
+      --brand-soft: #dff6f2;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --warn: #b45309;
+      --warn-soft: #ffedd5;
+      --danger: #b91c1c;
+      --danger-soft: #fee2e2;
+      --success: #047857;
+      --success-soft: #d1fae5;
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --shadow: 0 18px 40px rgba(15, 23, 42, 0.10);
+      --font: "Segoe UI", "Aptos", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.45;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .hero,
+    .screens,
+    .row,
+    .form-grid,
+    .table-filters,
+    .states {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero {
+      grid-template-columns: 1.2fr 0.8fr;
+      margin-bottom: 28px;
+    }
+
+    .card,
+    .screen {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    .card { padding: 24px; }
+    .screen-head { padding: 20px 24px; border-bottom: 1px solid var(--line); }
+    .screen-body { padding: 24px; background: #f8fafc; }
+
+    .tag,
+    .status,
+    .nav-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag.brand { background: var(--brand-soft); color: var(--brand); }
+    .tag.blue { background: var(--accent-soft); color: var(--accent); }
+    .tag.warn { background: var(--warn-soft); color: var(--warn); }
+    .tag.error { background: var(--danger-soft); color: var(--danger); }
+    .tag.neutral { background: #eef2f7; color: var(--muted); }
+
+    h1, h2, h3, h4 { margin: 0; }
+
+    h1 {
+      margin-top: 16px;
+      font-size: clamp(42px, 6vw, 70px);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+    }
+
+    p, li, td, th, label, .muted {
+      color: var(--muted);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: 18px;
+      min-height: 520px;
+    }
+
+    .sidebar {
+      padding: 20px;
+      border-radius: 20px;
+      background: var(--surface-dark);
+      color: #e2e8f0;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 16px;
+    }
+
+    .brand {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .nav-chip {
+      width: fit-content;
+      background: rgba(255,255,255,0.10);
+      color: #e2e8f0;
+    }
+
+    .nav-list,
+    .stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .nav-item,
+    .panel,
+    .note,
+    .address,
+    .state {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .nav-item {
+      background: rgba(255,255,255,0.03);
+      border-color: transparent;
+      color: rgba(226, 232, 240, 0.78);
+      padding: 12px 14px;
+    }
+
+    .nav-item.active {
+      background: rgba(37,99,235,0.22);
+      color: white;
+    }
+
+    .panel { padding: 18px; }
+
+    .topbar,
+    .banner,
+    .actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .topbar {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .banner {
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid #fed7aa;
+      background: #fff7ed;
+    }
+
+    .button,
+    .button-ghost,
+    .button-danger {
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .button { background: var(--accent); color: white; }
+    .button-ghost { background: white; color: var(--text); border-color: var(--line); }
+    .button-danger { background: white; color: var(--danger); border-color: #fecaca; }
+
+    .row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .table-filters {
+      grid-template-columns: 1.8fr 1fr 1fr 1fr auto;
+      margin-top: 12px;
+    }
+
+    .form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 12px;
+    }
+
+    .input {
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    .table th {
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .table td {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    .status.success { background: var(--success-soft); color: var(--success); }
+    .status.primary { background: var(--brand-soft); color: var(--brand); }
+
+    .login {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 18px;
+      min-height: 520px;
+    }
+
+    .login-hero {
+      padding: 28px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 58%, #164e63 100%);
+      color: #e2e8f0;
+      display: grid;
+      align-content: space-between;
+      gap: 18px;
+    }
+
+    .login-hero h3 {
+      margin-top: 16px;
+      font-size: 48px;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .login-card {
+      padding: 26px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: white;
+      display: grid;
+      gap: 16px;
+      align-content: center;
+    }
+
+    .note {
+      padding: 14px 16px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: #fecaca;
+      font-size: 14px;
+    }
+
+    .states {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      margin-top: 12px;
+    }
+
+    .state { padding: 16px; }
+
+    .footer {
+      margin-top: 28px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: var(--surface-dark);
+      color: #e2e8f0;
+    }
+
+    code {
+      font-family: Consolas, monospace;
+      font-size: 0.95em;
+      background: rgba(15,23,42,0.06);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 1240px) {
+      .hero,
+      .login,
+      .shell { grid-template-columns: 1fr; }
+      .row.two,
+      .row.three,
+      .table-filters,
+      .form-grid,
+      .states { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 24px, 1440px); }
+      .row.two,
+      .row.three,
+      .table-filters,
+      .form-grid,
+      .states { grid-template-columns: 1fr; }
+      .card,
+      .screen-head,
+      .screen-body,
+      .login-hero,
+      .login-card { padding: 18px; }
+      h1 { font-size: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="card">
+        <span class="tag brand">Design review gate</span>
+        <h1>Cleaner, desktop-first EMS screens before any Vue scaffold work.</h1>
+        <p>
+          This revision drops the old-fashioned palette and loose decorative layout. The mockup is now built
+          around reusable Vue-friendly panels, tables, forms, banners, and dialogs that map cleanly to a
+          free-core component stack.
+        </p>
+        <div class="row three" style="margin-top: 20px;">
+          <div class="panel">
+            <strong>Modern shell</strong>
+            <p>Tighter spacing, cooler neutrals, stronger contrast, and fewer visual distractions.</p>
+          </div>
+          <div class="panel">
+            <strong>Supported components</strong>
+            <p>Designed to be built from Nuxt UI core components with Reka UI as the low-level fallback.</p>
+          </div>
+          <div class="panel">
+            <strong>Desktop first</strong>
+            <p>Wide tables and side-by-side admin panels matter more right now than mobile-perfect layouts.</p>
+          </div>
+        </div>
+      </div>
+      <aside class="card">
+        <h2>Free-core build direction</h2>
+        <p>No paid license or subscription is required for the intended frontend baseline.</p>
+        <div class="chips">
+          <span class="tag blue">Nuxt UI core</span>
+          <span class="tag brand">Reka UI fallback</span>
+          <span class="tag neutral">Tailwind tokens</span>
+        </div>
+        <ul>
+          <li>desktop-oriented app shell and admin workflows</li>
+          <li>explicit session bootstrap and renew experience</li>
+          <li>employee list as the first real page</li>
+          <li>clear 401, 403, 404, 409, and 429 states</li>
+          <li>no premium templates or UI kits</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="screens">
+      <article class="screen">
+        <div class="screen-head">
+          <div>
+            <h2>Authenticated app shell</h2>
+            <div class="chips">
+              <span class="tag blue">Admin view</span>
+              <span class="tag brand">Basic variant removes Roles and Audit Logs</span>
+              <span class="tag warn">Session warning stays inside the shell</span>
+            </div>
+          </div>
+          <span class="muted">Desktop-first workspace for daily operations</span>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <aside class="sidebar">
+              <div class="brand">EMS</div>
+              <div class="nav-chip">Admin workspace</div>
+              <div class="nav-list">
+                <div class="nav-item active">Employees</div>
+                <div class="nav-item">Roles</div>
+                <div class="nav-item">Audit Logs</div>
+                <div class="nav-item">My Addresses</div>
+              </div>
+              <div class="stack">
+                <div class="nav-item">Current user<br><strong>Carlos Alvarez</strong></div>
+                <div class="nav-item">Expires at<br><strong>11:52 AM local</strong></div>
+              </div>
+            </aside>
+            <section class="stack">
+              <div class="topbar">
+                <div>
+                  <h3>Employee operations</h3>
+                  <p>Directory management, onboarding, address control, and role-aware admin actions.</p>
+                </div>
+                <div class="actions">
+                  <span class="tag warn">27 minutes remaining</span>
+                  <button class="button-ghost">Renew later</button>
+                  <button class="button">New employee</button>
+                </div>
+              </div>
+              <div class="banner">
+                <div>
+                  <strong>Session nearing idle timeout.</strong><br>
+                  Renewal is explicit and only available while the current session remains valid.
+                </div>
+                <div class="actions">
+                  <button class="button-ghost">Dismiss</button>
+                  <button class="button">Stay signed in</button>
+                </div>
+              </div>
+              <div class="row two">
+                <div class="panel">
+                  <strong>Employee list</strong>
+                  <div class="table-filters">
+                    <div class="input">Search employees by name or email</div>
+                    <div class="input">Status: Active</div>
+                    <div class="input">Hire from</div>
+                    <div class="input">Hire to</div>
+                    <button class="button-ghost">Reset</button>
+                  </div>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Employee</th>
+                        <th>Status</th>
+                        <th>Hire date</th>
+                        <th>Primary address</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Ana Lopez</strong><br><span class="muted">ana.lopez@company.com</span></td>
+                        <td><span class="status success">Active</span></td>
+                        <td>2025-01-15</td>
+                        <td>Pittsburgh, PA</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Marcus Hill</strong><br><span class="muted">marcus.hill@company.com</span></td>
+                        <td><span class="tag neutral">Inactive</span></td>
+                        <td>2024-04-10</td>
+                        <td>Chicago, IL</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="panel">
+                  <strong>Operational snapshot</strong>
+                  <div class="row three" style="margin-top: 14px;">
+                    <div class="panel"><strong>143</strong><p>Active employees</p></div>
+                    <div class="panel"><strong>08</strong><p>Role changes this week</p></div>
+                    <div class="panel"><strong>12</strong><p>Audit alerts</p></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen">
+        <div class="screen-head">
+          <div>
+            <h2>Login and session recovery</h2>
+            <div class="chips">
+              <span class="tag neutral">Anonymous route</span>
+              <span class="tag error">429 handling included</span>
+              <span class="tag warn">Expired sessions return here</span>
+            </div>
+          </div>
+          <span class="muted">Low-noise authentication with explicit recovery posture</span>
+        </div>
+        <div class="screen-body">
+          <div class="login">
+            <section class="login-hero">
+              <div>
+                <span class="tag brand">Internal operations system</span>
+                <h3>Workforce records, session control, and audit visibility in one desktop workspace.</h3>
+              </div>
+              <div class="states">
+                <div class="state"><strong>401</strong><br>Generic invalid-credentials message.</div>
+                <div class="state"><strong>423</strong><br>Lockout remains distinct.</div>
+                <div class="state"><strong>429</strong><br>Retry state for excessive attempts.</div>
+                <div class="state"><strong>Renew</strong><br>Bootstrap through <code>/auth/session</code>.</div>
+                <div class="state"><strong>Expiry</strong><br>Return to login after session end.</div>
+              </div>
+            </section>
+            <section class="login-card">
+              <div>
+                <span class="tag brand">Sign in</span>
+                <h3 style="margin-top: 14px; font-size: 34px;">Employment Management System</h3>
+                <p class="muted">Cookie auth, one active session, explicit renew inside the final 30-minute window.</p>
+              </div>
+              <div>
+                <label>Email</label>
+                <div class="input">admin@company.com</div>
+              </div>
+              <div>
+                <label>Password</label>
+                <div class="input">••••••••••••••••</div>
+              </div>
+              <div class="note">Too many attempts. Please wait briefly before trying again.</div>
+              <button class="button">Sign in</button>
+            </section>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen">
+        <div class="screen-head">
+          <div>
+            <h2>Employee detail and edit flow</h2>
+            <div class="chips">
+              <span class="tag neutral">GET /employees/{id}</span>
+              <span class="tag blue">Write actions are admin-only</span>
+              <span class="tag error">Validation and conflict states stay inline</span>
+            </div>
+          </div>
+          <span class="muted">Profile view and the admin form system use the same component language</span>
+        </div>
+        <div class="screen-body">
+          <div class="row two">
+            <div class="panel">
+              <div class="topbar">
+                <div>
+                  <h3>Ana Lopez</h3>
+                  <p>Employee ID 03458 • Active • Pittsburgh, PA</p>
+                </div>
+                <div class="actions">
+                  <button class="button-ghost">Edit</button>
+                  <button class="button-danger">Soft delete</button>
+                </div>
+              </div>
+              <div class="row two" style="margin-top: 18px;">
+                <div class="panel">
+                  <strong>Identity and employment</strong>
+                  <table class="table">
+                    <tbody>
+                      <tr><td>Email</td><td>ana.lopez@company.com</td></tr>
+                      <tr><td>Phone</td><td>5551234567</td></tr>
+                      <tr><td>Date of birth</td><td>1990-06-18</td></tr>
+                      <tr><td>Hire date</td><td>2025-01-15</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="panel">
+                  <strong>Addresses</strong>
+                  <div class="address-grid" style="margin-top: 12px;">
+                    <div class="address">
+                      <span class="status primary">Primary</span>
+                      <p><strong>Home</strong><br>100 Main St<br>Pittsburgh, PA 15222</p>
+                    </div>
+                    <div class="address">
+                      <p><strong>Mailing</strong><br>200 Oak Ave, Apt 4<br>Pittsburgh, PA 15213</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <strong>Employee form</strong>
+              <div class="form-grid">
+                <div><label>First name</label><div class="input">Ana</div></div>
+                <div><label>Last name</label><div class="input">Lopez</div></div>
+                <div><label>Email</label><div class="input">ana.lopez@company.com</div></div>
+                <div><label>Phone</label><div class="input">5551234567</div></div>
+                <div><label>Date of birth</label><div class="input">1990-06-18</div></div>
+                <div><label>Hire date</label><div class="input">2025-01-15</div></div>
+              </div>
+              <div class="note" style="margin-top: 14px;">
+                Validation summary: hire date must be at least 14 years after date of birth.
+              </div>
+              <div class="actions" style="margin-top: 14px;">
+                <button class="button-ghost">Cancel</button>
+                <button class="button">Save changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen">
+        <div class="screen-head">
+          <div>
+            <h2>Roles, audit logs, and shared states</h2>
+            <div class="chips">
+              <span class="tag blue">Admin-only workspaces</span>
+              <span class="tag neutral">Dense read surfaces</span>
+              <span class="tag error">Shared state language is system-wide</span>
+            </div>
+          </div>
+          <span class="muted">Administrative review tools and cross-app error posture</span>
+        </div>
+        <div class="screen-body">
+          <div class="row two">
+            <div class="panel">
+              <strong>Role assignment</strong>
+              <div class="form-grid">
+                <div><label>User</label><div class="input">marcus.hill@company.com</div></div>
+                <div><label>Target role</label><div class="input">Basic</div></div>
+              </div>
+              <div class="banner" style="margin-top: 14px;">
+                <div>
+                  <strong>Guardrail.</strong><br>
+                  This change revokes the user's active session immediately.
+                </div>
+                <button class="button">Apply role</button>
+              </div>
+              <div class="note" style="margin-top: 14px;">
+                Conflict example: this change would leave the system with zero active Admin users.
+              </div>
+            </div>
+            <div class="panel">
+              <strong>Audit logs</strong>
+              <div class="table-filters">
+                <div class="input">Actor: carlos</div>
+                <div class="input">Action: SessionRenewed</div>
+                <div class="input">From date</div>
+                <div class="input">To date</div>
+                <button class="button-ghost">Reset</button>
+              </div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Action</th>
+                    <th>Actor</th>
+                    <th>Entity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>2026-03-19 09:31 local</td>
+                    <td><span class="tag neutral">SessionRenewed</span></td>
+                    <td>carlos.alvarez</td>
+                    <td>UserSession</td>
+                  </tr>
+                  <tr>
+                    <td>2026-03-19 09:22 local</td>
+                    <td><span class="tag neutral">RoleChanged</span></td>
+                    <td>carlos.alvarez</td>
+                    <td>User 3488</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="states">
+            <div class="state"><strong>Loading</strong><br>Skeletons replace full-page spinners after app bootstrap.</div>
+            <div class="state"><strong>401</strong><br>Clear session state and return to login.</div>
+            <div class="state"><strong>403</strong><br>Explicit forbidden state only when the API denies instead of hides.</div>
+            <div class="state"><strong>404</strong><br>Neutral not-found posture for missing or hidden resources.</div>
+            <div class="state"><strong>409 / 429</strong><br>Conflicts stay inline. Login throttle gets a distinct retry message.</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="footer">
+      <strong>Next step after approval:</strong> scaffold <code>ui/</code> with Vue + Vite + TypeScript + Router + Pinia + Vitest + ESLint + Prettier, then implement the shell, auth bootstrap, anti-forgery-aware client, explicit renew flow, and employee list as the first production page.
+    </section>
+  </main>
+</body>
+</html>

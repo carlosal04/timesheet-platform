@@ -38,6 +38,8 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - FluentValidation validators and API-side validation error handling for implemented requests
 - Local API start/test scripts for manual validation
 - GitHub workflow, versioning, and release documentation
+- New `ui/` frontend app scaffolded with Vue, TypeScript, Router, Pinia, Vitest, ESLint, and Prettier
+- Desktop-first EMS mock-mode UI foundation with login, shell, theme toggle, employee list, route skeletons, and shared state components
 
 ### Changed
 - Removed committed runtime credential defaults in favor of local `.env` placeholders and secret-driven scripts
@@ -67,6 +69,10 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Verified EF migrations against the pinned PostgreSQL 18 image on a fresh temporary volume
 - Verified the containerized EMS API smoke flow against the pinned PostgreSQL 18 runtime for health, login, session bootstrap, and employee list
 - Pinned the frontend, reverse-proxy, and API Docker image references to the verified digests used by the current EMS runtime baseline
+- Replaced the placeholder frontend static-site build path with a real multi-stage build from `ui/`
+- Added a semantic light/dark design-token layer with system-first theme selection and local preference persistence
+- Added Vite local `/api` proxy support through `VITE_DEV_API_TARGET`
+- Replaced the frontend mock auth/session flow with real EMS API integration for login, logout, session bootstrap, anti-forgery bootstrap, and session renew
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
@@ -79,3 +85,6 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added a shared Docker image CVE remediation runbook for future agents and modules
 - Corrected EMS notes and prerequisites so the repo status matches the completed CVE baseline and the current shell-level .NET verification issue
 - Added a backend-ready summary so UI planning can start from the repo instead of stale notes or chat history
+- Added a design-first EMS UI screen pack and blocked `ui/` scaffold work pending screen approval
+- Updated EMS notes to reflect that the UI design gate is complete and the frontend foundation is now implemented in mock mode
+- Updated EMS notes to reflect that frontend auth/session is now integrated with the real EMS backend and employee data remains the next pending integration slice
