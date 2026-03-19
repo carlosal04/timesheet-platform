@@ -191,8 +191,6 @@ The current EMS frontend foundation under `ui/` implements:
   - redirect back to `/login` on logout or unauthorized session loss
   - centralized anti-forgery bootstrap and one-time refresh/retry support for authenticated state-changing requests
 - mock-mode route coverage for:
-  - employees list
-  - employee detail
   - employee create/edit
   - employee addresses
   - my addresses
@@ -200,6 +198,12 @@ The current EMS frontend foundation under `ui/` implements:
   - audit logs
   - `403`
   - `404`
+- real employee read integration with:
+  - `GET /employees` for the employee list page
+  - `GET /employees/{id}` for the employee detail page
+  - backend-driven pagination/filter state for the list page
+  - unauthorized redirect back to `/login` when employee reads lose the current session
+  - mock fallback kept only for untouched placeholder employee routes that still reference fixture ids
 - shared frontend states and primitives for:
   - loading skeleton
   - empty state
@@ -216,8 +220,7 @@ Verified frontend foundation baseline:
 - the built frontend container passes `/healthz` and the nginx healthcheck
 
 Current frontend pending work:
-- replace mock employee data with `GET /employees`
-- integrate employee detail and write flows
+- integrate employee write flows
 - integrate address, roles, and audit-log backend flows
 - verify the full frontend/backend runtime through the reverse proxy after real API integration
 

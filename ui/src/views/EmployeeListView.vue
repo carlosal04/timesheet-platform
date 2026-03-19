@@ -1,55 +1,112 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import EmptyState from '@/components/shared/EmptyState.vue'
 import LoadingSkeleton from '@/components/shared/LoadingSkeleton.vue'
 import PageHeader from '@/components/app/PageHeader.vue'
+import ProblemStatePanel from '@/components/shared/ProblemStatePanel.vue'
+import { listEmployees } from '@/services/api/employees'
+import { isApiProblemError, isProblemStatus } from '@/services/api/http'
 import { useSessionStore } from '@/stores/session'
+import type { EmployeeListRow } from '@/types/ems'
 
 const session = useSessionStore()
+const route = useRoute()
+const router = useRouter()
 const search = ref('')
 const status = ref<'All' | 'Active' | 'Inactive'>('All')
 const page = ref(1)
 const pageSize = ref(4)
 const includePrimaryAddress = ref(true)
 const loading = ref(true)
+const totalCount = ref(0)
+const rows = ref<EmployeeListRow[]>([])
+const problem = ref<null | { code: string; title: string; description: string }>(null)
+let requestSequence = 0
 
-onMounted(() => {
-  window.setTimeout(() => {
-    loading.value = false
-  }, 350)
-})
+const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageSize.value)))
 
-const filteredRows = computed(() => {
-  return session.employeeRows.filter((employee) => {
-    const matchesSearch =
-      !search.value ||
-      `${employee.firstName} ${employee.lastName}`.toLowerCase().includes(search.value.toLowerCase()) ||
-      employee.email.toLowerCase().includes(search.value.toLowerCase())
-    const matchesStatus = status.value === 'All' || employee.status === status.value
+async function loadEmployees() {
+  const sequence = ++requestSequence
+  loading.value = true
+  problem.value = null
 
-    return matchesSearch && matchesStatus
-  })
-})
+  try {
+    const result = await listEmployees({
+      page: page.value,
+      pageSize: pageSize.value,
+      name: search.value.trim() || undefined,
+      status: status.value === 'All' ? undefined : status.value,
+      includePrimaryAddress: includePrimaryAddress.value,
+    })
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / pageSize.value)))
-const pagedRows = computed(() => {
-  const start = (page.value - 1) * pageSize.value
-  return filteredRows.value.slice(start, start + pageSize.value)
-})
+    if (sequence !== requestSequence) {
+      return
+    }
+
+    rows.value = result.items
+    totalCount.value = result.totalCount
+    page.value = result.page
+    pageSize.value = result.pageSize
+  } catch (error) {
+    if (sequence !== requestSequence) {
+      return
+    }
+
+    rows.value = []
+    totalCount.value = 0
+
+    if (isProblemStatus(error, 401)) {
+      session.handleUnauthorized()
+      await router.replace({ name: 'login', query: { redirect: route.fullPath } })
+      return
+    }
+
+    if (isApiProblemError(error)) {
+      problem.value = {
+        code: String(error.status || 500),
+        title: error.problem.title ?? 'Employee list unavailable',
+        description: error.problem.detail ?? 'The employee list could not be loaded from the EMS API.',
+      }
+      return
+    }
+
+    problem.value = {
+      code: '500',
+      title: 'Employee list unavailable',
+      description: 'The employee list could not be loaded from the EMS API.',
+    }
+  } finally {
+    if (sequence === requestSequence) {
+      loading.value = false
+    }
+  }
+}
 
 function resetFilters() {
   search.value = ''
   status.value = 'All'
   page.value = 1
 }
+
+watch([search, status, includePrimaryAddress], () => {
+  page.value = 1
+})
+
+watch([search, status, page, pageSize, includePrimaryAddress], () => {
+  void loadEmployees()
+})
+
+onMounted(() => {
+  void loadEmployees()
+})
 </script>
 
 <template>
   <section class="view-stack">
     <PageHeader
       title="Employees"
-      description="The first real data page is mock-backed here, but already shaped around the approved backend contract."
+      description="The employee list now loads from the real EMS API while the rest of the placeholder screens remain mock-backed."
     >
       <template #actions>
         <label class="toggle text-muted">
@@ -75,8 +132,15 @@ function resetFilters() {
         <button class="filters__button" type="button" @click="resetFilters">Reset</button>
       </div>
 
+      <ProblemStatePanel
+        v-if="problem"
+        :code="problem.code"
+        :title="problem.title"
+        :description="problem.description"
+      />
+
       <EmptyState
-        v-if="!pagedRows.length"
+        v-else-if="!rows.length"
         title="No employees match the current filters."
         description="Adjust the name or status filter to widen the result set."
       />
@@ -92,7 +156,7 @@ function resetFilters() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="employee in pagedRows" :key="employee.id">
+            <tr v-for="employee in rows" :key="employee.id">
               <td>
                 <RouterLink class="table__link" :to="`/employees/${employee.id}`">
                   <strong>{{ employee.firstName }} {{ employee.lastName }}</strong>

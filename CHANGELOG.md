@@ -73,6 +73,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added a semantic light/dark design-token layer with system-first theme selection and local preference persistence
 - Added Vite local `/api` proxy support through `VITE_DEV_API_TARGET`
 - Replaced the frontend mock auth/session flow with real EMS API integration for login, logout, session bootstrap, anti-forgery bootstrap, and session renew
+- Replaced the frontend mock employee list with real `GET /employees` integration and added a real `GET /employees/{id}` read path for the detail screen
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
@@ -88,3 +89,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added a design-first EMS UI screen pack and blocked `ui/` scaffold work pending screen approval
 - Updated EMS notes to reflect that the UI design gate is complete and the frontend foundation is now implemented in mock mode
 - Updated EMS notes to reflect that frontend auth/session is now integrated with the real EMS backend and employee data remains the next pending integration slice
+- Updated EMS notes to reflect that employee list and detail reads now use the real EMS backend while writes, addresses, roles, and audit screens remain pending frontend integrations

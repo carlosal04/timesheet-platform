@@ -1,4 +1,4 @@
-import type { EmployeeAddress, EmployeeListRow } from '@/types/ems'
+import type { EmployeeAddress, EmployeeListRow, EmployeeRecord } from '@/types/ems'
 import { apiRequest } from '@/services/api/http'
 
 interface EmployeeListResponse {
@@ -21,6 +21,30 @@ interface EmployeeListItem {
 }
 
 interface EmployeeListPrimaryAddress {
+  id: string
+  addressType: EmployeeAddress['addressType']
+  isPrimary: boolean
+  line1: string
+  line2: string | null
+  city: string
+  state: string
+  zipCode: string
+  countryCode: string
+}
+
+interface EmployeeDetailResponse {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  dateOfBirth: string
+  hireDate: string
+  status: EmployeeRecord['status']
+  addresses: EmployeeDetailAddress[]
+}
+
+interface EmployeeDetailAddress {
   id: string
   addressType: EmployeeAddress['addressType']
   isPrimary: boolean
@@ -97,6 +121,20 @@ function toEmployeeRow(item: EmployeeListItem): EmployeeListRow {
   }
 }
 
+function toEmployeeRecord(response: EmployeeDetailResponse): EmployeeRecord {
+  return {
+    id: response.id,
+    firstName: response.firstName,
+    lastName: response.lastName,
+    email: response.email,
+    phone: response.phone,
+    dateOfBirth: response.dateOfBirth,
+    hireDate: response.hireDate,
+    status: response.status,
+    addresses: response.addresses,
+  }
+}
+
 export async function listEmployees(query: EmployeeListQuery): Promise<EmployeeListPage> {
   const queryString = toQueryString(query)
   const response = await apiRequest<EmployeeListResponse>(`/employees?${queryString}`)
@@ -107,4 +145,9 @@ export async function listEmployees(query: EmployeeListQuery): Promise<EmployeeL
     pageSize: response.pageSize,
     totalCount: response.totalCount,
   }
+}
+
+export async function getEmployeeById(employeeId: string): Promise<EmployeeRecord> {
+  const response = await apiRequest<EmployeeDetailResponse>(`/employees/${employeeId}`)
+  return toEmployeeRecord(response)
 }

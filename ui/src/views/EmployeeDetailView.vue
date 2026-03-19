@@ -1,23 +1,88 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/app/PageHeader.vue'
 import ProblemStatePanel from '@/components/shared/ProblemStatePanel.vue'
 import { findEmployee } from '@/mocks/ems'
+import { getEmployeeById } from '@/services/api/employees'
+import { isApiProblemError, isProblemStatus } from '@/services/api/http'
+import { useSessionStore } from '@/stores/session'
+import type { EmployeeRecord } from '@/types/ems'
 
 const route = useRoute()
-const employee = computed(() => findEmployee(String(route.params.id)))
+const router = useRouter()
+const session = useSessionStore()
+const employee = ref<EmployeeRecord | null>(null)
+const loading = ref(true)
+const problem = ref<null | { code: string; title: string; description: string }>(null)
+
+const fallbackEmployee = computed(() => findEmployee(String(route.params.id)))
+
+async function loadEmployee() {
+  loading.value = true
+  problem.value = null
+
+  try {
+    employee.value = await getEmployeeById(String(route.params.id))
+  } catch (error) {
+    if (isProblemStatus(error, 401)) {
+      session.handleUnauthorized()
+      employee.value = null
+      await router.replace({ name: 'login', query: { redirect: route.fullPath } })
+      return
+    }
+
+    if (isProblemStatus(error, 404) && fallbackEmployee.value) {
+      employee.value = fallbackEmployee.value
+      return
+    }
+
+    employee.value = null
+
+    if (isApiProblemError(error)) {
+      problem.value = {
+        code: String(error.status || 404),
+        title: error.problem.title ?? 'Employee not found',
+        description: error.problem.detail ?? 'The requested employee is missing or hidden in the current posture.',
+      }
+      return
+    }
+
+    problem.value = {
+      code: '404',
+      title: 'Employee not found',
+      description: 'The requested employee is missing or hidden in the current posture.',
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(
+  () => route.params.id,
+  () => {
+    void loadEmployee()
+  },
+)
+
+onMounted(() => {
+  void loadEmployee()
+})
 </script>
 
 <template>
+  <div v-if="loading" class="section-card">
+    <p class="text-muted">Loading employee details...</p>
+  </div>
+
   <ProblemStatePanel
-    v-if="!employee"
-    code="404"
-    title="Employee not found"
-    description="The requested employee is missing or hidden in the current posture."
+    v-else-if="problem"
+    :code="problem.code"
+    :title="problem.title"
+    :description="problem.description"
   />
 
-  <section v-else class="view-stack">
+  <section v-else-if="employee" class="view-stack">
     <PageHeader
       :title="`${employee.firstName} ${employee.lastName}`"
       description="Employee profile, active addresses, and the admin path into edit and address management."
@@ -64,6 +129,13 @@ const employee = computed(() => findEmployee(String(route.params.id)))
       </div>
     </div>
   </section>
+
+  <ProblemStatePanel
+    v-else
+    code="404"
+    title="Employee not found"
+    description="The requested employee is missing or hidden in the current posture."
+  />
 </template>
 
 <style scoped>
