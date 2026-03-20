@@ -19,6 +19,7 @@ The current EMS foundation checkpoint implements the approved Phase 1 backend co
 - self-service address primary-change endpoint `PATCH /me/addresses/{addressId}/primary`
 - self-service address delete endpoint `DELETE /me/addresses/{addressId}`
 - role list endpoint `GET /roles`
+- user list endpoint `GET /users`
 - user-role assignment endpoint `PATCH /users/{userId}/role`
 - audit log read endpoint `GET /audit-logs`
 - authenticated session bootstrap endpoint `GET /auth/session`
@@ -71,7 +72,7 @@ The current EMS foundation checkpoint implements the approved Phase 1 backend co
 
 ## Current hardening follow-ups
 
-- the approved contract now includes a pending `GET /users` admin endpoint to support the role-assignment UI without inventing a manual user selector
+- the EMS backend now implements the approved `GET /users` admin endpoint needed by the role-assignment UI
 - no remaining Docker CVE remediation work is pending for the current approved baseline
 - the frontend, reverse-proxy, PostgreSQL, and API Docker image references are now pinned to the verified artifacts used for the current runtime baseline
 - data-protection keys now persist for the current local and Docker single-instance runtime, but a shared/protected key-ring strategy would still be needed before multi-instance production deployment
@@ -100,12 +101,13 @@ Implemented and verified:
 - `PATCH /me/addresses/{addressId}/primary`
 - `DELETE /me/addresses/{addressId}`
 - `GET /roles`
+- `GET /users`
 - `PATCH /users/{userId}/role`
 - `GET /audit-logs`
 
 Pending:
-- implement `GET /users` in the EMS backend and wire it into the admin role-assignment UI
 - integrate address create/edit backend flows in the frontend
+- integrate the admin role-assignment UI with the real `GET /users` and `PATCH /users/{userId}/role` backend flows
 - after those slices are green, resume cross-cutting hardening and backend freeze/handoff work
 
 ## Backend-ready summary for UI planning
@@ -118,7 +120,7 @@ Current backend-ready summary:
   - employees: `GET /employees`, `GET /employees/{id}`, `POST /employees`, `PUT /employees/{id}`, `DELETE /employees/{id}`
   - admin addresses: `GET /employees/{employeeId}/addresses`, `GET /employees/{employeeId}/addresses/{addressId}`, `POST /employees/{employeeId}/addresses`, `PUT /employees/{employeeId}/addresses/{addressId}`, `PATCH /employees/{employeeId}/addresses/{addressId}/primary`, `DELETE /employees/{employeeId}/addresses/{addressId}`
   - self-service addresses: `GET /me/addresses`, `PATCH /me/addresses/{addressId}/primary`, `DELETE /me/addresses/{addressId}`
-  - admin reads: `GET /roles`, `PATCH /users/{userId}/role`, `GET /audit-logs`
+  - admin reads: `GET /roles`, `GET /users`, `PATCH /users/{userId}/role`, `GET /audit-logs`
 - auth and session model:
   - cookie authentication with persisted `UserSession`
   - idle-timeout session model with frontend-driven renew through `POST /auth/renew`
@@ -221,8 +223,8 @@ The current EMS frontend foundation under `ui/` implements:
   - backend-driven paging posture with live audit metadata instead of mock summaries
 - partial role-screen integration with:
   - `GET /roles` for the canonical role catalog
-  - explicit approved contract addition for `GET /users` so role assignment can now be implemented without inventing a manual user selector
-  - role screen implementation remains pending until the new user list and assignment UI are wired to the real backend
+  - `GET /users` for the real admin-selectable user list
+  - role-assignment action UI remains pending until the table and per-row assignment workflow are wired to the real backend
 - verified reverse-proxy runtime path with the real UI:
   - rebuilt the frontend and API containers from the current repo state
   - served the UI through `http://localhost:8088/`

@@ -14,6 +14,7 @@ public static class PolicyNames
     public const string OwnAddressDelete = "OwnAddressDelete";
     public const string OwnAddressPrimaryManage = "OwnAddressPrimaryManage";
     public const string RoleRead = "RoleRead";
+    public const string UserRead = "UserRead";
     public const string UserRoleAssign = "UserRoleAssign";
     public const string AuditLogRead = "AuditLogRead";
 }

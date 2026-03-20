@@ -21,6 +21,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Self-service address primary-change endpoint `PATCH /me/addresses/{addressId}/primary`
 - Self-service address delete endpoint `DELETE /me/addresses/{addressId}`
 - Role list endpoint `GET /roles`
+- User list endpoint `GET /users`
 - User-role assignment endpoint `PATCH /users/{userId}/role`
 - Audit log read endpoint `GET /audit-logs`
 - Authenticated session bootstrap endpoint `GET /auth/session`
@@ -100,3 +101,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated EMS notes to reflect that audit logs are now integrated, the role catalog is real, and role assignment remains intentionally blocked until the backend exposes an approved user-read contract
 - Updated EMS notes to reflect that the reverse-proxy runtime path has now been verified with a throwaway test stack and that only address create/edit plus the blocked role-assignment contract gap remain
 - Updated the EMS API contract to add `GET /users` as the approved admin-only user-list endpoint needed to complete the role-assignment UI without inventing a manual user selector
+- Updated EMS notes to reflect that `GET /users` is now implemented in the backend and that only the role-assignment UI wiring remains for this flow

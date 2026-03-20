@@ -36,6 +36,8 @@ using ListEmployeeAddressesResult = TimeSheet.Modules.EmploymentManagement.Appli
 using ListMyEmployeeAddressesQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.ListMine.Query;
 using ListRolesQuery = TimeSheet.Modules.EmploymentManagement.Application.Roles.List.Query;
 using ListRolesResult = TimeSheet.Modules.EmploymentManagement.Application.Roles.List.Result;
+using ListUsersQuery = TimeSheet.Modules.EmploymentManagement.Application.Users.List.Query;
+using ListUsersResult = TimeSheet.Modules.EmploymentManagement.Application.Users.List.Result;
 using SetMyEmployeeAddressPrimaryCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.SetOwnPrimary.Command;
 using SetEmployeeAddressPrimaryCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.SetPrimary.Command;
 using UpdateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Update.Command;
@@ -152,6 +154,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(PolicyNames.OwnAddressDelete, policy => policy.RequireRole(RoleCodes.Basic))
     .AddPolicy(PolicyNames.OwnAddressPrimaryManage, policy => policy.RequireRole(RoleCodes.Basic))
     .AddPolicy(PolicyNames.RoleRead, policy => policy.RequireRole(RoleCodes.Admin))
+    .AddPolicy(PolicyNames.UserRead, policy => policy.RequireRole(RoleCodes.Admin))
     .AddPolicy(PolicyNames.UserRoleAssign, policy => policy.RequireRole(RoleCodes.Admin))
     .AddPolicy(PolicyNames.AuditLogRead, policy => policy.RequireRole(RoleCodes.Admin))
     .SetFallbackPolicy(new AuthorizationPolicyBuilder()
@@ -471,6 +474,26 @@ app.MapGet("/roles", async Task<IResult> (
     var result = await bus.InvokeAsync<ListRolesResult>(new ListRolesQuery(includeInactive ?? false));
     return TypedResults.Ok(result);
 }).RequireAuthorization(PolicyNames.RoleRead);
+
+app.MapGet("/users", async Task<IResult> (
+    int? page,
+    int? pageSize,
+    string? email,
+    string? roleCode,
+    bool? includeInactive,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<ListUsersResult>(
+        new ListUsersQuery(
+            page ?? 1,
+            pageSize ?? 25,
+            email,
+            roleCode,
+            includeInactive ?? false));
+
+    return TypedResults.Ok(result);
+}).RequireAuthorization(PolicyNames.UserRead);
 
 app.MapMethods("/users/{userId:guid}/role", ["PATCH"], async Task<IResult> (
     Guid userId,

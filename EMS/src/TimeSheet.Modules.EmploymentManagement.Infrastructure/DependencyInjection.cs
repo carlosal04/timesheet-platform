@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeWriteService, EmployeeWriteService>();
         services.AddScoped<IEmployeeAddressService, EmployeeAddressService>();
         services.AddScoped<IRoleReadService, RoleReadService>();
+        services.AddScoped<IUserReadService, UserReadService>();
         services.AddScoped<IUserRoleService, UserRoleService>();
         services.AddScoped<DatabaseInitializer>();
 
