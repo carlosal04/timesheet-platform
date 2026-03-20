@@ -1,63 +1,120 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/app/PageHeader.vue'
-import ValidationSummary from '@/components/shared/ValidationSummary.vue'
+import ProblemStatePanel from '@/components/shared/ProblemStatePanel.vue'
+import { listRoles } from '@/services/api/roles'
+import { isApiProblemError, isProblemStatus } from '@/services/api/http'
 import { useSessionStore } from '@/stores/session'
+import type { RoleRecord } from '@/types/ems'
 
+const route = useRoute()
+const router = useRouter()
 const session = useSessionStore()
-const selectedRoles = reactive(
-  Object.fromEntries(session.mockUsers.map((user) => [user.id, user.roleCode])) as Record<string, 'Admin' | 'Basic'>,
-)
-const messages = ref<string[]>([])
+const includeInactive = ref(false)
+const roles = ref<RoleRecord[]>([])
+const loading = ref(true)
+const problem = ref<null | { code: string; title: string; description: string }>(null)
 
-function applyRole(userId: string) {
-  messages.value = []
-  const currentAdmins = Object.values(selectedRoles).filter((role) => role === 'Admin').length
-  const targetRole = selectedRoles[userId]
-  const currentRole = session.mockUsers.find((user) => user.id === userId)?.roleCode
+async function loadRoles() {
+  loading.value = true
+  problem.value = null
 
-  if (currentRole === 'Admin' && targetRole !== 'Admin' && currentAdmins <= 1) {
-    messages.value = ['This change would leave the system with zero active Admin users.']
-    return
+  try {
+    roles.value = await listRoles(includeInactive.value)
+  } catch (error) {
+    if (isProblemStatus(error, 401)) {
+      session.handleUnauthorized()
+      await router.replace({ name: 'login', query: { redirect: route.fullPath } })
+      return
+    }
+
+    if (isApiProblemError(error)) {
+      problem.value = {
+        code: String(error.status || 500),
+        title: error.problem.title ?? 'Role catalog unavailable',
+        description: error.problem.detail ?? 'The canonical role catalog could not be loaded from the EMS API.',
+      }
+      return
+    }
+
+    problem.value = {
+      code: '500',
+      title: 'Role catalog unavailable',
+      description: 'The canonical role catalog could not be loaded from the EMS API.',
+    }
+  } finally {
+    loading.value = false
   }
-
-  messages.value = ['Mock role assignment accepted. In the real integration this will revoke the target user session immediately.']
 }
+
+watch(includeInactive, () => {
+  void loadRoles()
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    void loadRoles()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <section class="view-stack">
     <PageHeader
       title="Roles"
-      description="Admin-only role management using the approved role codes and zero-admin protection rule."
+      description="Admin-only role catalog sourced from the real EMS backend."
+    >
+      <template #actions>
+        <label class="toggle text-muted">
+          <input v-model="includeInactive" type="checkbox" />
+          Include inactive
+        </label>
+      </template>
+    </PageHeader>
+
+    <ProblemStatePanel
+      code="Info"
+      title="Role assignment UI is waiting on a user-read contract."
+      description="The approved backend exposes GET /roles and PATCH /users/{userId}/role, but it does not yet expose a user-list/read endpoint for selecting the target user in a trustworthy UI."
     />
 
-    <ValidationSummary :messages="messages" />
+    <div v-if="loading" class="section-card">
+      <p class="text-muted">Loading canonical roles...</p>
+    </div>
 
-    <div class="section-card roles-card">
+    <ProblemStatePanel
+      v-else-if="problem"
+      :code="problem.code"
+      :title="problem.title"
+      :description="problem.description"
+    />
+
+    <div v-else class="section-card roles-card">
       <table class="table">
         <thead>
           <tr>
-            <th>User</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Action</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>System role</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in session.mockUsers" :key="user.id">
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
+          <tr v-for="role in roles" :key="role.id">
+            <td><span class="status-pill status-pill--primary">{{ role.code }}</span></td>
+            <td>{{ role.name }}</td>
             <td>
-              <select v-model="selectedRoles[user.id]" class="roles-card__select">
-                <option v-for="role in session.mockRoles" :key="role.id" :value="role.code">
-                  {{ role.name }}
-                </option>
-              </select>
+              <span
+                class="status-pill"
+                :class="role.isActive ? 'status-pill--success' : 'status-pill--warning'"
+              >
+                {{ role.isActive ? 'Active' : 'Inactive' }}
+              </span>
             </td>
-            <td>
-              <UButton color="primary" variant="soft" @click="applyRole(user.id)">Apply role</UButton>
-            </td>
+            <td>{{ role.isSystem ? 'Yes' : 'No' }}</td>
           </tr>
         </tbody>
       </table>
@@ -87,12 +144,9 @@ function applyRole(userId: string) {
   border-bottom: 1px solid var(--panel-border);
 }
 
-.roles-card__select {
-  min-height: 42px;
-  padding: 0 0.85rem;
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  background: var(--panel-bg-strong);
-  color: var(--text-main);
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>

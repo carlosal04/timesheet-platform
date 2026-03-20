@@ -217,6 +217,14 @@ The current EMS frontend foundation under `ui/` implements:
   - `PATCH /me/addresses/{addressId}/primary` and `DELETE /me/addresses/{addressId}` for self-service address actions
   - employee detail now links to the live admin address screen for real employee records
   - address create/edit buttons remain intentionally deferred to the next frontend slice
+- real audit-log integration with:
+  - `GET /audit-logs` for the admin audit page
+  - backend-driven filtering by actor user, action type, entity type, and result
+  - backend-driven paging posture with live audit metadata instead of mock summaries
+- partial role-screen integration with:
+  - `GET /roles` for the canonical role catalog
+  - explicit UI note that role assignment remains blocked by the lack of an approved user-list/read contract
+  - no invented user selector or mock-backed assignment flow retained for the real admin screen
 - shared frontend states and primitives for:
   - loading skeleton
   - empty state
@@ -234,7 +242,7 @@ Verified frontend foundation baseline:
 
 Current frontend pending work:
 - integrate address create/edit backend flows
-- integrate roles and audit-log backend flows
+- integrate role assignment once an approved user-read contract exists
 - verify the full frontend/backend runtime through the reverse proxy after real API integration
 
 ## Review checklist for future EMS changes

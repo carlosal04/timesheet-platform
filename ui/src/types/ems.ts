@@ -39,6 +39,7 @@ export interface RoleRecord {
   code: RoleCode
   name: string
   isActive: boolean
+  isSystem?: boolean
 }
 
 export interface AuditRecord {

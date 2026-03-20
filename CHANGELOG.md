@@ -76,6 +76,8 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Replaced the frontend mock employee list with real `GET /employees` integration and added a real `GET /employees/{id}` read path for the detail screen
 - Replaced the frontend mock employee create, edit, and delete flows with the real EMS employee write endpoints and shared `400/404/409` handling
 - Replaced the frontend mock admin/self-service address screens with real EMS address reads plus primary/delete actions
+- Replaced the frontend mock audit-log screen with the real EMS audit endpoint and live filtering/paging posture
+- Replaced the frontend mock role catalog with the real EMS role list, and explicitly blocked assignment UI until a user-read contract exists
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
@@ -94,3 +96,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated EMS notes to reflect that employee list and detail reads now use the real EMS backend while writes, addresses, roles, and audit screens remain pending frontend integrations
 - Updated EMS notes to reflect that employee write flows are now integrated and that addresses, roles, audit logs, and full reverse-proxy runtime verification remain the next frontend slices
 - Updated EMS notes to reflect that admin and self-service address screens now use the real EMS backend, while address create/edit, roles, audit logs, and full reverse-proxy runtime verification remain pending
+- Updated EMS notes to reflect that audit logs are now integrated, the role catalog is real, and role assignment remains intentionally blocked until the backend exposes an approved user-read contract
