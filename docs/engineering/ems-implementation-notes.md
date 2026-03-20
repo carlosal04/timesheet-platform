@@ -107,7 +107,6 @@ Implemented and verified:
 
 Pending:
 - integrate address create/edit backend flows in the frontend
-- integrate the admin role-assignment UI with the real `GET /users` and `PATCH /users/{userId}/role` backend flows
 - after those slices are green, resume cross-cutting hardening and backend freeze/handoff work
 
 ## Backend-ready summary for UI planning
@@ -221,10 +220,11 @@ The current EMS frontend foundation under `ui/` implements:
   - `GET /audit-logs` for the admin audit page
   - backend-driven filtering by actor user, action type, entity type, and result
   - backend-driven paging posture with live audit metadata instead of mock summaries
-- partial role-screen integration with:
+- real role-screen integration with:
   - `GET /roles` for the canonical role catalog
-  - `GET /users` for the real admin-selectable user list
-  - role-assignment action UI remains pending until the table and per-row assignment workflow are wired to the real backend
+  - `GET /users` for the admin-selectable user list with paging and filtering
+  - `PATCH /users/{userId}/role` for per-row role changes
+  - local inline success and problem feedback for role-change outcomes, including session-revocation counts
 - verified reverse-proxy runtime path with the real UI:
   - rebuilt the frontend and API containers from the current repo state
   - served the UI through `http://localhost:8088/`
@@ -248,7 +248,6 @@ Verified frontend foundation baseline:
 
 Current frontend pending work:
 - integrate address create/edit backend flows
-- integrate role assignment with the approved `GET /users` contract and the existing `PATCH /users/{userId}/role` action
 
 ## Review checklist for future EMS changes
 

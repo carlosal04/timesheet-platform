@@ -36,10 +36,21 @@ export interface UserRecord {
 
 export interface RoleRecord {
   id: string
-  code: RoleCode
+  code: string
   name: string
   isActive: boolean
   isSystem?: boolean
+}
+
+export interface UserListRow {
+  id: string
+  email: string
+  roleId: string
+  roleCode: string
+  roleName: string
+  employeeId: string | null
+  employeeName: string | null
+  isActive: boolean
 }
 
 export interface AuditRecord {

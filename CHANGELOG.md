@@ -78,7 +78,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Replaced the frontend mock employee create, edit, and delete flows with the real EMS employee write endpoints and shared `400/404/409` handling
 - Replaced the frontend mock admin/self-service address screens with real EMS address reads plus primary/delete actions
 - Replaced the frontend mock audit-log screen with the real EMS audit endpoint and live filtering/paging posture
-- Replaced the frontend mock role catalog with the real EMS role list, and explicitly blocked assignment UI until a user-read contract exists
+- Replaced the frontend mock role catalog blocker with the real EMS role catalog, user list, and role-assignment workflow
 - Verified the real UI through the Docker reverse-proxy path, including login, session bootstrap, and anti-forgery bootstrap
 
 ### Documentation
@@ -102,3 +102,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated EMS notes to reflect that the reverse-proxy runtime path has now been verified with a throwaway test stack and that only address create/edit plus the blocked role-assignment contract gap remain
 - Updated the EMS API contract to add `GET /users` as the approved admin-only user-list endpoint needed to complete the role-assignment UI without inventing a manual user selector
 - Updated EMS notes to reflect that `GET /users` is now implemented in the backend and that only the role-assignment UI wiring remains for this flow
+- Updated EMS notes to reflect that the roles screen now uses the real role catalog, user list, and role-assignment action, leaving address create/edit as the remaining major frontend slice
