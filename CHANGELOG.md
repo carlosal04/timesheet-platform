@@ -103,3 +103,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated the EMS API contract to add `GET /users` as the approved admin-only user-list endpoint needed to complete the role-assignment UI without inventing a manual user selector
 - Updated EMS notes to reflect that `GET /users` is now implemented in the backend and that only the role-assignment UI wiring remains for this flow
 - Updated EMS notes to reflect that the roles screen now uses the real role catalog, user list, and role-assignment action, leaving address create/edit as the remaining major frontend slice
+- Updated EMS notes to reflect successful reverse-proxy verification of `GET /users` and a real role change through `PATCH /users/{userId}/role` in a throwaway runtime stack

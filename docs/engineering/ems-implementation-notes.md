@@ -230,6 +230,8 @@ The current EMS frontend foundation under `ui/` implements:
   - served the UI through `http://localhost:8088/`
   - verified `/`, `/healthz`, and `/api/health`
   - verified login, `GET /auth/session`, and `GET /auth/antiforgery` through the reverse proxy
+  - verified `GET /roles` and `GET /users` through the reverse proxy
+  - verified one successful user-role change through `PATCH /users/{userId}/role` on a throwaway seeded user in the temporary runtime database
   - used an isolated throwaway Compose project with explicit test-only env vars because `EMS/.env` was not present in this workspace
 - shared frontend states and primitives for:
   - loading skeleton
