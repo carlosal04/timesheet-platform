@@ -78,6 +78,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Replaced the frontend mock admin/self-service address screens with real EMS address reads plus primary/delete actions
 - Replaced the frontend mock audit-log screen with the real EMS audit endpoint and live filtering/paging posture
 - Replaced the frontend mock role catalog with the real EMS role list, and explicitly blocked assignment UI until a user-read contract exists
+- Verified the real UI through the Docker reverse-proxy path, including login, session bootstrap, and anti-forgery bootstrap
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
@@ -97,3 +98,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated EMS notes to reflect that employee write flows are now integrated and that addresses, roles, audit logs, and full reverse-proxy runtime verification remain the next frontend slices
 - Updated EMS notes to reflect that admin and self-service address screens now use the real EMS backend, while address create/edit, roles, audit logs, and full reverse-proxy runtime verification remain pending
 - Updated EMS notes to reflect that audit logs are now integrated, the role catalog is real, and role assignment remains intentionally blocked until the backend exposes an approved user-read contract
+- Updated EMS notes to reflect that the reverse-proxy runtime path has now been verified with a throwaway test stack and that only address create/edit plus the blocked role-assignment contract gap remain

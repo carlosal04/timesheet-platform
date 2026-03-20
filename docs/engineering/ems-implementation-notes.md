@@ -225,6 +225,12 @@ The current EMS frontend foundation under `ui/` implements:
   - `GET /roles` for the canonical role catalog
   - explicit UI note that role assignment remains blocked by the lack of an approved user-list/read contract
   - no invented user selector or mock-backed assignment flow retained for the real admin screen
+- verified reverse-proxy runtime path with the real UI:
+  - rebuilt the frontend and API containers from the current repo state
+  - served the UI through `http://localhost:8088/`
+  - verified `/`, `/healthz`, and `/api/health`
+  - verified login, `GET /auth/session`, and `GET /auth/antiforgery` through the reverse proxy
+  - used an isolated throwaway Compose project with explicit test-only env vars because `EMS/.env` was not present in this workspace
 - shared frontend states and primitives for:
   - loading skeleton
   - empty state
@@ -243,7 +249,6 @@ Verified frontend foundation baseline:
 Current frontend pending work:
 - integrate address create/edit backend flows
 - integrate role assignment once an approved user-read contract exists
-- verify the full frontend/backend runtime through the reverse proxy after real API integration
 
 ## Review checklist for future EMS changes
 
