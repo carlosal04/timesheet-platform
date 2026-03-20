@@ -591,7 +591,49 @@ Returns canonical roles from the `Role` table. Admin only.
 }
 ```
 
-## 6.2 PATCH `/users/{userId}/role`
+## 6.2 GET `/users`
+Returns paginated users for admin user-management and role-assignment screens. Admin only.
+
+### Query parameters
+| Name | Type | Notes |
+|---|---|---|
+| `page` | int | default 1 |
+| `pageSize` | int | default 25 |
+| `email` | string? | optional contains filter |
+| `roleCode` | string? | optional exact role-code filter |
+| `includeInactive` | bool? | Admin only; default false |
+
+### Success
+- Status: `200 OK`
+```json
+{
+  "items": [
+    {
+      "id": "guid",
+      "email": "user@example.com",
+      "roleId": "guid",
+      "roleCode": "Admin",
+      "roleName": "Administrator",
+      "employeeId": "guid or null",
+      "employeeName": "Ana Lopez or null",
+      "isActive": true
+    }
+  ],
+  "page": 1,
+  "pageSize": 25,
+  "totalCount": 1
+}
+```
+
+### Required behavior
+- only Admin may call this endpoint
+- active users are returned by default
+- inactive users are included only when `includeInactive=true`
+- results are sorted by `email ASC`
+- `employeeName` is derived from the linked employee record when `employeeId` exists; otherwise `null`
+- this endpoint exists so the frontend can select a trustworthy role-assignment target without inventing a manual user ID flow
+
+## 6.3 PATCH `/users/{userId}/role`
 Assigns or changes the role of a user. Admin only.
 
 ### Request
@@ -693,3 +735,4 @@ Returns paginated audit events for Admin.
 4. Frontend should use `GET /auth/session` as the bootstrap source for current user identity and session timing after login and on page reload.
 5. Frontend should call `GET /auth/antiforgery` after login/session bootstrap and send `X-CSRF-TOKEN` for all state-changing requests.
 6. Frontend should renew only while the current session is still valid; a `401` means the user must log in again.
+7. The role-assignment screen should combine `GET /roles` for the canonical role catalog with `GET /users` for the selectable target-user list.

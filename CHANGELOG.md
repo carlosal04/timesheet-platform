@@ -99,3 +99,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated EMS notes to reflect that admin and self-service address screens now use the real EMS backend, while address create/edit, roles, audit logs, and full reverse-proxy runtime verification remain pending
 - Updated EMS notes to reflect that audit logs are now integrated, the role catalog is real, and role assignment remains intentionally blocked until the backend exposes an approved user-read contract
 - Updated EMS notes to reflect that the reverse-proxy runtime path has now been verified with a throwaway test stack and that only address create/edit plus the blocked role-assignment contract gap remain
+- Updated the EMS API contract to add `GET /users` as the approved admin-only user-list endpoint needed to complete the role-assignment UI without inventing a manual user selector

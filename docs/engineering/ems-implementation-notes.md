@@ -71,7 +71,7 @@ The current EMS foundation checkpoint implements the approved Phase 1 backend co
 
 ## Current hardening follow-ups
 
-- no remaining business endpoints are pending in the current approved EMS Phase 1 backend contract
+- the approved contract now includes a pending `GET /users` admin endpoint to support the role-assignment UI without inventing a manual user selector
 - no remaining Docker CVE remediation work is pending for the current approved baseline
 - the frontend, reverse-proxy, PostgreSQL, and API Docker image references are now pinned to the verified artifacts used for the current runtime baseline
 - data-protection keys now persist for the current local and Docker single-instance runtime, but a shared/protected key-ring strategy would still be needed before multi-instance production deployment
@@ -104,11 +104,9 @@ Implemented and verified:
 - `GET /audit-logs`
 
 Pending:
-- no remaining business endpoints in the current approved EMS Phase 1 backend contract
-- cross-cutting hardening and runtime-completion items only
-- next hardening priorities:
-  - local shell/toolchain verification stability
-  - backend freeze and handoff readiness for frontend planning
+- implement `GET /users` in the EMS backend and wire it into the admin role-assignment UI
+- integrate address create/edit backend flows in the frontend
+- after those slices are green, resume cross-cutting hardening and backend freeze/handoff work
 
 ## Backend-ready summary for UI planning
 
@@ -223,8 +221,8 @@ The current EMS frontend foundation under `ui/` implements:
   - backend-driven paging posture with live audit metadata instead of mock summaries
 - partial role-screen integration with:
   - `GET /roles` for the canonical role catalog
-  - explicit UI note that role assignment remains blocked by the lack of an approved user-list/read contract
-  - no invented user selector or mock-backed assignment flow retained for the real admin screen
+  - explicit approved contract addition for `GET /users` so role assignment can now be implemented without inventing a manual user selector
+  - role screen implementation remains pending until the new user list and assignment UI are wired to the real backend
 - verified reverse-proxy runtime path with the real UI:
   - rebuilt the frontend and API containers from the current repo state
   - served the UI through `http://localhost:8088/`
@@ -248,7 +246,7 @@ Verified frontend foundation baseline:
 
 Current frontend pending work:
 - integrate address create/edit backend flows
-- integrate role assignment once an approved user-read contract exists
+- integrate role assignment with the approved `GET /users` contract and the existing `PATCH /users/{userId}/role` action
 
 ## Review checklist for future EMS changes
 
