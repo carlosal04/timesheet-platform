@@ -209,7 +209,14 @@ The current EMS frontend foundation under `ui/` implements:
   - `PUT /employees/{id}` for the edit form
   - `DELETE /employees/{id}` from the employee detail screen
   - real `400/404/409` handling through shared problem and validation states
-  - detail-page posture adjusted so real employee records do not link into not-yet-integrated address management screens
+  - detail-page posture adjusted so employee CRUD is live while address create/edit remains on the next frontend slice
+- real address screen integration with:
+  - `GET /employees/{employeeId}/addresses` for the admin address-management screen
+  - `GET /me/addresses` for the self-service address screen
+  - `PATCH /employees/{employeeId}/addresses/{addressId}/primary` and `DELETE /employees/{employeeId}/addresses/{addressId}` for admin address actions
+  - `PATCH /me/addresses/{addressId}/primary` and `DELETE /me/addresses/{addressId}` for self-service address actions
+  - employee detail now links to the live admin address screen for real employee records
+  - address create/edit buttons remain intentionally deferred to the next frontend slice
 - shared frontend states and primitives for:
   - loading skeleton
   - empty state
@@ -226,7 +233,8 @@ Verified frontend foundation baseline:
 - the built frontend container passes `/healthz` and the nginx healthcheck
 
 Current frontend pending work:
-- integrate address, roles, and audit-log backend flows
+- integrate address create/edit backend flows
+- integrate roles and audit-log backend flows
 - verify the full frontend/backend runtime through the reverse proxy after real API integration
 
 ## Review checklist for future EMS changes

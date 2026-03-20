@@ -156,14 +156,10 @@ watch(
       <div class="section-card panel">
         <div class="panel__header">
           <h3>Addresses</h3>
-          <RouterLink v-if="usingMockFallback" :to="`/employees/${employee.id}/addresses`">
+          <RouterLink :to="`/employees/${employee.id}/addresses`">
             <UButton color="neutral" variant="soft">Manage addresses</UButton>
           </RouterLink>
         </div>
-        <p v-if="!usingMockFallback" class="text-muted">
-          Address management is still on the next frontend integration slice. The current detail page already
-          shows the live address data returned by the EMS API.
-        </p>
         <div class="address-grid">
           <article v-for="address in employee.addresses" :key="address.id" class="address-card">
             <span v-if="address.isPrimary" class="status-pill status-pill--brand">Primary</span>
