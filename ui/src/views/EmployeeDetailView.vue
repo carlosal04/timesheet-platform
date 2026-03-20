@@ -20,6 +20,33 @@ const showingDeleteConfirm = ref(false)
 const usingMockFallback = ref(false)
 
 const fallbackEmployee = computed(() => findEmployee(String(route.params.id)))
+const canManageAddresses = computed(() => {
+  if (!employee.value) {
+    return false
+  }
+
+  if (session.roleCode === 'Admin') {
+    return true
+  }
+
+  return session.session?.employeeId === employee.value.id
+})
+
+const manageAddressesRoute = computed(() => {
+  if (!employee.value) {
+    return '/employees'
+  }
+
+  if (session.roleCode === 'Admin') {
+    return `/employees/${employee.value.id}/addresses`
+  }
+
+  return '/me/addresses'
+})
+
+const manageAddressesLabel = computed(() =>
+  session.roleCode === 'Admin' ? 'Manage addresses' : 'Manage my addresses',
+)
 
 async function loadEmployee() {
   loading.value = true
@@ -156,8 +183,8 @@ watch(
       <div class="section-card panel">
         <div class="panel__header">
           <h3>Addresses</h3>
-          <RouterLink :to="`/employees/${employee.id}/addresses`">
-            <UButton color="neutral" variant="soft">Manage addresses</UButton>
+          <RouterLink v-if="canManageAddresses" :to="manageAddressesRoute">
+            <UButton color="neutral" variant="soft">{{ manageAddressesLabel }}</UButton>
           </RouterLink>
         </div>
         <div class="address-grid">

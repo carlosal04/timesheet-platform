@@ -51,8 +51,10 @@ The current EMS foundation checkpoint implements the approved Phase 1 backend co
 - PostgreSQL 18 healthcheck verification succeeded locally on a fresh temporary Compose volume
 - EF migration verification succeeded against PostgreSQL 18 on a fresh temporary Compose volume
 - containerized application smoke verification against PostgreSQL 18 succeeded for health, login, session bootstrap, and employee list
+- containerized reverse-proxy verification also succeeded for employee creation plus admin address create and update through the browser-facing `/api` path on an isolated throwaway stack
 - local Windows verification required moving the default published PostgreSQL host port from `54329` to `15432` because the original range was excluded on this machine
 - the standalone local-host PostgreSQL 18 smoke path in this shell proved unreliable; the trusted verification path for the PostgreSQL 18 upgrade is the containerized runtime path
+- solution-level `dotnet build` and `dotnet test` now pass again in this shell under `.NET SDK 10.0.201`
 
 ## Audit coverage notes
 
@@ -62,13 +64,9 @@ The current EMS foundation checkpoint implements the approved Phase 1 backend co
 
 ## Known environment and tooling issues
 
-- in this shell, solution-level `dotnet build` and `dotnet test` currently fail before compilation under `.NET SDK 10.0.200` with `MSB4276` workload SDK resolver errors
-- the missing resolver directories reported by MSBuild are:
-  - `Microsoft.NET.SDK.WorkloadAutoImportPropsLocator`
-  - `Microsoft.NET.SDK.WorkloadManifestTargetsLocator`
-- this is a shell or machine toolchain issue, not an identified EMS product-code regression
-- the current repair path is to repair or reinstall the `.NET SDK 10.0.200` / Visual Studio-managed .NET 10 installation until those resolver SDK folders are restored and solution-level `dotnet build` works again
-- local EF migration generation currently succeeds through `dotnet-ef --no-build` after a successful build path, and the repo EF helper reuses the already-restored local tool before attempting restore
+- the previous `.NET SDK 10.0.200` `MSB4276` workload-resolver issue was resolved after repairing the local .NET 10 / Visual Studio installation and moving to `.NET SDK 10.0.201`
+- local EF migration generation still succeeds through `dotnet-ef --no-build` after a successful build path, and the repo EF helper reuses the already-restored local tool before attempting restore
+- a full rebuild immediately after running tests can still show a transient locked-PDB warning if `testhost` has not released a test assembly yet; current solution build/test verification remains green
 
 ## Current hardening follow-ups
 
@@ -106,7 +104,8 @@ Implemented and verified:
 - `GET /audit-logs`
 
 Pending:
-- integrate address create/edit backend flows in the frontend
+- no remaining approved Phase 1 endpoint-surface gaps are pending in the current EMS frontend/backend baseline
+- remaining work is now demo polish, optional UX refinement, and any new scope beyond the current approved Phase 1 contract
 - after those slices are green, resume cross-cutting hardening and backend freeze/handoff work
 
 ## Backend-ready summary for UI planning
@@ -208,14 +207,16 @@ The current EMS frontend foundation under `ui/` implements:
   - `PUT /employees/{id}` for the edit form
   - `DELETE /employees/{id}` from the employee detail screen
   - real `400/404/409` handling through shared problem and validation states
-  - detail-page posture adjusted so employee CRUD is live while address create/edit remains on the next frontend slice
+  - detail-page posture adjusted so Admin users stay on the admin address-management route while Basic users only see `/me/addresses` for their own linked employee record
 - real address screen integration with:
   - `GET /employees/{employeeId}/addresses` for the admin address-management screen
+  - `POST /employees/{employeeId}/addresses` for admin address creation
+  - `PUT /employees/{employeeId}/addresses/{addressId}` for admin address editing
   - `GET /me/addresses` for the self-service address screen
   - `PATCH /employees/{employeeId}/addresses/{addressId}/primary` and `DELETE /employees/{employeeId}/addresses/{addressId}` for admin address actions
   - `PATCH /me/addresses/{addressId}/primary` and `DELETE /me/addresses/{addressId}` for self-service address actions
   - employee detail now links to the live admin address screen for real employee records
-  - address create/edit buttons remain intentionally deferred to the next frontend slice
+  - admin address create/edit uses the real backend contract, canonical address-type values, and shared validation/problem handling
 - real audit-log integration with:
   - `GET /audit-logs` for the admin audit page
   - backend-driven filtering by actor user, action type, entity type, and result
@@ -232,6 +233,7 @@ The current EMS frontend foundation under `ui/` implements:
   - verified login, `GET /auth/session`, and `GET /auth/antiforgery` through the reverse proxy
   - verified `GET /roles` and `GET /users` through the reverse proxy
   - verified one successful user-role change through `PATCH /users/{userId}/role` on a throwaway seeded user in the temporary runtime database
+  - verified one successful employee create plus admin address create and update flow through the reverse proxy on a throwaway seeded employee in the temporary runtime database
   - used an isolated throwaway Compose project with explicit test-only env vars because `EMS/.env` was not present in this workspace
 - shared frontend states and primitives for:
   - loading skeleton
@@ -249,7 +251,8 @@ Verified frontend foundation baseline:
 - the built frontend container passes `/healthz` and the nginx healthcheck
 
 Current frontend pending work:
-- integrate address create/edit backend flows
+- no approved Phase 1 endpoint-surface gaps remain for the current EMS UI demo baseline
+- optional next work is demo polish, additional UX refinements, and any scope added beyond the current approved contract
 
 ## Review checklist for future EMS changes
 

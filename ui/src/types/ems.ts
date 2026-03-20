@@ -2,7 +2,7 @@ export type RoleCode = 'Admin' | 'Basic'
 
 export interface EmployeeAddress {
   id: string
-  addressType: 'Home' | 'Mailing' | 'Work'
+  addressType: 'Home' | 'Mailing' | 'EmergencyContact' | 'Other'
   isPrimary: boolean
   line1: string
   line2: string | null

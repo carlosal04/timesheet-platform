@@ -77,9 +77,11 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Replaced the frontend mock employee list with real `GET /employees` integration and added a real `GET /employees/{id}` read path for the detail screen
 - Replaced the frontend mock employee create, edit, and delete flows with the real EMS employee write endpoints and shared `400/404/409` handling
 - Replaced the frontend mock admin/self-service address screens with real EMS address reads plus primary/delete actions
+- Replaced the deferred frontend admin address create/edit gap with the real EMS address create/update workflow, canonical address-type values, and shared validation/problem handling
 - Replaced the frontend mock audit-log screen with the real EMS audit endpoint and live filtering/paging posture
 - Replaced the frontend mock role catalog blocker with the real EMS role catalog, user list, and role-assignment workflow
 - Verified the real UI through the Docker reverse-proxy path, including login, session bootstrap, and anti-forgery bootstrap
+- Verified employee create plus admin address create/update through the Docker reverse-proxy path on a throwaway runtime stack
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
@@ -104,3 +106,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated EMS notes to reflect that `GET /users` is now implemented in the backend and that only the role-assignment UI wiring remains for this flow
 - Updated EMS notes to reflect that the roles screen now uses the real role catalog, user list, and role-assignment action, leaving address create/edit as the remaining major frontend slice
 - Updated EMS notes to reflect successful reverse-proxy verification of `GET /users` and a real role change through `PATCH /users/{userId}/role` in a throwaway runtime stack
+- Updated EMS notes to reflect that the admin address screen now supports live create/edit flows, that the current shell-level .NET verification issue is resolved, and that the current EMS demo baseline no longer has an approved endpoint-surface gap

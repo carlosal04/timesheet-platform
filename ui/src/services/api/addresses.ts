@@ -18,6 +18,22 @@ interface EmployeeAddressItem {
   countryCode: string
 }
 
+interface AddressWriteResponse {
+  id: string
+  employeeId: string
+}
+
+export interface AddressWriteInput {
+  addressType: EmployeeAddress['addressType']
+  isPrimary: boolean
+  line1: string
+  line2: string | null
+  city: string
+  state: string
+  zipCode: string
+  countryCode: string
+}
+
 function toEmployeeAddress(item: EmployeeAddressItem): EmployeeAddress {
   return {
     id: item.id,
@@ -32,10 +48,41 @@ function toEmployeeAddress(item: EmployeeAddressItem): EmployeeAddress {
   }
 }
 
+function toAddressWriteBody(input: AddressWriteInput): Record<string, unknown> {
+  return {
+    addressType: input.addressType,
+    isPrimary: input.isPrimary,
+    line1: input.line1,
+    line2: input.line2,
+    city: input.city,
+    state: input.state,
+    zipCode: input.zipCode,
+    countryCode: input.countryCode,
+  }
+}
+
 export async function listEmployeeAddresses(employeeId: string, includeDeleted = false) {
   const query = includeDeleted ? '?includeDeleted=true' : ''
   const response = await apiRequest<EmployeeAddressListResponse>(`/employees/${employeeId}/addresses${query}`)
   return response.items.map(toEmployeeAddress)
+}
+
+export async function createEmployeeAddress(employeeId: string, input: AddressWriteInput) {
+  const response = await apiRequest<AddressWriteResponse>(`/employees/${employeeId}/addresses`, {
+    method: 'POST',
+    body: toAddressWriteBody(input),
+  })
+
+  return response.id
+}
+
+export async function updateEmployeeAddress(employeeId: string, addressId: string, input: AddressWriteInput) {
+  const response = await apiRequest<AddressWriteResponse>(`/employees/${employeeId}/addresses/${addressId}`, {
+    method: 'PUT',
+    body: toAddressWriteBody(input),
+  })
+
+  return response.id
 }
 
 export async function setEmployeeAddressPrimary(employeeId: string, addressId: string) {
