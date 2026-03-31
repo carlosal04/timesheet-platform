@@ -181,6 +181,7 @@ That is out of scope for Phase 1.
 - `AddressWrite`
 - `AddressDeleteAny`
 - `AddressPrimaryManageAny`
+- `OwnAddressRead`
 - `OwnAddressDelete`
 - `OwnAddressPrimaryManage`
 - `RoleRead`
@@ -201,6 +202,7 @@ That is out of scope for Phase 1.
 | `AddressWrite` | Admin, HR | create/update addresses |
 | `AddressDeleteAny` | Admin, HR | soft delete any address |
 | `AddressPrimaryManageAny` | Admin, HR | set primary for any employee |
+| `OwnAddressRead` | Manager, Developer | self-service address reads |
 | `OwnAddressDelete` | Manager, Developer | requires resource-based ownership check |
 | `OwnAddressPrimaryManage` | Manager, Developer | requires resource-based ownership check |
 | `RoleRead` | Admin | list canonical roles |

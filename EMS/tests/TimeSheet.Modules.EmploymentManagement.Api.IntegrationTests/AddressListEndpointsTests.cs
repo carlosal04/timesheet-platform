@@ -113,7 +113,7 @@ public sealed class AddressListEndpointsTests : IClassFixture<AuthApiFactory>
     }
 
     [Fact]
-    public async Task GetEmployeeAddresses_IncludeDeletedIsForbiddenForBasic()
+    public async Task GetEmployeeAddresses_IncludeDeletedIsForbiddenForManager()
     {
         await _factory.ResetDatabaseAsync();
 
@@ -122,13 +122,13 @@ public sealed class AddressListEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.address.reader@example.com",
-                RoleId = basicRole.Id,
+                Email = "manager.address.reader@example.com",
+                RoleId = managerRole.Id,
                 IsActive = true
             };
 
@@ -157,7 +157,7 @@ public sealed class AddressListEndpointsTests : IClassFixture<AuthApiFactory>
             HandleCookies = false
         });
 
-        var authCookie = await LoginAsync(client, "basic.address.reader@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "manager.address.reader@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, $"/employees/{employeeId}/addresses?includeDeleted=true");
         request.Headers.Add("Cookie", authCookie);
 

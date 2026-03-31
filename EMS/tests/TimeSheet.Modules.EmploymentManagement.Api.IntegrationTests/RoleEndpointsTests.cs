@@ -36,11 +36,15 @@ public sealed class RoleEndpointsTests : IClassFixture<AuthApiFactory>
 
         var payload = await response.Content.ReadFromJsonAsync<RoleListResult>();
         Assert.NotNull(payload);
-        Assert.Equal(2, payload!.Items.Count);
+        Assert.Equal(4, payload!.Items.Count);
         Assert.Equal(RoleCodes.Admin, payload.Items[0].Code);
         Assert.Equal("Administrator", payload.Items[0].Name);
-        Assert.Equal(RoleCodes.Basic, payload.Items[1].Code);
-        Assert.Equal("Basic User", payload.Items[1].Name);
+        Assert.Equal(RoleCodes.Developer, payload.Items[1].Code);
+        Assert.Equal("Developer", payload.Items[1].Name);
+        Assert.Equal(RoleCodes.HR, payload.Items[2].Code);
+        Assert.Equal("Human Resources", payload.Items[2].Name);
+        Assert.Equal(RoleCodes.Manager, payload.Items[3].Code);
+        Assert.Equal("Manager", payload.Items[3].Name);
         Assert.All(payload.Items, item => Assert.True(item.IsActive));
         Assert.All(payload.Items, item => Assert.True(item.IsSystem));
     }
@@ -53,8 +57,8 @@ public sealed class RoleEndpointsTests : IClassFixture<AuthApiFactory>
         await _factory.ExecuteScopedAsync(async services =>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
-            basicRole.IsActive = false;
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
+            developerRole.IsActive = false;
             await dbContext.SaveChangesAsync();
         });
 
@@ -69,12 +73,12 @@ public sealed class RoleEndpointsTests : IClassFixture<AuthApiFactory>
 
         var payload = await response.Content.ReadFromJsonAsync<RoleListResult>();
         Assert.NotNull(payload);
-        Assert.Equal(2, payload!.Items.Count);
-        Assert.Contains(payload.Items, item => item.Code == RoleCodes.Basic && item.IsActive == false);
+        Assert.Equal(4, payload!.Items.Count);
+        Assert.Contains(payload.Items, item => item.Code == RoleCodes.Developer && item.IsActive == false);
     }
 
     [Fact]
-    public async Task GetRoles_ForBasicUser_ReturnsForbidden()
+    public async Task GetRoles_ForHrUser_ReturnsForbidden()
     {
         await _factory.ResetDatabaseAsync();
 
@@ -82,13 +86,13 @@ public sealed class RoleEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var hrRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.HR);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.roles@example.com",
-                RoleId = basicRole.Id,
+                Email = "hr.roles@example.com",
+                RoleId = hrRole.Id,
                 IsActive = true
             };
 
@@ -98,7 +102,7 @@ public sealed class RoleEndpointsTests : IClassFixture<AuthApiFactory>
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.roles@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "hr.roles@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/roles");
         request.Headers.Add("Cookie", authCookie);
 

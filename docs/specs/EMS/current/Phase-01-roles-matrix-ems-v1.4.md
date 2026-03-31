@@ -67,6 +67,7 @@ The word "own" means the address belongs to the employee record linked to `User.
 | Create Address | Add a new address | `AddressWrite` | ✔️ | ✔️ | ❌ | ❌ |
 | Update Address | Edit an address | `AddressWrite` | ✔️ | ✔️ | ❌ | ❌ |
 | Set Primary Address (Any Employee) | Make any employee address primary | `AddressPrimaryManageAny` | ✔️ | ✔️ | ❌ | ❌ |
+| List Own Addresses | View own linked employee addresses | `OwnAddressRead` | ❌ | ❌ | ✔️ | ✔️ |
 | Set Primary Address (Own) | Make own linked employee address primary | `OwnAddressPrimaryManage` | ❌ | ❌ | ✔️ | ✔️ |
 | Soft Delete Address (Any Employee) | Mark any employee address as deleted | `AddressDeleteAny` | ✔️ | ✔️ | ❌ | ❌ |
 | Soft Delete Address (Own) | Mark own linked employee address as deleted | `OwnAddressDelete` | ❌ | ❌ | ✔️ | ✔️ |

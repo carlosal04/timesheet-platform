@@ -35,13 +35,13 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.ownprimary@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.ownprimary@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -94,7 +94,7 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.ownprimary@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.ownprimary@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/me/addresses/{newPrimaryId}/primary");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
@@ -132,13 +132,13 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.forbiddenprimary@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.forbiddenprimary@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = ownEmployeeId,
                 IsActive = true
             };
@@ -190,7 +190,7 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.forbiddenprimary@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.forbiddenprimary@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/me/addresses/{otherAddressId}/primary");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
@@ -214,13 +214,13 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.deletedprimary@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.deletedprimary@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -260,7 +260,7 @@ public sealed class OwnAddressSetPrimaryEndpointsTests : IClassFixture<AuthApiFa
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.deletedprimary@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.deletedprimary@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/me/addresses/{addressId}/primary");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 

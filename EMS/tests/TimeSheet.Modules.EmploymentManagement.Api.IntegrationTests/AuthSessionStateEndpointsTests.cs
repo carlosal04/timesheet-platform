@@ -51,7 +51,7 @@ public sealed class AuthSessionStateEndpointsTests : IClassFixture<AuthApiFactor
     }
 
     [Fact]
-    public async Task GetSession_ReturnsLinkedEmployeeId_ForBasicUser()
+    public async Task GetSession_ReturnsLinkedEmployeeId_ForManagerUser()
     {
         await _factory.ResetDatabaseAsync();
 
@@ -60,7 +60,7 @@ public sealed class AuthSessionStateEndpointsTests : IClassFixture<AuthApiFactor
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             dbContext.Employees.Add(new Employee
             {
@@ -78,8 +78,8 @@ public sealed class AuthSessionStateEndpointsTests : IClassFixture<AuthApiFactor
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.session@example.com",
-                RoleId = basicRole.Id,
+                Email = "manager.session@example.com",
+                RoleId = managerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -90,7 +90,7 @@ public sealed class AuthSessionStateEndpointsTests : IClassFixture<AuthApiFactor
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.session@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "manager.session@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/auth/session");
         request.Headers.Add("Cookie", authCookie);
 
@@ -100,7 +100,7 @@ public sealed class AuthSessionStateEndpointsTests : IClassFixture<AuthApiFactor
 
         var payload = await response.Content.ReadFromJsonAsync<SessionResponse>();
         Assert.NotNull(payload);
-        Assert.Equal(RoleCodes.Basic, payload!.RoleCode);
+        Assert.Equal(RoleCodes.Manager, payload!.RoleCode);
         Assert.Equal(employeeId, payload.EmployeeId);
     }
 

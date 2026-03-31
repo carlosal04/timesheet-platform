@@ -144,15 +144,16 @@ builder.Services
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(PolicyNames.AuthenticatedUser, policy => policy.RequireAuthenticatedUser())
     .AddPolicy(PolicyNames.AdminOnly, policy => policy.RequireRole(RoleCodes.Admin))
-    .AddPolicy(PolicyNames.EmployeeRead, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.Basic))
-    .AddPolicy(PolicyNames.EmployeeWrite, policy => policy.RequireRole(RoleCodes.Admin))
-    .AddPolicy(PolicyNames.EmployeeDelete, policy => policy.RequireRole(RoleCodes.Admin))
-    .AddPolicy(PolicyNames.AddressRead, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.Basic))
-    .AddPolicy(PolicyNames.AddressWrite, policy => policy.RequireRole(RoleCodes.Admin))
-    .AddPolicy(PolicyNames.AddressDeleteAny, policy => policy.RequireRole(RoleCodes.Admin))
-    .AddPolicy(PolicyNames.AddressPrimaryManageAny, policy => policy.RequireRole(RoleCodes.Admin))
-    .AddPolicy(PolicyNames.OwnAddressDelete, policy => policy.RequireRole(RoleCodes.Basic))
-    .AddPolicy(PolicyNames.OwnAddressPrimaryManage, policy => policy.RequireRole(RoleCodes.Basic))
+    .AddPolicy(PolicyNames.EmployeeRead, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.HR, RoleCodes.Manager))
+    .AddPolicy(PolicyNames.EmployeeWrite, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.HR))
+    .AddPolicy(PolicyNames.EmployeeDelete, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.HR))
+    .AddPolicy(PolicyNames.AddressRead, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.HR, RoleCodes.Manager))
+    .AddPolicy(PolicyNames.AddressWrite, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.HR))
+    .AddPolicy(PolicyNames.AddressDeleteAny, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.HR))
+    .AddPolicy(PolicyNames.AddressPrimaryManageAny, policy => policy.RequireRole(RoleCodes.Admin, RoleCodes.HR))
+    .AddPolicy(PolicyNames.OwnAddressRead, policy => policy.RequireRole(RoleCodes.Manager, RoleCodes.Developer))
+    .AddPolicy(PolicyNames.OwnAddressDelete, policy => policy.RequireRole(RoleCodes.Manager, RoleCodes.Developer))
+    .AddPolicy(PolicyNames.OwnAddressPrimaryManage, policy => policy.RequireRole(RoleCodes.Manager, RoleCodes.Developer))
     .AddPolicy(PolicyNames.RoleRead, policy => policy.RequireRole(RoleCodes.Admin))
     .AddPolicy(PolicyNames.UserRead, policy => policy.RequireRole(RoleCodes.Admin))
     .AddPolicy(PolicyNames.UserRoleAssign, policy => policy.RequireRole(RoleCodes.Admin))
@@ -446,7 +447,7 @@ app.MapGet("/me/addresses", async Task<IResult> (
 {
     var result = await bus.InvokeAsync<ListEmployeeAddressesResult>(new ListMyEmployeeAddressesQuery());
     return TypedResults.Ok(result);
-}).RequireAuthorization(PolicyNames.AddressRead);
+}).RequireAuthorization(PolicyNames.OwnAddressRead);
 
 app.MapMethods("/me/addresses/{addressId:guid}/primary", ["PATCH"], async Task<IResult> (
     Guid addressId,

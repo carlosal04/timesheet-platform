@@ -33,13 +33,13 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             var user = new User
             {
                 Id = targetUserId,
                 Email = targetEmail,
-                RoleId = basicRole.Id,
+                RoleId = managerRole.Id,
                 IsActive = true
             };
 
@@ -120,7 +120,7 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             var inactiveRole = new Role
             {
@@ -138,7 +138,7 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
             {
                 Id = targetUserId,
                 Email = "target.inactiverole@example.com",
-                RoleId = basicRole.Id,
+                RoleId = managerRole.Id,
                 IsActive = true
             };
 
@@ -166,7 +166,7 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
         await _factory.ResetDatabaseAsync();
 
         Guid adminUserId = Guid.Empty;
-        Guid basicRoleId = Guid.Empty;
+        Guid managerRoleId = Guid.Empty;
 
         await _factory.ExecuteScopedAsync(async services =>
         {
@@ -175,8 +175,8 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
                 .Where(x => x.Email == "admin@example.com")
                 .Select(x => x.Id)
                 .SingleAsync();
-            basicRoleId = await dbContext.Roles
-                .Where(x => x.Code == RoleCodes.Basic)
+            managerRoleId = await dbContext.Roles
+                .Where(x => x.Code == RoleCodes.Manager)
                 .Select(x => x.Id)
                 .SingleAsync();
         });
@@ -185,7 +185,7 @@ public sealed class UserRoleAssignmentEndpointsTests : IClassFixture<AuthApiFact
         var adminCookie = await LoginAsync(adminClient, "admin@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Patch, $"/users/{adminUserId}/role")
         {
-            Content = JsonContent.Create(new AssignUserRoleRequest(basicRoleId))
+            Content = JsonContent.Create(new AssignUserRoleRequest(managerRoleId))
         };
         await AntiforgeryTestHelper.AttachAsync(adminClient, adminCookie, request);
 

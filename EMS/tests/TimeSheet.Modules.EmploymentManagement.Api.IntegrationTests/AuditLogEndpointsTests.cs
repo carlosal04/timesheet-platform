@@ -57,7 +57,7 @@ public sealed class AuditLogEndpointsTests : IClassFixture<AuthApiFactory>
     }
 
     [Fact]
-    public async Task GetAuditLogs_ForBasicUser_ReturnsForbidden()
+    public async Task GetAuditLogs_ForHrUser_ReturnsForbidden()
     {
         await _factory.ResetDatabaseAsync();
 
@@ -65,13 +65,13 @@ public sealed class AuditLogEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var hrRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.HR);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.audit@example.com",
-                RoleId = basicRole.Id,
+                Email = "hr.audit@example.com",
+                RoleId = hrRole.Id,
                 IsActive = true
             };
 
@@ -81,7 +81,7 @@ public sealed class AuditLogEndpointsTests : IClassFixture<AuthApiFactory>
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.audit@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "hr.audit@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/audit-logs");
         request.Headers.Add("Cookie", authCookie);
 

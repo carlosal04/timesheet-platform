@@ -11,6 +11,7 @@ public static class PolicyNames
     public const string AddressWrite = "AddressWrite";
     public const string AddressDeleteAny = "AddressDeleteAny";
     public const string AddressPrimaryManageAny = "AddressPrimaryManageAny";
+    public const string OwnAddressRead = "OwnAddressRead";
     public const string OwnAddressDelete = "OwnAddressDelete";
     public const string OwnAddressPrimaryManage = "OwnAddressPrimaryManage";
     public const string RoleRead = "RoleRead";

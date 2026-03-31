@@ -39,20 +39,20 @@ The current EMS foundation checkpoint implements the previously approved Phase 1
 - central package management, shared build props, and `*.slnx`
 - local secret handling through `EMS/.env` with committed placeholders in `EMS/.env.example`
 
-## Approved recovery scope now pending
+## Approved recovery scope in progress
 
-The approved current EMS spec set now goes beyond the code currently on this branch.
+The approved current EMS spec set now goes beyond the fully shipped code baseline on this branch.
 
 Newly approved but not yet implemented:
-- canonical role-model expansion from `Admin/Basic` to `Admin/HR/Manager/Developer`
 - separate Admin user provisioning via `POST /users`
 - onboarding resend via `POST /users/{userId}/resend-temporary-password`
 - forced first-login password change via `POST /auth/change-password`
 - self-service reset flow via `POST /auth/forgot-password` and `POST /auth/reset-password`
 - secure outbound email delivery from a no-reply sender
 - lower-environment email capture for onboarding and reset verification
+- frontend role-model migration from `Admin/Basic` to `Admin/HR/Manager/Developer`
 
-Until those slices land, the current codebase still runs on the older `Admin/Basic` implementation baseline even though the current spec set has been corrected.
+The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, but the onboarding/reset contracts and the frontend role-aware UX still need to be brought up to the corrected current spec set.
 
 ## Verified runtime baseline
 
@@ -119,14 +119,14 @@ Implemented and verified:
 - `GET /audit-logs`
 
 Pending:
-- role-model migration from `Admin/Basic` to `Admin/HR/Manager/Developer`
 - `POST /users`
 - `POST /users/{userId}/resend-temporary-password`
 - `POST /auth/change-password`
 - `POST /auth/forgot-password`
 - `POST /auth/reset-password`
 - outbound email infrastructure and lower-environment email capture
-- frontend recovery work for new roles, onboarding, reset-password, and copy/alignment cleanup
+- frontend role-model recovery for `Admin/HR/Manager/Developer`
+- frontend recovery work for onboarding, reset-password, and copy/alignment cleanup
 
 ## Last shipped backend-ready summary for UI planning
 
@@ -228,7 +228,7 @@ The current EMS frontend foundation under `ui/` implements:
   - `PUT /employees/{id}` for the edit form
   - `DELETE /employees/{id}` from the employee detail screen
   - real `400/404/409` handling through shared problem and validation states
-  - detail-page posture adjusted so Admin users stay on the admin address-management route while Basic users only see `/me/addresses` for their own linked employee record
+  - detail-page posture currently uses the pre-recovery Admin-versus-self-service split and still needs a frontend role-model update for `HR`, `Manager`, and `Developer`
 - real address screen integration with:
   - `GET /employees/{employeeId}/addresses` for the admin address-management screen
   - `POST /employees/{employeeId}/addresses` for admin address creation

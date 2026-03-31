@@ -10,7 +10,10 @@ namespace TimeSheet.Modules.EmploymentManagement.Infrastructure.Initialization;
 public sealed class DatabaseInitializer
 {
     private const string AdminRoleName = "Administrator";
-    private const string BasicRoleName = "Basic User";
+    private const string HrRoleName = "Human Resources";
+    private const string ManagerRoleName = "Manager";
+    private const string DeveloperRoleName = "Developer";
+    private const string LegacyBasicRoleCode = "Basic";
 
     private readonly EmploymentManagementDbContext _dbContext;
     private readonly IPasswordHashingService _passwordHashingService;
@@ -38,7 +41,9 @@ public sealed class DatabaseInitializer
         }
 
         var adminRole = await EnsureRoleAsync(RoleCodes.Admin, AdminRoleName, cancellationToken);
-        await EnsureRoleAsync(RoleCodes.Basic, BasicRoleName, cancellationToken);
+        await EnsureRoleAsync(RoleCodes.HR, HrRoleName, cancellationToken);
+        await EnsureRoleAsync(RoleCodes.Manager, ManagerRoleName, cancellationToken, LegacyBasicRoleCode);
+        await EnsureRoleAsync(RoleCodes.Developer, DeveloperRoleName, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -67,9 +72,18 @@ public sealed class DatabaseInitializer
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<Role> EnsureRoleAsync(string code, string name, CancellationToken cancellationToken)
+    private async Task<Role> EnsureRoleAsync(
+        string code,
+        string name,
+        CancellationToken cancellationToken,
+        string? legacyCode = null)
     {
         var role = await _dbContext.Roles.SingleOrDefaultAsync(x => x.Code == code, cancellationToken);
+        if (role is null && !string.IsNullOrWhiteSpace(legacyCode))
+        {
+            role = await _dbContext.Roles.SingleOrDefaultAsync(x => x.Code == legacyCode, cancellationToken);
+        }
+
         if (role is null)
         {
             role = new Role
@@ -81,6 +95,7 @@ public sealed class DatabaseInitializer
             _dbContext.Roles.Add(role);
         }
 
+        role.Code = code;
         role.Name = name;
         role.IsActive = true;
         role.IsSystem = true;

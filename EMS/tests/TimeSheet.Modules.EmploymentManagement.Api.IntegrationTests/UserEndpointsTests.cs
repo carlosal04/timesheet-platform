@@ -30,7 +30,7 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             var linkedEmployee = new Employee
             {
@@ -51,7 +51,7 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
             {
                 Id = Guid.NewGuid(),
                 Email = "alpha.user@example.com",
-                RoleId = basicRole.Id,
+                RoleId = managerRole.Id,
                 IsActive = true
             };
             alphaUser.PasswordHash = passwordHashingService.HashPassword(alphaUser, "P@ssw0rd123!");
@@ -60,7 +60,7 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
             {
                 Id = Guid.NewGuid(),
                 Email = "brenda.user@example.com",
-                RoleId = basicRole.Id,
+                RoleId = managerRole.Id,
                 EmployeeId = linkedEmployee.Id,
                 IsActive = true
             };
@@ -70,7 +70,7 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
             {
                 Id = Guid.NewGuid(),
                 Email = "zoe.inactive@example.com",
-                RoleId = basicRole.Id,
+                RoleId = managerRole.Id,
                 IsActive = false
             };
             inactiveUser.PasswordHash = passwordHashingService.HashPassword(inactiveUser, "P@ssw0rd123!");
@@ -112,13 +112,13 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             var inactiveUser = new User
             {
                 Id = Guid.NewGuid(),
                 Email = "disabled.user@example.com",
-                RoleId = basicRole.Id,
+                RoleId = managerRole.Id,
                 IsActive = false
             };
 
@@ -150,17 +150,17 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
             var adminRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Admin);
 
-            var basicUser = new User
+            var managerUser = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "filter.match.basic@example.com",
-                RoleId = basicRole.Id,
+                Email = "filter.match.manager@example.com",
+                RoleId = managerRole.Id,
                 IsActive = true
             };
-            basicUser.PasswordHash = passwordHashingService.HashPassword(basicUser, "P@ssw0rd123!");
+            managerUser.PasswordHash = passwordHashingService.HashPassword(managerUser, "P@ssw0rd123!");
 
             var adminUser = new User
             {
@@ -171,13 +171,13 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
             };
             adminUser.PasswordHash = passwordHashingService.HashPassword(adminUser, "P@ssw0rd123!");
 
-            dbContext.Users.AddRange(basicUser, adminUser);
+            dbContext.Users.AddRange(managerUser, adminUser);
             await dbContext.SaveChangesAsync();
         });
 
         using var client = CreateClient();
         var authCookie = await LoginAsync(client, "admin@example.com", "P@ssw0rd123!");
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/users?email=filter.match&roleCode=Basic");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/users?email=filter.match&roleCode=Manager");
         request.Headers.Add("Cookie", authCookie);
 
         var response = await client.SendAsync(request);
@@ -187,8 +187,8 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
         var payload = await response.Content.ReadFromJsonAsync<UserListResult>();
         Assert.NotNull(payload);
         Assert.Single(payload!.Items);
-        Assert.Equal("filter.match.basic@example.com", payload.Items[0].Email);
-        Assert.Equal(RoleCodes.Basic, payload.Items[0].RoleCode);
+        Assert.Equal("filter.match.manager@example.com", payload.Items[0].Email);
+        Assert.Equal(RoleCodes.Manager, payload.Items[0].RoleCode);
     }
 
     [Fact]
@@ -200,7 +200,7 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             foreach (var email in new[]
                      {
@@ -214,7 +214,7 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
                 {
                     Id = Guid.NewGuid(),
                     Email = email,
-                    RoleId = basicRole.Id,
+                    RoleId = managerRole.Id,
                     IsActive = true
                 };
 
@@ -245,7 +245,7 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
     }
 
     [Fact]
-    public async Task GetUsers_ForBasicUser_ReturnsForbidden()
+    public async Task GetUsers_ForHrUser_ReturnsForbidden()
     {
         await _factory.ResetDatabaseAsync();
 
@@ -253,13 +253,13 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var hrRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.HR);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.users@example.com",
-                RoleId = basicRole.Id,
+                Email = "hr.users@example.com",
+                RoleId = hrRole.Id,
                 IsActive = true
             };
 
@@ -269,7 +269,7 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.users@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "hr.users@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/users");
         request.Headers.Add("Cookie", authCookie);
 

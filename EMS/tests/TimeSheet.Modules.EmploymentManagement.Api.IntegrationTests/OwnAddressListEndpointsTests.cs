@@ -35,13 +35,13 @@ public sealed class OwnAddressListEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.selfservice@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.selfservice@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -108,7 +108,7 @@ public sealed class OwnAddressListEndpointsTests : IClassFixture<AuthApiFactory>
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.selfservice@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.selfservice@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/me/addresses");
         request.Headers.Add("Cookie", authCookie);
 
@@ -133,13 +133,13 @@ public sealed class OwnAddressListEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.nolink@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.nolink@example.com",
+                RoleId = developerRole.Id,
                 IsActive = true
             };
 
@@ -149,7 +149,7 @@ public sealed class OwnAddressListEndpointsTests : IClassFixture<AuthApiFactory>
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.nolink@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.nolink@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/me/addresses");
         request.Headers.Add("Cookie", authCookie);
 
@@ -172,13 +172,13 @@ public sealed class OwnAddressListEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.missingemployee@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.missingemployee@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -189,7 +189,7 @@ public sealed class OwnAddressListEndpointsTests : IClassFixture<AuthApiFactory>
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.missingemployee@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.missingemployee@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/me/addresses");
         request.Headers.Add("Cookie", authCookie);
 

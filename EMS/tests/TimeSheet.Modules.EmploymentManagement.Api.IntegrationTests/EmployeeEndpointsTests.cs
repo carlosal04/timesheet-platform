@@ -120,11 +120,11 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
     }
 
     [Fact]
-    public async Task GetEmployeeById_ReturnsAddressesPrimaryFirst_ForBasic()
+    public async Task GetEmployeeById_ReturnsAddressesPrimaryFirst_ForManager()
     {
         await _factory.ResetDatabaseAsync();
 
-        var basicUserId = Guid.NewGuid();
+        var managerUserId = Guid.NewGuid();
         var employeeId = Guid.NewGuid();
         var primaryAddressId = Guid.NewGuid();
         var secondaryAddressId = Guid.NewGuid();
@@ -133,13 +133,13 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             var user = new User
             {
-                Id = basicUserId,
-                Email = "basic@example.com",
-                RoleId = basicRole.Id,
+                Id = managerUserId,
+                Email = "manager@example.com",
+                RoleId = managerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -211,7 +211,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
             HandleCookies = false
         });
 
-        var authCookie = await LoginAsync(client, "basic@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "manager@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, $"/employees/{employeeId}");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
@@ -228,7 +228,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
     }
 
     [Fact]
-    public async Task GetEmployees_IncludeDeletedIsForbidden_ForBasic()
+    public async Task GetEmployees_IncludeDeletedIsForbidden_ForManager()
     {
         await _factory.ResetDatabaseAsync();
 
@@ -236,13 +236,13 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.reader@example.com",
-                RoleId = basicRole.Id,
+                Email = "manager.reader@example.com",
+                RoleId = managerRole.Id,
                 IsActive = true
             };
 
@@ -257,9 +257,48 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
             HandleCookies = false
         });
 
-        var authCookie = await LoginAsync(client, "basic.reader@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "manager.reader@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/employees?includeDeleted=true");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetEmployees_ForDeveloper_ReturnsForbidden()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        await _factory.ExecuteScopedAsync(async services =>
+        {
+            var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "developer.reader@example.com",
+                RoleId = developerRole.Id,
+                IsActive = true
+            };
+
+            user.PasswordHash = passwordHashingService.HashPassword(user, "P@ssw0rd123!");
+            dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync();
+        });
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var authCookie = await LoginAsync(client, "developer.reader@example.com", "P@ssw0rd123!");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/employees");
+        request.Headers.Add("Cookie", authCookie);
 
         var response = await client.SendAsync(request);
 
@@ -345,7 +384,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
     }
 
     [Fact]
-    public async Task CreateEmployee_ForBasicUser_ReturnsForbiddenProblemDetails()
+    public async Task CreateEmployee_ForManagerUser_ReturnsForbiddenProblemDetails()
     {
         await _factory.ResetDatabaseAsync();
 
@@ -353,13 +392,13 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.creator@example.com",
-                RoleId = basicRole.Id,
+                Email = "manager.creator@example.com",
+                RoleId = managerRole.Id,
                 IsActive = true
             };
 
@@ -374,7 +413,7 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
             HandleCookies = false
         });
 
-        var authCookie = await LoginAsync(client, "basic.creator@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "manager.creator@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Post, "/employees")
         {
             Content = JsonContent.Create(new CreateEmployeeRequest(
@@ -395,6 +434,56 @@ public sealed class EmployeeEndpointsTests : IClassFixture<AuthApiFactory>
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problem);
         Assert.Equal(StatusCodes.Status403Forbidden, problem!.Status);
+    }
+
+    [Fact]
+    public async Task CreateEmployee_ForHrUser_ReturnsCreated()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        await _factory.ExecuteScopedAsync(async services =>
+        {
+            var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
+            var hrRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.HR);
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "hr.creator@example.com",
+                RoleId = hrRole.Id,
+                IsActive = true
+            };
+
+            user.PasswordHash = passwordHashingService.HashPassword(user, "P@ssw0rd123!");
+            dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync();
+        });
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var authCookie = await LoginAsync(client, "hr.creator@example.com", "P@ssw0rd123!");
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/employees")
+        {
+            Content = JsonContent.Create(new CreateEmployeeRequest(
+                "Harper",
+                "Lee",
+                "harper.lee@company.com",
+                "5553334444",
+                new DateOnly(1990, 5, 9),
+                new DateOnly(2024, 1, 15),
+                EmployeeStatusCodes.Active,
+                null))
+        };
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]

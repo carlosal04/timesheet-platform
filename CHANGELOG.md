@@ -80,6 +80,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Replaced the deferred frontend admin address create/edit gap with the real EMS address create/update workflow, canonical address-type values, and shared validation/problem handling
 - Replaced the frontend mock audit-log screen with the real EMS audit endpoint and live filtering/paging posture
 - Replaced the frontend mock role catalog blocker with the real EMS role catalog, user list, and role-assignment workflow
+- Migrated the EMS backend authorization and seed baseline from `Admin/Basic` to `Admin/HR/Manager/Developer`, including the self-service address policies required by `Manager` and `Developer`
 - Verified the real UI through the Docker reverse-proxy path, including login, session bootstrap, and anti-forgery bootstrap
 - Verified employee create plus admin address create/update through the Docker reverse-proxy path on a throwaway runtime stack
 
@@ -109,3 +110,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated EMS notes to reflect that the admin address screen now supports live create/edit flows, that the current shell-level .NET verification issue is resolved, and that the current EMS demo baseline no longer has an approved endpoint-surface gap
 - Corrected the current EMS spec set to the approved access-recovery scope with `Admin/HR/Manager/Developer`, separate user onboarding, password-reset flows, and email-delivery requirements
 - Updated EMS implementation notes to distinguish the current shipped `Admin/Basic` code baseline from the newly approved but still-pending access-recovery slices
+- Updated EMS implementation notes to reflect that the backend role/policy baseline is now on `Admin/HR/Manager/Developer` while the onboarding/reset and frontend role-aware slices are still pending

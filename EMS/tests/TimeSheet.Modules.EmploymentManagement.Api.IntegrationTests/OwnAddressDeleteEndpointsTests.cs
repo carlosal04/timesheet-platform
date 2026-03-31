@@ -35,13 +35,13 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = userId,
-                Email = "basic.owndelete@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.owndelete@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -80,7 +80,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.owndelete@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.owndelete@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/me/addresses/{addressId}");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
@@ -118,13 +118,13 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = userId,
-                Email = "basic.ownprimarydelete@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.ownprimarydelete@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -190,7 +190,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.ownprimarydelete@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.ownprimarydelete@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/me/addresses/{deletedPrimaryId}");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
@@ -236,13 +236,13 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.forbiddendelete@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.forbiddendelete@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = ownEmployeeId,
                 IsActive = true
             };
@@ -294,7 +294,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.forbiddendelete@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.forbiddendelete@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/me/addresses/{otherAddressId}");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
@@ -318,13 +318,13 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         {
             var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
             var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
-            var basicRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Basic);
+            var developerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Developer);
 
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "basic.deletedownaddress@example.com",
-                RoleId = basicRole.Id,
+                Email = "developer.deletedownaddress@example.com",
+                RoleId = developerRole.Id,
                 EmployeeId = employeeId,
                 IsActive = true
             };
@@ -364,7 +364,7 @@ public sealed class OwnAddressDeleteEndpointsTests : IClassFixture<AuthApiFactor
         });
 
         using var client = CreateClient();
-        var authCookie = await LoginAsync(client, "basic.deletedownaddress@example.com", "P@ssw0rd123!");
+        var authCookie = await LoginAsync(client, "developer.deletedownaddress@example.com", "P@ssw0rd123!");
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"/me/addresses/{addressId}");
         await AntiforgeryTestHelper.AttachAsync(client, authCookie, request);
 
