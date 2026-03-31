@@ -128,6 +128,10 @@ Pending:
 Implemented foundation for the approved recovery scope:
 - SMTP email delivery registration via `MailKit` with no-reply sender configuration from `Email:*`
 - lower-environment email capture via the pinned `Mailpit` Compose service on `http://localhost:8025/`
+- production-safe HTML and plain-text email composition for:
+  - initial temporary-password invites
+  - resent temporary-password invites
+  - self-service password-reset emails
 
 ## Last shipped backend-ready summary for UI planning
 

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Email;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure;
@@ -18,6 +20,7 @@ public class EmailOptionsValidatorTests
         {
             FromAddress = "no-reply@ems.local",
             FromDisplayName = "Employment Management System",
+            SupportEmail = "support@ems.local",
             Smtp = new SmtpOptions
             {
                 Host = "localhost",
@@ -38,6 +41,7 @@ public class EmailOptionsValidatorTests
         var options = new EmailOptions
         {
             FromAddress = "not-an-email",
+            SupportEmail = "support@ems.local",
             Smtp = new SmtpOptions
             {
                 Host = "localhost",
@@ -58,6 +62,7 @@ public class EmailOptionsValidatorTests
         var options = new EmailOptions
         {
             FromAddress = "no-reply@ems.local",
+            SupportEmail = "support@ems.local",
             Smtp = new SmtpOptions
             {
                 Host = "localhost",
@@ -81,6 +86,7 @@ public class EmailOptionsValidatorTests
                 ["Authentication:CookieName"] = "ems.auth",
                 ["Email:FromAddress"] = "no-reply@ems.local",
                 ["Email:FromDisplayName"] = "Employment Management System",
+                ["Email:SupportEmail"] = "support@ems.local",
                 ["Email:Smtp:Host"] = "localhost",
                 ["Email:Smtp:Port"] = "1025",
                 ["Email:Smtp:SecurityMode"] = "None"
@@ -89,17 +95,32 @@ public class EmailOptionsValidatorTests
 
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment());
         services.AddEmploymentManagementInfrastructure(configuration);
 
         using var provider = services.BuildServiceProvider(validateScopes: true);
         using var scope = provider.CreateScope();
 
         var sender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
+        var composer = scope.ServiceProvider.GetRequiredService<IUserAccessEmailComposer>();
         var options = scope.ServiceProvider.GetRequiredService<IOptions<EmailOptions>>().Value;
 
         Assert.IsType<SmtpEmailSender>(sender);
+        Assert.IsType<UserAccessEmailComposer>(composer);
         Assert.Equal("no-reply@ems.local", options.FromAddress);
+        Assert.Equal("support@ems.local", options.SupportEmail);
         Assert.Equal("localhost", options.Smtp.Host);
         Assert.Equal(1025, options.Smtp.Port);
+    }
+
+    private sealed class FakeHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Development;
+
+        public string ApplicationName { get; set; } = "EMS.Tests";
+
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

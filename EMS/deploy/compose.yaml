@@ -30,6 +30,7 @@ services:
       BootstrapAdmin__Name: ${EMS_BOOTSTRAP_ADMIN_NAME:-Bootstrap Admin}
       Email__FromAddress: ${EMS_EMAIL_FROM_ADDRESS:-no-reply@ems.local}
       Email__FromDisplayName: ${EMS_EMAIL_FROM_DISPLAY_NAME:-Employment Management System}
+      Email__SupportEmail: ${EMS_EMAIL_SUPPORT_EMAIL:-support@ems.local}
       Email__Smtp__Host: ${EMS_SMTP_HOST:-mailpit}
       Email__Smtp__Port: ${EMS_SMTP_PORT:-1025}
       Email__Smtp__SecurityMode: ${EMS_SMTP_SECURITY_MODE:-None}

@@ -31,6 +31,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Soft-delete metadata persistence for `DeletedByUserId` on employees and addresses
 - MailKit-based SMTP email delivery baseline with no-reply sender configuration
 - Lower-environment Mailpit email-capture service in Compose for onboarding and reset verification
+- Production-safe HTML and plain-text email templates for temporary-password invites, invite resends, and password-reset emails
 - Frontend static container moved from Alpine nginx to Chainguard nginx
 - Reverse-proxy container moved from Alpine nginx to Chainguard nginx
 - PostgreSQL container moved from `postgres:17-alpine` to `postgres:17-bookworm`

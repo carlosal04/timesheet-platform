@@ -18,6 +18,15 @@ public sealed class EmailOptionsValidator : IValidateOptions<EmailOptions>
             failures.Add("Email:FromAddress must be a valid email address.");
         }
 
+        if (string.IsNullOrWhiteSpace(options.SupportEmail))
+        {
+            failures.Add("Email:SupportEmail is required.");
+        }
+        else if (!MailAddress.TryCreate(options.SupportEmail, out _))
+        {
+            failures.Add("Email:SupportEmail must be a valid email address.");
+        }
+
         if (options.Smtp is null)
         {
             failures.Add("Email:Smtp configuration is required.");

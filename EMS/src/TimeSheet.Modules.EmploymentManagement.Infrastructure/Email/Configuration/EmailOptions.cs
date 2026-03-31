@@ -8,5 +8,7 @@ public sealed class EmailOptions
 
     public string FromDisplayName { get; set; } = "Employment Management System";
 
+    public string SupportEmail { get; set; } = "support@ems.local";
+
     public SmtpOptions Smtp { get; set; } = new();
 }

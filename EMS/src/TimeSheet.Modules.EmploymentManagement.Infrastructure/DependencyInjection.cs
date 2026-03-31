@@ -54,6 +54,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserContext, CurrentUserContext>();
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IPasswordHashingService, PasswordHashingService>();
+        services.AddScoped<IUserAccessEmailComposer, UserAccessEmailComposer>();
         services.AddScoped<IUserSessionAuthenticationService, UserSessionAuthenticationService>();
         services.AddScoped<ISessionReadService, SessionReadService>();
         services.AddScoped<ISessionValidator, SessionValidator>();
