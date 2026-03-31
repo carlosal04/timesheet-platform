@@ -20,12 +20,13 @@ const showingDeleteConfirm = ref(false)
 const usingMockFallback = ref(false)
 
 const fallbackEmployee = computed(() => findEmployee(String(route.params.id)))
+const canAdministerEmployee = computed(() => session.roleCode === 'Admin' || session.roleCode === 'HR')
 const canManageAddresses = computed(() => {
   if (!employee.value) {
     return false
   }
 
-  if (session.roleCode === 'Admin') {
+  if (canAdministerEmployee.value) {
     return true
   }
 
@@ -37,7 +38,7 @@ const manageAddressesRoute = computed(() => {
     return '/employees'
   }
 
-  if (session.roleCode === 'Admin') {
+  if (canAdministerEmployee.value) {
     return `/employees/${employee.value.id}/addresses`
   }
 
@@ -45,7 +46,7 @@ const manageAddressesRoute = computed(() => {
 })
 
 const manageAddressesLabel = computed(() =>
-  session.roleCode === 'Admin' ? 'Manage addresses' : 'Manage my addresses',
+  canAdministerEmployee.value ? 'Manage addresses' : 'Manage my addresses',
 )
 
 async function loadEmployee() {
@@ -153,16 +154,21 @@ watch(
   <section v-else-if="employee" class="view-stack">
     <PageHeader
       :title="`${employee.firstName} ${employee.lastName}`"
-      description="Employee profile, active addresses, and the admin path into edit and address management."
+      description="Employee profile details, active addresses, and the next actions allowed by your current role."
     >
       <template #actions>
         <RouterLink to="/employees">
           <UButton color="neutral" variant="soft">Back to list</UButton>
         </RouterLink>
-        <RouterLink v-if="!usingMockFallback" :to="`/employees/${employee.id}/edit`">
+        <RouterLink v-if="!usingMockFallback && canAdministerEmployee" :to="`/employees/${employee.id}/edit`">
           <UButton>Edit employee</UButton>
         </RouterLink>
-        <UButton v-if="!usingMockFallback" color="error" variant="soft" @click="showingDeleteConfirm = true">
+        <UButton
+          v-if="!usingMockFallback && canAdministerEmployee"
+          color="error"
+          variant="soft"
+          @click="showingDeleteConfirm = true"
+        >
           Delete employee
         </UButton>
       </template>

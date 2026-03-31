@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 
 const router = useRouter()
@@ -22,7 +22,8 @@ async function handleLogin() {
     return
   }
 
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/employees'
+  const redirect =
+    typeof route.query.redirect === 'string' ? route.query.redirect : session.defaultAuthenticatedPath
   await router.push(redirect)
 }
 </script>
@@ -32,21 +33,21 @@ async function handleLogin() {
     <section class="page-card login-layout">
       <div class="login-layout__hero">
         <div>
-          <span class="status-pill status-pill--brand">EMS frontend integration</span>
+          <span class="status-pill status-pill--brand">Secure access</span>
           <h1>Employment Management System</h1>
           <p class="text-muted">
-            Sign in with the EMS bootstrap admin credentials configured for your local runtime. The shell,
-            theme system, session timer, and route posture now run against the real backend auth flow.
+            Sign in to access employee operations, self-service address management, and the admin workspace
+            assigned to your EMS role.
           </p>
         </div>
 
         <div class="login-layout__demo-accounts">
           <button class="login-layout__demo-button" type="button" @click="useLocalBootstrapExample()">
-            Prefill local example email
+            Use the local admin email
           </button>
           <p class="text-muted">
-            Default local example: <strong>admin@example.com</strong>. The password comes from your EMS bootstrap
-            admin setup, typically via <code>EMS/.env</code>.
+            Local demo environments usually start with <strong>admin@example.com</strong> as the bootstrap
+            administrator. The password comes from your EMS runtime configuration.
           </p>
         </div>
       </div>
@@ -54,10 +55,10 @@ async function handleLogin() {
       <form class="section-card login-layout__card" @submit.prevent="handleLogin">
         <div>
           <span class="status-pill status-pill--primary">Sign in</span>
-          <h2>Access the EMS workspace</h2>
+          <h2>Access your EMS workspace</h2>
           <p class="text-muted">
-            System theme is used first, then your override is remembered locally. Successful sign-in bootstraps the
-            authenticated session and anti-forgery state from the API.
+            Your theme preference is remembered locally. Successful sign-in bootstraps the authenticated session
+            and anti-forgery state from the API.
           </p>
         </div>
 
@@ -81,7 +82,7 @@ async function handleLogin() {
             class="login-layout__input"
             type="password"
             autocomplete="current-password"
-            placeholder="Enter your local EMS password"
+            placeholder="Enter your password"
           />
         </div>
 
@@ -91,6 +92,9 @@ async function handleLogin() {
         </div>
 
         <div class="login-layout__actions">
+          <RouterLink class="login-layout__secondary-link" :to="{ name: 'forgot-password' }">
+            Forgot your password?
+          </RouterLink>
           <UButton type="submit" :loading="session.isBusy || session.isHydrating">Sign in</UButton>
         </div>
       </form>
@@ -172,7 +176,14 @@ async function handleLogin() {
 
 .login-layout__actions {
   display: flex;
+  align-items: center;
+  gap: 1rem;
   justify-content: flex-end;
+}
+
+.login-layout__secondary-link {
+  color: var(--primary);
+  font-weight: 600;
 }
 
 @media (max-width: 1100px) {

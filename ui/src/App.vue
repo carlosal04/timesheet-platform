@@ -6,7 +6,8 @@ import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
 const session = useSessionStore()
-const showShell = computed(() => session.isAuthenticated && route.name !== 'login')
+const shelllessRouteNames = new Set(['login', 'forgot-password', 'reset-password', 'change-password'])
+const showShell = computed(() => session.isAuthenticated && !shelllessRouteNames.has(String(route.name ?? '')))
 </script>
 
 <template>

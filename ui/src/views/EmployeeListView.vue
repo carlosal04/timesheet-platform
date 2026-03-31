@@ -106,14 +106,14 @@ onMounted(() => {
   <section class="view-stack">
     <PageHeader
       title="Employees"
-      description="The employee list now loads from the real EMS API while the rest of the placeholder screens remain mock-backed."
+      description="Browse the current employee directory, review status, and move into the actions allowed by your EMS role."
     >
       <template #actions>
         <label class="toggle text-muted">
           <input v-model="includePrimaryAddress" type="checkbox" />
           Include primary address
         </label>
-        <RouterLink v-if="session.roleCode === 'Admin'" to="/employees/new">
+        <RouterLink v-if="session.roleCode === 'Admin' || session.roleCode === 'HR'" to="/employees/new">
           <UButton>New employee</UButton>
         </RouterLink>
       </template>

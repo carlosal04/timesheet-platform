@@ -8,6 +8,9 @@ import EmployeeAddressesView from '@/views/EmployeeAddressesView.vue'
 import MyAddressesView from '@/views/MyAddressesView.vue'
 import RolesView from '@/views/RolesView.vue'
 import AuditLogsView from '@/views/AuditLogsView.vue'
+import ChangePasswordView from '@/views/ChangePasswordView.vue'
+import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
+import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import ForbiddenView from '@/views/ForbiddenView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
@@ -16,7 +19,9 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/employees',
+      name: 'root',
+      component: EmployeeListView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',
@@ -25,40 +30,58 @@ const router = createRouter({
       meta: { publicOnly: true },
     },
     {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: ForgotPasswordView,
+      meta: { publicOnly: true },
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: ResetPasswordView,
+      meta: { publicOnly: true },
+    },
+    {
+      path: '/change-password',
+      name: 'change-password',
+      component: ChangePasswordView,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/employees',
       name: 'employees',
       component: EmployeeListView,
-      meta: { requiresAuth: true, roles: ['Admin', 'Basic'] },
+      meta: { requiresAuth: true, roles: ['Admin', 'HR', 'Manager'] },
     },
     {
       path: '/employees/new',
       name: 'employee-new',
       component: EmployeeFormView,
-      meta: { requiresAuth: true, roles: ['Admin'] },
+      meta: { requiresAuth: true, roles: ['Admin', 'HR'] },
     },
     {
       path: '/employees/:id',
       name: 'employee-detail',
       component: EmployeeDetailView,
-      meta: { requiresAuth: true, roles: ['Admin', 'Basic'] },
+      meta: { requiresAuth: true, roles: ['Admin', 'HR', 'Manager'] },
     },
     {
       path: '/employees/:id/edit',
       name: 'employee-edit',
       component: EmployeeFormView,
-      meta: { requiresAuth: true, roles: ['Admin'] },
+      meta: { requiresAuth: true, roles: ['Admin', 'HR'] },
     },
     {
       path: '/employees/:id/addresses',
       name: 'employee-addresses',
       component: EmployeeAddressesView,
-      meta: { requiresAuth: true, roles: ['Admin'] },
+      meta: { requiresAuth: true, roles: ['Admin', 'HR'] },
     },
     {
       path: '/me/addresses',
       name: 'my-addresses',
       component: MyAddressesView,
-      meta: { requiresAuth: true, roles: ['Basic'] },
+      meta: { requiresAuth: true, roles: ['Manager', 'Developer'] },
     },
     {
       path: '/roles',

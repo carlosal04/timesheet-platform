@@ -36,7 +36,7 @@ async function loadAddresses() {
       problem.value = {
         code: String(error.status || 403),
         title: error.problem.title ?? 'Address access denied',
-        description: error.problem.detail ?? 'Basic self-service access requires a linked employee record.',
+        description: error.problem.detail ?? 'Self-service address access requires a linked employee record.',
       }
       return
     }
@@ -44,7 +44,7 @@ async function loadAddresses() {
     problem.value = {
       code: '403',
       title: 'Address access denied',
-      description: 'Basic self-service access requires a linked employee record.',
+      description: 'Self-service address access requires a linked employee record.',
     }
   } finally {
     loading.value = false
@@ -146,7 +146,7 @@ watch(
   <section v-else class="view-stack">
     <PageHeader
       title="My addresses"
-      description="Basic self-service address management with live ownership-scoped actions."
+      description="Manage the addresses attached to your linked employee profile with self-service actions."
     />
 
     <div class="card-grid">

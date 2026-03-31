@@ -5,6 +5,7 @@ interface LoginResponse {
   userId: string
   email: string
   roleCode: RoleCode
+  mustChangePassword: boolean
 }
 
 interface SessionResponse {
@@ -12,6 +13,7 @@ interface SessionResponse {
   email: string
   roleCode: RoleCode
   employeeId: string | null
+  mustChangePassword: boolean
   sessionId: string
   expiresAtUtc: string
   idleTimeoutMinutes: number
@@ -29,6 +31,7 @@ function normalizeSession(response: SessionResponse): SessionSnapshot {
     email: response.email,
     roleCode: response.roleCode,
     employeeId: response.employeeId,
+    mustChangePassword: response.mustChangePassword,
     sessionId: response.sessionId,
     expiresAtUtc: response.expiresAtUtc,
     idleTimeoutMinutes: response.idleTimeoutMinutes,
@@ -89,4 +92,27 @@ export async function renewSession(): Promise<RenewSessionResponse | null> {
 
     throw error
   }
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await apiRequest<void>('/auth/change-password', {
+    method: 'POST',
+    body: { currentPassword, newPassword },
+  })
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  await apiRequest<void>('/auth/forgot-password', {
+    method: 'POST',
+    body: { email },
+    skipAntiforgery: true,
+  })
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await apiRequest<void>('/auth/reset-password', {
+    method: 'POST',
+    body: { token, newPassword },
+    skipAntiforgery: true,
+  })
 }

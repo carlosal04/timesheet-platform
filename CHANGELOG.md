@@ -96,6 +96,10 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added self-service password reset with hashed reset tokens, no-reply reset emails, and active-session revocation on successful reset
 - Verified the real UI through the Docker reverse-proxy path, including login, session bootstrap, and anti-forgery bootstrap
 - Verified employee create plus admin address create/update through the Docker reverse-proxy path on a throwaway runtime stack
+- Replaced the frontend `Admin/Basic` posture with the recovered `Admin/HR/Manager/Developer` route, nav, and session model
+- Added frontend change-password, forgot-password, and reset-password screens wired to the live EMS auth endpoints
+- Expanded the frontend Users & Roles workspace to create users, resend temporary passwords, and show onboarding state from the live EMS backend
+- Verified the end-to-end access-recovery runtime flow through the reverse proxy and Mailpit, including onboarding invite, resend invalidation, forced password change, forgot-password, reset-password, and final relogin
 
 ### Documentation
 - Added EMS implementation notes to track current checkpoint status and known gaps
@@ -124,3 +128,4 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Corrected the current EMS spec set to the approved access-recovery scope with `Admin/HR/Manager/Developer`, separate user onboarding, password-reset flows, and email-delivery requirements
 - Updated EMS implementation notes to distinguish the current shipped `Admin/Basic` code baseline from the newly approved but still-pending access-recovery slices
 - Updated EMS implementation notes to reflect that the backend role/policy baseline is now on `Admin/HR/Manager/Developer` while the onboarding/reset and frontend role-aware slices are still pending
+- Updated EMS implementation notes to reflect that the frontend role-aware recovery, auth recovery screens, and Users & Roles workspace are now implemented and runtime-verified

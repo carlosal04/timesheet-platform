@@ -17,7 +17,7 @@ async function handleLogout() {
   <header class="topbar section-card">
     <div>
       <p class="topbar__eyebrow">Employment Management System</p>
-      <h1 class="topbar__title">Desktop-first UI foundation</h1>
+      <h1 class="topbar__title">Operations workspace</h1>
     </div>
 
     <div class="topbar__actions">

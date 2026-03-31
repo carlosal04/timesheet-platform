@@ -2,7 +2,12 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useNow } from '@vueuse/core'
 import { findEmployee, mockAuditRecords, mockRoles, mockUsers, toEmployeeListRows } from '@/mocks/ems'
-import { getSession, login as loginRequest, logout as logoutRequest, renewSession as renewSessionRequest } from '@/services/api/auth'
+import {
+  getSession,
+  login as loginRequest,
+  logout as logoutRequest,
+  renewSession as renewSessionRequest,
+} from '@/services/api/auth'
 import { clearAntiforgeryToken, isApiProblemError } from '@/services/api/http'
 import type { AuditRecord, EmployeeListRow, EmployeeRecord, LoginProblem, RoleCode, RoleRecord, SessionSnapshot, UserRecord } from '@/types/ems'
 import { formatRemainingTime } from '@/utils/date'
@@ -19,7 +24,8 @@ export const useSessionStore = defineStore('session', () => {
   let initializationPromise: Promise<void> | null = null
 
   const isAuthenticated = computed(() => session.value !== null)
-  const roleCode = computed<RoleCode>(() => session.value?.roleCode ?? 'Basic')
+  const roleCode = computed<RoleCode | null>(() => session.value?.roleCode ?? null)
+  const mustChangePassword = computed(() => session.value?.mustChangePassword ?? false)
   const remainingMilliseconds = computed(() => {
     if (!session.value) {
       return 0
@@ -28,6 +34,13 @@ export const useSessionStore = defineStore('session', () => {
     return Math.max(0, new Date(session.value.expiresAtUtc).getTime() - now.value.getTime())
   })
   const remainingLabel = computed(() => formatRemainingTime(remainingMilliseconds.value))
+  const defaultAuthenticatedPath = computed(() => {
+    if (mustChangePassword.value) {
+      return '/change-password'
+    }
+
+    return roleCode.value === 'Developer' ? '/me/addresses' : '/employees'
+  })
   const isInWarningWindow = computed(
     () =>
       isAuthenticated.value &&
@@ -181,6 +194,16 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  async function refreshSession() {
+    try {
+      session.value = await getSession()
+      return session.value !== null
+    } catch (error) {
+      loginProblem.value = toLoginProblem(error)
+      return false
+    }
+  }
+
   async function logout() {
     isBusy.value = true
 
@@ -218,8 +241,10 @@ export const useSessionStore = defineStore('session', () => {
     isInitialized,
     isInWarningWindow,
     loginProblem,
+    mustChangePassword,
     mockRoles: mockRoles as RoleRecord[],
     mockUsers: mockUsers as UserRecord[],
+    defaultAuthenticatedPath,
     remainingLabel,
     remainingMilliseconds,
     roleCode,
@@ -229,6 +254,7 @@ export const useSessionStore = defineStore('session', () => {
     handleUnauthorized,
     login,
     logout,
+    refreshSession,
     renewSession,
   }
 })

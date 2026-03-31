@@ -1,4 +1,4 @@
-export type RoleCode = 'Admin' | 'Basic'
+export type RoleCode = 'Admin' | 'HR' | 'Manager' | 'Developer'
 
 export interface EmployeeAddress {
   id: string
@@ -51,6 +51,9 @@ export interface UserListRow {
   employeeId: string | null
   employeeName: string | null
   isActive: boolean
+  mustChangePassword: boolean
+  temporaryPasswordExpiresAtUtc: string | null
+  lastTemporaryPasswordIssuedAtUtc: string | null
 }
 
 export interface AuditRecord {
@@ -67,6 +70,7 @@ export interface SessionSnapshot {
   email: string
   roleCode: RoleCode
   employeeId: string | null
+  mustChangePassword: boolean
   sessionId: string
   expiresAtUtc: string
   idleTimeoutMinutes: number

@@ -118,24 +118,33 @@ export const mockUsers: UserRecord[] = [
     employeeId: null,
   },
   {
-    id: 'user-basic-david',
+    id: 'user-manager-david',
     name: 'David Price',
-    email: 'basic@company.com',
-    roleCode: 'Basic',
+    email: 'manager@company.com',
+    roleCode: 'Manager',
     employeeId: 'emp-david-price',
   },
   {
-    id: 'user-admin-ops',
+    id: 'user-hr-ops',
     name: 'Operations Lead',
-    email: 'ops.lead@company.com',
-    roleCode: 'Admin',
+    email: 'hr@company.com',
+    roleCode: 'HR',
     employeeId: null,
+  },
+  {
+    id: 'user-developer-jasmine',
+    name: 'Jasmine Cho',
+    email: 'developer@company.com',
+    roleCode: 'Developer',
+    employeeId: 'emp-jasmine-cho',
   },
 ]
 
 export const mockRoles: RoleRecord[] = [
   { id: 'role-admin', code: 'Admin', name: 'Administrator', isActive: true },
-  { id: 'role-basic', code: 'Basic', name: 'Basic User', isActive: true },
+  { id: 'role-hr', code: 'HR', name: 'Human Resources', isActive: true },
+  { id: 'role-manager', code: 'Manager', name: 'Manager', isActive: true },
+  { id: 'role-developer', code: 'Developer', name: 'Developer', isActive: true },
 ]
 
 export const mockAuditRecords: AuditRecord[] = [
@@ -153,7 +162,7 @@ export const mockAuditRecords: AuditRecord[] = [
     actionType: 'RoleChanged',
     actorEmail: 'admin@company.com',
     entityType: 'User',
-    summary: 'Marcus Hill moved from Basic to Admin.',
+    summary: 'Marcus Hill moved from Developer to Manager.',
   },
   {
     id: 'audit-3',
@@ -195,6 +204,7 @@ export function buildMockSession(roleCode: RoleCode): SessionSnapshot {
     email: user.email,
     roleCode: user.roleCode,
     employeeId: user.employeeId,
+    mustChangePassword: false,
     sessionId: `session-${roleCode.toLowerCase()}`,
     expiresAtUtc: new Date(Date.now() + 27 * 60 * 1000).toISOString(),
     idleTimeoutMinutes: 480,

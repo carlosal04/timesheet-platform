@@ -17,6 +17,9 @@ interface UserItem {
   employeeId: string | null
   employeeName: string | null
   isActive: boolean
+  mustChangePassword: boolean
+  temporaryPasswordExpiresAtUtc: string | null
+  lastTemporaryPasswordIssuedAtUtc: string | null
 }
 
 export interface UserListQuery {
@@ -34,6 +37,32 @@ export interface UserListPage {
   totalCount: number
 }
 
+interface CreateUserResponse {
+  userId: string
+  email: string
+  roleId: string
+  roleCode: string
+  employeeId: string | null
+  mustChangePassword: boolean
+  temporaryPasswordExpiresAtUtc: string
+}
+
+export interface CreateUserInput {
+  roleId: string
+  employeeId?: string
+  email?: string
+}
+
+export interface CreateUserResult {
+  userId: string
+  email: string
+  roleId: string
+  roleCode: string
+  employeeId: string | null
+  mustChangePassword: boolean
+  temporaryPasswordExpiresAtUtc: string
+}
+
 interface AssignUserRoleResponse {
   userId: string
   roleId: string
@@ -41,11 +70,21 @@ interface AssignUserRoleResponse {
   sessionsRevoked: number
 }
 
+interface ResendTemporaryPasswordResponse {
+  userId: string
+  temporaryPasswordExpiresAtUtc: string
+}
+
 export interface RoleAssignmentResult {
   userId: string
   roleId: string
   roleCode: string
   sessionsRevoked: number
+}
+
+export interface ResendTemporaryPasswordResult {
+  userId: string
+  temporaryPasswordExpiresAtUtc: string
 }
 
 function toQueryString(query: UserListQuery) {
@@ -79,6 +118,9 @@ function toUserListRow(item: UserItem): UserListRow {
     employeeId: item.employeeId,
     employeeName: item.employeeName,
     isActive: item.isActive,
+    mustChangePassword: item.mustChangePassword,
+    temporaryPasswordExpiresAtUtc: item.temporaryPasswordExpiresAtUtc,
+    lastTemporaryPasswordIssuedAtUtc: item.lastTemporaryPasswordIssuedAtUtc,
   }
 }
 
@@ -94,6 +136,27 @@ export async function listUsers(query: UserListQuery): Promise<UserListPage> {
   }
 }
 
+export async function createUser(input: CreateUserInput): Promise<CreateUserResult> {
+  const response = await apiRequest<CreateUserResponse>('/users', {
+    method: 'POST',
+    body: {
+      roleId: input.roleId,
+      employeeId: input.employeeId ?? null,
+      email: input.email ?? null,
+    },
+  })
+
+  return {
+    userId: response.userId,
+    email: response.email,
+    roleId: response.roleId,
+    roleCode: response.roleCode,
+    employeeId: response.employeeId,
+    mustChangePassword: response.mustChangePassword,
+    temporaryPasswordExpiresAtUtc: response.temporaryPasswordExpiresAtUtc,
+  }
+}
+
 export async function assignUserRole(userId: string, roleId: string): Promise<RoleAssignmentResult> {
   const response = await apiRequest<AssignUserRoleResponse>(`/users/${userId}/role`, {
     method: 'PATCH',
@@ -105,5 +168,16 @@ export async function assignUserRole(userId: string, roleId: string): Promise<Ro
     roleId: response.roleId,
     roleCode: response.roleCode,
     sessionsRevoked: response.sessionsRevoked,
+  }
+}
+
+export async function resendTemporaryPassword(userId: string): Promise<ResendTemporaryPasswordResult> {
+  const response = await apiRequest<ResendTemporaryPasswordResponse>(`/users/${userId}/resend-temporary-password`, {
+    method: 'POST',
+  })
+
+  return {
+    userId: response.userId,
+    temporaryPasswordExpiresAtUtc: response.temporaryPasswordExpiresAtUtc,
   }
 }

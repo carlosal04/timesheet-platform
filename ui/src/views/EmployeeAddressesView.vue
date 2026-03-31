@@ -351,7 +351,7 @@ watch(
   <section v-else-if="employeeName" class="view-stack">
     <PageHeader
       :title="`${employeeName} addresses`"
-      description="Admin-only address management with live primary-address and soft-delete actions."
+      description="Manage employee addresses with the create, primary, edit, and soft-delete actions allowed for Admin and HR."
     >
       <template #actions>
         <UButton :disabled="usingMockFallback" @click="openCreateForm">Add address</UButton>
@@ -362,7 +362,7 @@ watch(
       v-if="usingMockFallback"
       code="Info"
       title="Address write actions are available only on real employee records."
-      description="This fallback route is still rendering fixture data. The live address actions are active when the employee comes from the EMS API."
+      description="This screen is showing fallback reference data because the employee was not available from the API. Address changes require a live employee record."
     />
 
     <div class="card-grid">

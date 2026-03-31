@@ -10,13 +10,23 @@ const navItems = computed(() => {
   if (session.roleCode === 'Admin') {
     return [
       { label: 'Employees', to: '/employees' },
-      { label: 'Roles', to: '/roles' },
+      { label: 'Users & Roles', to: '/roles' },
       { label: 'Audit Logs', to: '/audit-logs' },
     ]
   }
 
+  if (session.roleCode === 'HR') {
+    return [{ label: 'Employees', to: '/employees' }]
+  }
+
+  if (session.roleCode === 'Manager') {
+    return [
+      { label: 'Employees', to: '/employees' },
+      { label: 'My Addresses', to: '/me/addresses' },
+    ]
+  }
+
   return [
-    { label: 'Employees', to: '/employees' },
     { label: 'My Addresses', to: '/me/addresses' },
   ]
 })
@@ -25,7 +35,7 @@ const navItems = computed(() => {
 <template>
   <div class="sidebar">
     <div class="sidebar__brand">EMS</div>
-    <div class="sidebar__role status-pill status-pill--brand">{{ session.roleCode }} workspace</div>
+    <div class="sidebar__role status-pill status-pill--brand">{{ session.roleCode ?? 'Authenticated' }} workspace</div>
 
     <nav class="sidebar__nav">
       <RouterLink

@@ -225,7 +225,7 @@ watch(
   <section v-else class="view-stack">
     <PageHeader
       :title="isEditMode ? 'Edit employee' : 'Create employee'"
-      description="Admin-only form now wired to the real EMS employee write endpoints and validation posture."
+      description="Create or update employee records with the validation and write posture allowed for Admin and HR."
     />
 
     <form class="section-card form-card" @submit.prevent="submitForm">

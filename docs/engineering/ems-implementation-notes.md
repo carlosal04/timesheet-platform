@@ -49,10 +49,13 @@ The current EMS foundation checkpoint implements the previously approved Phase 1
 
 The approved current EMS spec set now goes beyond the fully shipped code baseline on this branch.
 
-Newly approved but not yet implemented:
+Newly approved and now implemented:
 - frontend role-model migration from `Admin/Basic` to `Admin/HR/Manager/Developer`
+- frontend forced-password-change route and screen
+- frontend forgot-password and reset-password screens
+- frontend admin user-management workspace for create-user, resend-temporary-password, and role assignment
 
-The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture, the auth foundation now exposes `mustChangePassword` plus `POST /auth/change-password`, `POST /users` now provisions onboarding accounts with temporary-password email delivery, `POST /users/{userId}/resend-temporary-password` now rotates onboarding credentials and revokes active sessions, and the anonymous `POST /auth/forgot-password` / `POST /auth/reset-password` flow is now implemented with hashed reset tokens and password-reset email delivery. The remaining work in the corrected current spec set is now concentrated on the frontend role-aware UX and the related onboarding/reset screens and copy cleanup.
+The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture, the auth foundation now exposes `mustChangePassword` plus `POST /auth/change-password`, `POST /users` now provisions onboarding accounts with temporary-password email delivery, `POST /users/{userId}/resend-temporary-password` now rotates onboarding credentials and revokes active sessions, the anonymous `POST /auth/forgot-password` / `POST /auth/reset-password` flow is now implemented with hashed reset tokens and password-reset email delivery, and the frontend now consumes those access-recovery contracts. The remaining work in the corrected current spec set is now concentrated on incremental UI polish and broader browser QA rather than missing access flows.
 
 ## Verified runtime baseline
 
@@ -67,6 +70,18 @@ The backend authorization and seeding baseline now run on `Admin/HR/Manager/Deve
 - EF migration verification succeeded against PostgreSQL 18 on a fresh temporary Compose volume
 - containerized application smoke verification against PostgreSQL 18 succeeded for health, login, session bootstrap, and employee list
 - containerized reverse-proxy verification also succeeded for employee creation plus admin address create and update through the browser-facing `/api` path on an isolated throwaway stack
+- reverse-proxy runtime verification now also covers the access-recovery flow end to end:
+  - admin login
+  - employee create
+  - user create
+  - onboarding invite capture through Mailpit from the configured no-reply sender
+  - onboarding resend with immediate invalidation of the previous temporary password
+  - temporary-password login with `mustChangePassword=true`
+  - forced password change
+  - self-service forgot-password request
+  - reset-email capture through Mailpit
+  - password reset completion
+  - final login with the reset password
 - local Windows verification required moving the default published PostgreSQL host port from `54329` to `15432` because the original range was excluded on this machine
 - the standalone local-host PostgreSQL 18 smoke path in this shell proved unreliable; the trusted verification path for the PostgreSQL 18 upgrade is the containerized runtime path
 - solution-level `dotnet build` and `dotnet test` now pass again in this shell under `.NET SDK 10.0.201`
@@ -124,8 +139,7 @@ Implemented and verified:
 - `GET /audit-logs`
 
 Pending:
-- frontend role-model recovery for `Admin/HR/Manager/Developer`
-- frontend recovery work for onboarding, reset-password, and copy/alignment cleanup
+- incremental UI copy/alignment cleanup and broader manual browser QA
 
 Implemented foundation for the approved recovery scope:
 - authenticated `mustChangePassword` support across login/session contracts and cookie claims
@@ -141,6 +155,14 @@ Implemented foundation for the approved recovery scope:
   - initial temporary-password invites
   - resent temporary-password invites
   - self-service password-reset emails
+- frontend role-aware routing and nav for `Admin`, `HR`, `Manager`, and `Developer`
+- frontend `/change-password`, `/forgot-password`, and `/reset-password` screens wired to the live EMS auth endpoints
+- frontend Users & Roles workspace wired to:
+  - `GET /roles`
+  - `GET /users`
+  - `POST /users`
+  - `POST /users/{userId}/resend-temporary-password`
+  - `PATCH /users/{userId}/role`
 
 ## Last shipped backend-ready summary for UI planning
 
@@ -242,7 +264,7 @@ The current EMS frontend foundation under `ui/` implements:
   - `PUT /employees/{id}` for the edit form
   - `DELETE /employees/{id}` from the employee detail screen
   - real `400/404/409` handling through shared problem and validation states
-  - detail-page posture currently uses the pre-recovery Admin-versus-self-service split and still needs a frontend role-model update for `HR`, `Manager`, and `Developer`
+  - detail-page posture now follows the recovered role model, with Admin/HR admin actions and Manager self-service address routing
 - real address screen integration with:
   - `GET /employees/{employeeId}/addresses` for the admin address-management screen
   - `POST /employees/{employeeId}/addresses` for admin address creation
@@ -259,8 +281,16 @@ The current EMS frontend foundation under `ui/` implements:
 - real role-screen integration with:
   - `GET /roles` for the canonical role catalog
   - `GET /users` for the admin-selectable user list with paging and filtering
+  - `POST /users` for admin-created login accounts
+  - `POST /users/{userId}/resend-temporary-password` for onboarding reissue
   - `PATCH /users/{userId}/role` for per-row role changes
-  - local inline success and problem feedback for role-change outcomes, including session-revocation counts
+  - local inline success and problem feedback for user creation, onboarding resend, and role-change outcomes, including session-revocation counts
+- real access-recovery screen integration with:
+  - `POST /auth/change-password`
+  - `POST /auth/forgot-password`
+  - `POST /auth/reset-password`
+  - forced password-change routing while `mustChangePassword = true`
+  - anonymous password-recovery screens aligned to the live backend flow
 - verified reverse-proxy runtime path with the real UI:
   - rebuilt the frontend and API containers from the current repo state
   - served the UI through `http://localhost:8088/`
@@ -269,6 +299,8 @@ The current EMS frontend foundation under `ui/` implements:
   - verified `GET /roles` and `GET /users` through the reverse proxy
   - verified one successful user-role change through `PATCH /users/{userId}/role` on a throwaway seeded user in the temporary runtime database
   - verified one successful employee create plus admin address create and update flow through the reverse proxy on a throwaway seeded employee in the temporary runtime database
+  - verified one successful create-user plus onboarding resend flow through the reverse proxy with email capture in Mailpit
+  - verified one successful temporary-password login, forced password change, self-service forgot-password, reset-password, and final relogin flow through the browser-facing runtime endpoints
   - used an isolated throwaway Compose project with explicit test-only env vars because `EMS/.env` was not present in this workspace
 - shared frontend states and primitives for:
   - loading skeleton
@@ -286,8 +318,8 @@ Verified frontend foundation baseline:
 - the built frontend container passes `/healthz` and the nginx healthcheck
 
 Current frontend pending work:
-- approved current specs now require access-recovery work beyond the current UI baseline
-- the next frontend slices are role-model migration, user provisioning, onboarding resend, forced password change, self-service reset, and relevant copy/alignment cleanup
+- the approved access-recovery UI baseline is now in place
+- the next frontend slices are iterative copy/alignment cleanup, broader browser QA, and any follow-up polish discovered during demo testing
 
 ## Review checklist for future EMS changes
 
