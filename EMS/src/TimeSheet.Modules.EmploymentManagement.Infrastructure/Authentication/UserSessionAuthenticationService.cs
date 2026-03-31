@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Audit;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
+using ChangePasswordResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.ChangePassword.Result;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login;
 using RenewResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Renew.Result;
@@ -46,6 +47,14 @@ public sealed class UserSessionAuthenticationService : IUserSessionAuthenticatio
         {
             await WriteFailedLoginAuditAsync(user?.Id, normalizedEmail, AuditResults.Failure, cancellationToken);
             return Result.Failure("invalid_credentials");
+        }
+
+        if (user.MustChangePassword
+            && user.TemporaryPasswordExpiresAtUtc.HasValue
+            && user.TemporaryPasswordExpiresAtUtc.Value <= nowUtc)
+        {
+            await WriteFailedLoginAuditAsync(user.Id, normalizedEmail, AuditResults.Rejected, cancellationToken);
+            return Result.Failure("temporary_password_expired");
         }
 
         if (user.IsLockedOut(nowUtc))
@@ -140,6 +149,92 @@ public sealed class UserSessionAuthenticationService : IUserSessionAuthenticatio
             cancellationToken);
 
         return Result.Success(user, session, user.Role.Code);
+    }
+
+    public async Task<ChangePasswordResult?> ChangePasswordAsync(
+        Guid userId,
+        Guid sessionId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken)
+    {
+        var nowUtc = _clock.UtcNow;
+
+        var user = await _dbContext.Users
+            .Include(x => x.Role)
+            .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+        if (user is null || user.Role is null || !user.IsActive || !user.Role.IsActive || user.IsLockedOut(nowUtc))
+        {
+            return null;
+        }
+
+        var currentSession = await _dbContext.UserSessions
+            .SingleOrDefaultAsync(x => x.Id == sessionId && x.UserId == userId, cancellationToken);
+
+        if (currentSession is null || !currentSession.IsActive(nowUtc) || currentSession.SessionVersion != user.SessionVersion)
+        {
+            return null;
+        }
+
+        if (!_passwordHashingService.VerifyPassword(user, currentPassword))
+        {
+            return ChangePasswordResult.Failure("invalid_current_password");
+        }
+
+        user.PasswordHash = _passwordHashingService.HashPassword(user, newPassword);
+        user.ClearTemporaryPasswordState();
+
+        var sessionVersion = user.IncrementSessionVersion();
+        currentSession.SessionVersion = sessionVersion;
+        currentSession.LastSeenAtUtc = nowUtc;
+
+        var otherSessions = await _dbContext.UserSessions
+            .Where(x => x.UserId == userId
+                && x.Id != sessionId
+                && x.RevokedAtUtc == null
+                && x.ExpiresAtUtc > nowUtc)
+            .ToListAsync(cancellationToken);
+
+        foreach (var otherSession in otherSessions)
+        {
+            otherSession.Revoke("PasswordChange", nowUtc);
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        foreach (var otherSession in otherSessions)
+        {
+            await _auditLogService.WriteAsync(
+                new AuditWriteEntry(
+                    AuditActionTypes.SessionRevoked,
+                    AuditEntityTypes.UserSession,
+                    AuditResults.Success,
+                    otherSession.Id,
+                    new { Reason = "PasswordChange" },
+                    userId,
+                    otherSession.Id),
+                cancellationToken);
+        }
+
+        await _auditLogService.WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.PasswordChanged,
+                AuditEntityTypes.User,
+                AuditResults.Success,
+                user.Id,
+                null,
+                user.Id,
+                currentSession.Id),
+            cancellationToken);
+
+        return ChangePasswordResult.Success(
+            user.Id,
+            user.Email,
+            user.Role.Code,
+            user.EmployeeId,
+            currentSession.Id,
+            currentSession.ExpiresAtUtc);
     }
 
     public async Task<RenewResult?> RenewAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken)

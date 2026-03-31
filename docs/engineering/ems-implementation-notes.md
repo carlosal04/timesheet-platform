@@ -24,8 +24,10 @@ The current EMS foundation checkpoint implements the previously approved Phase 1
 - audit log read endpoint `GET /audit-logs`
 - authenticated session bootstrap endpoint `GET /auth/session`
 - authenticated session renew endpoint `POST /auth/renew`
+- authenticated password-change endpoint `POST /auth/change-password`
 - shared anti-forgery enforcement for authenticated state-changing endpoints, with `POST /auth/login` exempt
 - config-driven login rate limiting on `POST /auth/login`
+- authenticated `mustChangePassword` route gating for business endpoints, with allowlisted auth bootstrap/logout/renew/change-password routes
 - soft-delete metadata now persists both `DeletedAtUtc` and `DeletedByUserId` for employees and addresses
 - Docker frontend static container moved to Chainguard nginx with an image-compatible `nginx -t` healthcheck and a custom root nginx config for clean non-root startup
 - Docker reverse proxy moved to Chainguard nginx with an image-compatible `nginx -t` healthcheck
@@ -46,11 +48,10 @@ The approved current EMS spec set now goes beyond the fully shipped code baselin
 Newly approved but not yet implemented:
 - separate Admin user provisioning via `POST /users`
 - onboarding resend via `POST /users/{userId}/resend-temporary-password`
-- forced first-login password change via `POST /auth/change-password`
 - self-service reset flow via `POST /auth/forgot-password` and `POST /auth/reset-password`
 - frontend role-model migration from `Admin/Basic` to `Admin/HR/Manager/Developer`
 
-The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, and the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture. The onboarding/reset contracts and the frontend role-aware UX still need to be brought up to the corrected current spec set.
+The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture, and the auth foundation now exposes `mustChangePassword` plus `POST /auth/change-password`. The remaining onboarding/reset contracts and the frontend role-aware UX still need to be brought up to the corrected current spec set.
 
 ## Verified runtime baseline
 
@@ -119,13 +120,15 @@ Implemented and verified:
 Pending:
 - `POST /users`
 - `POST /users/{userId}/resend-temporary-password`
-- `POST /auth/change-password`
 - `POST /auth/forgot-password`
 - `POST /auth/reset-password`
 - frontend role-model recovery for `Admin/HR/Manager/Developer`
 - frontend recovery work for onboarding, reset-password, and copy/alignment cleanup
 
 Implemented foundation for the approved recovery scope:
+- authenticated `mustChangePassword` support across login/session contracts and cookie claims
+- `POST /auth/change-password` with current-password verification, onboarding-state clearing, and password-change auditing
+- authenticated business-route blocking while `mustChangePassword = true`, with allowlisted auth bootstrap/logout/renew/change-password routes
 - SMTP email delivery registration via `MailKit` with no-reply sender configuration from `Email:*`
 - lower-environment email capture via the pinned `Mailpit` Compose service on `http://localhost:8025/`
 - production-safe HTML and plain-text email composition for:

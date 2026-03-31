@@ -10,6 +10,7 @@ public static class AuditActionTypes
     public const string SessionRevoked = "SessionRevoked";
     public const string AccessDenied = "AccessDenied";
     public const string AccountLockedOut = "AccountLockedOut";
+    public const string PasswordChanged = "PasswordChanged";
     public const string UserRoleAssigned = "UserRoleAssigned";
     public const string RoleAssignmentRejected = "RoleAssignmentRejected";
     public const string EmployeeCreated = "EmployeeCreated";

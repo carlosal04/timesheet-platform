@@ -1,6 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Auth;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
+using TimeSheet.Modules.EmploymentManagement.Domain.Security;
+using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 
 namespace TimeSheet.Modules.EmploymentManagement.Api.IntegrationTests;
 
@@ -35,6 +41,7 @@ public sealed class AuthEndpointsTests : IClassFixture<AuthApiFactory>
         Assert.NotNull(payload);
         Assert.Equal("admin@example.com", payload!.Email);
         Assert.Equal("Admin", payload.RoleCode);
+        Assert.False(payload.MustChangePassword);
 
         using var antiforgeryRequest = new HttpRequestMessage(HttpMethod.Get, "/auth/antiforgery");
         antiforgeryRequest.Headers.Add("Cookie", authCookie);
@@ -57,6 +64,48 @@ public sealed class AuthEndpointsTests : IClassFixture<AuthApiFactory>
         var response = await client.PostAsJsonAsync("/auth/login", new LoginRequest(string.Empty, string.Empty));
 
         await AssertStatusCodeAsync(response, HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Login_WithExpiredTemporaryPassword_ReturnsSpecificUnauthorizedProblem()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        await _factory.ExecuteScopedAsync(async services =>
+        {
+            var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "expired.temp@example.com",
+                RoleId = managerRole.Id,
+                IsActive = true,
+                MustChangePassword = true,
+                TemporaryPasswordExpiresAtUtc = DateTimeOffset.UtcNow.AddMinutes(-5),
+                LastTemporaryPasswordIssuedAtUtc = DateTimeOffset.UtcNow.AddHours(-24)
+            };
+
+            user.PasswordHash = passwordHashingService.HashPassword(user, "TempP@ssw0rd123!");
+            dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync();
+        });
+
+        using var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false
+        });
+
+        var response = await client.PostAsJsonAsync("/auth/login", new LoginRequest("expired.temp@example.com", "TempP@ssw0rd123!"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("Temporary password expired", problem!.Title);
     }
 
     [Fact]

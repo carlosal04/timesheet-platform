@@ -55,6 +55,8 @@ public sealed class AuthSessionCookieEvents : CookieAuthenticationEvents
             return;
         }
 
+        var principalChanged = false;
+
         var existingRole = identity.FindFirst(ClaimTypes.Role);
         if (existingRole?.Value != result.RoleCode)
         {
@@ -64,6 +66,7 @@ public sealed class AuthSessionCookieEvents : CookieAuthenticationEvents
             }
 
             identity.AddClaim(new Claim(ClaimTypes.Role, result.RoleCode!));
+            principalChanged = true;
         }
 
         var existingEmployeeId = identity.FindFirst(CustomClaimTypes.EmployeeId);
@@ -79,6 +82,26 @@ public sealed class AuthSessionCookieEvents : CookieAuthenticationEvents
             {
                 identity.AddClaim(new Claim(CustomClaimTypes.EmployeeId, employeeIdValue));
             }
+
+            principalChanged = true;
+        }
+
+        var existingMustChangePassword = identity.FindFirst(CustomClaimTypes.MustChangePassword);
+        var mustChangePasswordValue = (result.MustChangePassword ?? false).ToString().ToLowerInvariant();
+        if (existingMustChangePassword?.Value != mustChangePasswordValue)
+        {
+            if (existingMustChangePassword is not null)
+            {
+                identity.RemoveClaim(existingMustChangePassword);
+            }
+
+            identity.AddClaim(new Claim(CustomClaimTypes.MustChangePassword, mustChangePasswordValue));
+            principalChanged = true;
+        }
+
+        if (principalChanged)
+        {
+            context.ShouldRenew = true;
         }
     }
 }

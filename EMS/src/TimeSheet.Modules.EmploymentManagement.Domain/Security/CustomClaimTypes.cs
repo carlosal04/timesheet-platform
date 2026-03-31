@@ -4,4 +4,5 @@ public static class CustomClaimTypes
 {
     public const string SessionId = "session_id";
     public const string EmployeeId = "employee_id";
+    public const string MustChangePassword = "must_change_password";
 }

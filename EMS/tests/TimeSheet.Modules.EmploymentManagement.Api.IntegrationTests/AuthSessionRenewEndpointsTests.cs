@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Auth;
 using TimeSheet.Modules.EmploymentManagement.Domain.Auditing;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
+using TimeSheet.Modules.EmploymentManagement.Domain.Security;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 
 namespace TimeSheet.Modules.EmploymentManagement.Api.IntegrationTests;
@@ -89,6 +91,53 @@ public sealed class AuthSessionRenewEndpointsTests : IClassFixture<AuthApiFactor
         var renewResponse = await client.SendAsync(renewRequest);
 
         Assert.Equal(HttpStatusCode.Unauthorized, renewResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Renew_WhenPasswordChangeIsRequired_RemainsAllowed()
+    {
+        await _factory.ResetDatabaseAsync();
+
+        await _factory.ExecuteScopedAsync(async services =>
+        {
+            var dbContext = services.GetRequiredService<EmploymentManagementDbContext>();
+            var passwordHashingService = services.GetRequiredService<IPasswordHashingService>();
+            var managerRole = await dbContext.Roles.SingleAsync(x => x.Code == RoleCodes.Manager);
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "renew.temp@example.com",
+                RoleId = managerRole.Id,
+                IsActive = true,
+                MustChangePassword = true,
+                TemporaryPasswordExpiresAtUtc = DateTimeOffset.UtcNow.AddHours(24),
+                LastTemporaryPasswordIssuedAtUtc = DateTimeOffset.UtcNow
+            };
+
+            user.PasswordHash = passwordHashingService.HashPassword(user, "TempP@ssw0rd123!");
+            dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync();
+        });
+
+        using var client = CreateClient();
+        var authCookie = await LoginAsync(client, "renew.temp@example.com", "TempP@ssw0rd123!");
+        var sessionBefore = await GetSessionAsync(client, authCookie);
+
+        using var renewRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/renew")
+        {
+            Content = JsonContent.Create(new { })
+        };
+        await AntiforgeryTestHelper.AttachAsync(client, authCookie, renewRequest);
+
+        var renewResponse = await client.SendAsync(renewRequest);
+
+        Assert.Equal(HttpStatusCode.OK, renewResponse.StatusCode);
+
+        var payload = await renewResponse.Content.ReadFromJsonAsync<RenewSessionResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(sessionBefore.SessionId, payload!.SessionId);
+        Assert.True(payload.ExpiresAtUtc > sessionBefore.ExpiresAtUtc);
     }
 
     private HttpClient CreateClient()

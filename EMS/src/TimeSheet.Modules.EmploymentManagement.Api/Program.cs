@@ -17,6 +17,8 @@ using TimeSheet.Modules.EmploymentManagement.Api.Contracts.Users;
 using TimeSheet.Modules.EmploymentManagement.Api.Infrastructure;
 using GetSessionQuery = TimeSheet.Modules.EmploymentManagement.Application.Authentication.GetSession.Query;
 using GetSessionResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.GetSession.Result;
+using ChangePasswordCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.ChangePassword.Command;
+using ChangePasswordResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.ChangePassword.Result;
 using ListAuditLogsQuery = TimeSheet.Modules.EmploymentManagement.Application.AuditLogs.List.Query;
 using ListAuditLogsResult = TimeSheet.Modules.EmploymentManagement.Application.AuditLogs.List.Result;
 using CreateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Command;
@@ -168,6 +170,7 @@ app.UseExceptionHandler();
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
 app.UseMiddleware<AuthenticatedAntiforgeryMiddleware>();
+app.UseMiddleware<MustChangePasswordEnforcementMiddleware>();
 app.UseAuthorization();
 
 using (var scope = app.Services.CreateScope())
@@ -188,6 +191,14 @@ app.MapPost("/auth/login", async Task<IResult> (
     var result = await bus.InvokeAsync<LoginResult>(new LoginCommand(request.Email, request.Password));
     if (!result.Succeeded || result.User is null || result.Session is null || result.RoleCode is null)
     {
+        if (result.ErrorCode == "temporary_password_expired")
+        {
+            return TypedResults.Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Temporary password expired",
+                detail: "Request a new temporary password from an administrator.");
+        }
+
         var statusCode = result.ErrorCode == "locked_out"
             ? StatusCodes.Status423Locked
             : StatusCodes.Status401Unauthorized;
@@ -199,32 +210,26 @@ app.MapPost("/auth/login", async Task<IResult> (
         return TypedResults.Problem(statusCode: statusCode, title: title);
     }
 
-    var claims = new List<Claim>
-    {
-        new(ClaimTypes.NameIdentifier, result.User.Id.ToString()),
-        new(ClaimTypes.Email, result.User.Email),
-        new(ClaimTypes.Role, result.RoleCode),
-        new(CustomClaimTypes.SessionId, result.Session.Id.ToString())
-    };
-
-    if (result.EmployeeId.HasValue)
-    {
-        claims.Add(new Claim(CustomClaimTypes.EmployeeId, result.EmployeeId.Value.ToString()));
-    }
-
-    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-    var principal = new ClaimsPrincipal(identity);
-
     await httpContext.SignInAsync(
         CookieAuthenticationDefaults.AuthenticationScheme,
-        principal,
+        CreatePrincipal(
+            result.User.Id,
+            result.User.Email,
+            result.RoleCode,
+            result.Session.Id,
+            result.EmployeeId,
+            result.MustChangePassword ?? false),
         new AuthenticationProperties
         {
             IsPersistent = true,
             ExpiresUtc = result.Session.ExpiresAtUtc
         });
 
-    return TypedResults.Ok(new LoginResponse(result.User.Id, result.User.Email, result.RoleCode));
+    return TypedResults.Ok(new LoginResponse(
+        result.User.Id,
+        result.User.Email,
+        result.RoleCode,
+        result.MustChangePassword ?? false));
 }).AllowAnonymous()
   .AddEndpointFilter<LoginRateLimitFilter>();
 
@@ -267,6 +272,7 @@ app.MapGet("/auth/session", async Task<IResult> (
         result.Email,
         result.RoleCode,
         result.EmployeeId,
+        result.MustChangePassword,
         result.SessionId,
         result.ExpiresAtUtc,
         result.IdleTimeoutMinutes));
@@ -300,6 +306,55 @@ app.MapPost("/auth/renew", async Task<IResult> (
         result.SessionId,
         result.ExpiresAtUtc,
         result.IdleTimeoutMinutes));
+}).RequireAuthorization(PolicyNames.AuthenticatedUser);
+
+app.MapPost("/auth/change-password", async Task<IResult> (
+    ChangePasswordRequest request,
+    IMessageBus bus,
+    HttpContext httpContext,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<ChangePasswordResult?>(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword));
+    if (result is null)
+    {
+        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return TypedResults.Problem(
+            statusCode: StatusCodes.Status401Unauthorized,
+            title: "Authentication required");
+    }
+
+    if (!result.Succeeded
+        || !result.UserId.HasValue
+        || result.Email is null
+        || result.RoleCode is null
+        || !result.SessionId.HasValue
+        || !result.ExpiresAtUtc.HasValue)
+    {
+        var title = result.ErrorCode == "invalid_current_password"
+            ? "Invalid current password"
+            : "Password change failed";
+
+        return TypedResults.Problem(
+            statusCode: StatusCodes.Status400BadRequest,
+            title: title);
+    }
+
+    await httpContext.SignInAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        CreatePrincipal(
+            result.UserId.Value,
+            result.Email,
+            result.RoleCode,
+            result.SessionId.Value,
+            result.EmployeeId,
+            false),
+        new AuthenticationProperties
+        {
+            IsPersistent = true,
+            ExpiresUtc = result.ExpiresAtUtc.Value
+        });
+
+    return TypedResults.NoContent();
 }).RequireAuthorization(PolicyNames.AuthenticatedUser);
 
 app.MapGet("/employees", async Task<IResult> (
@@ -589,6 +644,32 @@ app.MapDelete("/employees/{id:guid}", async Task<IResult> (
     await bus.InvokeAsync(new DeleteEmployeeCommand(id));
     return TypedResults.NoContent();
 }).RequireAuthorization(PolicyNames.EmployeeDelete);
+
+static ClaimsPrincipal CreatePrincipal(
+    Guid userId,
+    string email,
+    string roleCode,
+    Guid sessionId,
+    Guid? employeeId,
+    bool mustChangePassword)
+{
+    var claims = new List<Claim>
+    {
+        new(ClaimTypes.NameIdentifier, userId.ToString()),
+        new(ClaimTypes.Email, email),
+        new(ClaimTypes.Role, roleCode),
+        new(CustomClaimTypes.SessionId, sessionId.ToString()),
+        new(CustomClaimTypes.MustChangePassword, mustChangePassword.ToString().ToLowerInvariant())
+    };
+
+    if (employeeId.HasValue)
+    {
+        claims.Add(new Claim(CustomClaimTypes.EmployeeId, employeeId.Value.ToString()));
+    }
+
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    return new ClaimsPrincipal(identity);
+}
 
 app.Run();
 

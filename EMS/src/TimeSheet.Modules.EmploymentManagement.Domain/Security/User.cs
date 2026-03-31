@@ -22,6 +22,12 @@ public sealed class User
 
     public int SessionVersion { get; set; }
 
+    public bool MustChangePassword { get; set; }
+
+    public DateTimeOffset? TemporaryPasswordExpiresAtUtc { get; set; }
+
+    public DateTimeOffset? LastTemporaryPasswordIssuedAtUtc { get; set; }
+
     public bool IsLockedOut(DateTimeOffset nowUtc)
     {
         return LockoutEndUtc.HasValue && LockoutEndUtc.Value > nowUtc;
@@ -48,5 +54,11 @@ public sealed class User
     {
         SessionVersion++;
         return SessionVersion;
+    }
+
+    public void ClearTemporaryPasswordState()
+    {
+        MustChangePassword = false;
+        TemporaryPasswordExpiresAtUtc = null;
     }
 }

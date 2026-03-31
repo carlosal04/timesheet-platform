@@ -5,6 +5,7 @@ public sealed record Result(
     string Email,
     string RoleCode,
     Guid? EmployeeId,
+    bool MustChangePassword,
     Guid SessionId,
     DateTimeOffset ExpiresAtUtc,
     int IdleTimeoutMinutes);

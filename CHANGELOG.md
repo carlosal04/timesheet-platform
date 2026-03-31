@@ -32,6 +32,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - MailKit-based SMTP email delivery baseline with no-reply sender configuration
 - Lower-environment Mailpit email-capture service in Compose for onboarding and reset verification
 - Production-safe HTML and plain-text email templates for temporary-password invites, invite resends, and password-reset emails
+- Authenticated password-change endpoint `POST /auth/change-password`
 - Frontend static container moved from Alpine nginx to Chainguard nginx
 - Reverse-proxy container moved from Alpine nginx to Chainguard nginx
 - PostgreSQL container moved from `postgres:17-alpine` to `postgres:17-bookworm`
@@ -85,6 +86,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Replaced the frontend mock role catalog blocker with the real EMS role catalog, user list, and role-assignment workflow
 - Migrated the EMS backend authorization and seed baseline from `Admin/Basic` to `Admin/HR/Manager/Developer`, including the self-service address policies required by `Manager` and `Developer`
 - Pinned the lower-environment Mailpit image by digest to keep the email-capture baseline deterministic
+- Added onboarding-state fields to users, surfaced `mustChangePassword` in auth/session responses, and blocked business endpoints until password change is completed
 - Verified the real UI through the Docker reverse-proxy path, including login, session bootstrap, and anti-forgery bootstrap
 - Verified employee create plus admin address create/update through the Docker reverse-proxy path on a throwaway runtime stack
 

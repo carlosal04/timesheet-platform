@@ -39,6 +39,7 @@ public sealed class AuthSessionStateEndpointsTests : IClassFixture<AuthApiFactor
         Assert.Equal("admin@example.com", payload!.Email);
         Assert.Equal(RoleCodes.Admin, payload.RoleCode);
         Assert.Null(payload.EmployeeId);
+        Assert.False(payload.MustChangePassword);
         Assert.True(payload.ExpiresAtUtc > DateTimeOffset.UtcNow);
         Assert.Equal(480, payload.IdleTimeoutMinutes);
 
@@ -102,6 +103,7 @@ public sealed class AuthSessionStateEndpointsTests : IClassFixture<AuthApiFactor
         Assert.NotNull(payload);
         Assert.Equal(RoleCodes.Manager, payload!.RoleCode);
         Assert.Equal(employeeId, payload.EmployeeId);
+        Assert.False(payload.MustChangePassword);
     }
 
     [Fact]

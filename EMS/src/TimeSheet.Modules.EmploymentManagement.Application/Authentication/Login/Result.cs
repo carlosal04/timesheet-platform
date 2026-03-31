@@ -4,7 +4,14 @@ namespace TimeSheet.Modules.EmploymentManagement.Application.Authentication.Logi
 
 public sealed class Result
 {
-    private Result(bool succeeded, string? errorCode, User? user, UserSession? session, string? roleCode, Guid? employeeId)
+    private Result(
+        bool succeeded,
+        string? errorCode,
+        User? user,
+        UserSession? session,
+        string? roleCode,
+        Guid? employeeId,
+        bool? mustChangePassword)
     {
         Succeeded = succeeded;
         ErrorCode = errorCode;
@@ -12,6 +19,7 @@ public sealed class Result
         Session = session;
         RoleCode = roleCode;
         EmployeeId = employeeId;
+        MustChangePassword = mustChangePassword;
     }
 
     public bool Succeeded { get; }
@@ -26,13 +34,15 @@ public sealed class Result
 
     public Guid? EmployeeId { get; }
 
+    public bool? MustChangePassword { get; }
+
     public static Result Success(User user, UserSession session, string roleCode)
     {
-        return new Result(true, null, user, session, roleCode, user.EmployeeId);
+        return new Result(true, null, user, session, roleCode, user.EmployeeId, user.MustChangePassword);
     }
 
     public static Result Failure(string errorCode)
     {
-        return new Result(false, errorCode, null, null, null, null);
+        return new Result(false, errorCode, null, null, null, null, null);
     }
 }

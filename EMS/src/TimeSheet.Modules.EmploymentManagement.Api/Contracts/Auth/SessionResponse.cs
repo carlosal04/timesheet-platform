@@ -5,6 +5,7 @@ public sealed record SessionResponse(
     string Email,
     string RoleCode,
     Guid? EmployeeId,
+    bool MustChangePassword,
     Guid SessionId,
     DateTimeOffset ExpiresAtUtc,
     int IdleTimeoutMinutes);

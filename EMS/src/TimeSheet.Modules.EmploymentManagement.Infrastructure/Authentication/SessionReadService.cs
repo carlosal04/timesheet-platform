@@ -51,6 +51,7 @@ public sealed class SessionReadService : ISessionReadService
             user.Email,
             user.Role.Code,
             user.EmployeeId,
+            user.MustChangePassword,
             session.Id,
             session.ExpiresAtUtc,
             _authOptions.SessionLifetimeMinutes);
