@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Options;
 using Polly;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Addresses;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Audit;
+using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Email;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Employees;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Roles;
 using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Security;
@@ -12,6 +14,8 @@ using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Users;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Auditing;
+using TimeSheet.Modules.EmploymentManagement.Infrastructure.Email;
+using TimeSheet.Modules.EmploymentManagement.Infrastructure.Email.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Employees;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Initialization;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
@@ -26,6 +30,10 @@ public static class DependencyInjection
     {
         services.Configure<AuthOptions>(configuration.GetSection(AuthOptions.SectionName));
         services.Configure<BootstrapAdminOptions>(configuration.GetSection(BootstrapAdminOptions.SectionName));
+        services.AddOptions<EmailOptions>()
+            .Bind(configuration.GetSection(EmailOptions.SectionName))
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<EmailOptions>, EmailOptionsValidator>();
 
         services.AddDbContext<EmploymentManagementDbContext>(options =>
         {
@@ -49,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<IUserSessionAuthenticationService, UserSessionAuthenticationService>();
         services.AddScoped<ISessionReadService, SessionReadService>();
         services.AddScoped<ISessionValidator, SessionValidator>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IEmployeeReadService, EmployeeReadService>();
         services.AddScoped<IEmployeeWriteService, EmployeeWriteService>();
         services.AddScoped<IEmployeeAddressService, EmployeeAddressService>();

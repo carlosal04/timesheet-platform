@@ -28,6 +28,13 @@ services:
       BootstrapAdmin__Email: ${EMS_BOOTSTRAP_ADMIN_EMAIL:-}
       BootstrapAdmin__Password: ${EMS_BOOTSTRAP_ADMIN_PASSWORD:-}
       BootstrapAdmin__Name: ${EMS_BOOTSTRAP_ADMIN_NAME:-Bootstrap Admin}
+      Email__FromAddress: ${EMS_EMAIL_FROM_ADDRESS:-no-reply@ems.local}
+      Email__FromDisplayName: ${EMS_EMAIL_FROM_DISPLAY_NAME:-Employment Management System}
+      Email__Smtp__Host: ${EMS_SMTP_HOST:-mailpit}
+      Email__Smtp__Port: ${EMS_SMTP_PORT:-1025}
+      Email__Smtp__SecurityMode: ${EMS_SMTP_SECURITY_MODE:-None}
+      Email__Smtp__Username: ${EMS_SMTP_USERNAME:-}
+      Email__Smtp__Password: ${EMS_SMTP_PASSWORD:-}
       DataProtection__KeysPath: /var/lib/ems/data-protection-keys
     depends_on:
       postgres:
@@ -68,6 +75,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit@sha256:c5a6d0ba4d08187f70f305471da5fd9ad424fdfc2f25a2308226a786335dfa9f
+    ports:
+      - "${EMS_MAILPIT_UI_PORT:-8025}:8025"
 
 volumes:
   postgres-data:

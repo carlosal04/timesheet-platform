@@ -48,11 +48,9 @@ Newly approved but not yet implemented:
 - onboarding resend via `POST /users/{userId}/resend-temporary-password`
 - forced first-login password change via `POST /auth/change-password`
 - self-service reset flow via `POST /auth/forgot-password` and `POST /auth/reset-password`
-- secure outbound email delivery from a no-reply sender
-- lower-environment email capture for onboarding and reset verification
 - frontend role-model migration from `Admin/Basic` to `Admin/HR/Manager/Developer`
 
-The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, but the onboarding/reset contracts and the frontend role-aware UX still need to be brought up to the corrected current spec set.
+The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, and the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture. The onboarding/reset contracts and the frontend role-aware UX still need to be brought up to the corrected current spec set.
 
 ## Verified runtime baseline
 
@@ -124,9 +122,12 @@ Pending:
 - `POST /auth/change-password`
 - `POST /auth/forgot-password`
 - `POST /auth/reset-password`
-- outbound email infrastructure and lower-environment email capture
 - frontend role-model recovery for `Admin/HR/Manager/Developer`
 - frontend recovery work for onboarding, reset-password, and copy/alignment cleanup
+
+Implemented foundation for the approved recovery scope:
+- SMTP email delivery registration via `MailKit` with no-reply sender configuration from `Email:*`
+- lower-environment email capture via the pinned `Mailpit` Compose service on `http://localhost:8025/`
 
 ## Last shipped backend-ready summary for UI planning
 
