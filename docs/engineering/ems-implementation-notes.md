@@ -27,6 +27,8 @@ The current EMS foundation checkpoint implements the previously approved Phase 1
 - authenticated session bootstrap endpoint `GET /auth/session`
 - authenticated session renew endpoint `POST /auth/renew`
 - authenticated password-change endpoint `POST /auth/change-password`
+- anonymous forgot-password endpoint `POST /auth/forgot-password`
+- anonymous reset-password endpoint `POST /auth/reset-password`
 - shared anti-forgery enforcement for authenticated state-changing endpoints, with `POST /auth/login` exempt
 - config-driven login rate limiting on `POST /auth/login`
 - authenticated `mustChangePassword` route gating for business endpoints, with allowlisted auth bootstrap/logout/renew/change-password routes
@@ -48,10 +50,9 @@ The current EMS foundation checkpoint implements the previously approved Phase 1
 The approved current EMS spec set now goes beyond the fully shipped code baseline on this branch.
 
 Newly approved but not yet implemented:
-- self-service reset flow via `POST /auth/forgot-password` and `POST /auth/reset-password`
 - frontend role-model migration from `Admin/Basic` to `Admin/HR/Manager/Developer`
 
-The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture, the auth foundation now exposes `mustChangePassword` plus `POST /auth/change-password`, `POST /users` now provisions onboarding accounts with temporary-password email delivery, and `POST /users/{userId}/resend-temporary-password` now rotates onboarding credentials and revokes active sessions. The remaining reset contracts and the frontend role-aware UX still need to be brought up to the corrected current spec set.
+The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture, the auth foundation now exposes `mustChangePassword` plus `POST /auth/change-password`, `POST /users` now provisions onboarding accounts with temporary-password email delivery, `POST /users/{userId}/resend-temporary-password` now rotates onboarding credentials and revokes active sessions, and the anonymous `POST /auth/forgot-password` / `POST /auth/reset-password` flow is now implemented with hashed reset tokens and password-reset email delivery. The remaining work in the corrected current spec set is now concentrated on the frontend role-aware UX and the related onboarding/reset screens and copy cleanup.
 
 ## Verified runtime baseline
 
@@ -98,6 +99,9 @@ Implemented and verified:
 - `GET /auth/antiforgery`
 - `GET /auth/session`
 - `POST /auth/renew`
+- `POST /auth/change-password`
+- `POST /auth/forgot-password`
+- `POST /auth/reset-password`
 - `GET /employees`
 - `GET /employees/{id}`
 - `POST /employees`
@@ -120,14 +124,13 @@ Implemented and verified:
 - `GET /audit-logs`
 
 Pending:
-- `POST /auth/forgot-password`
-- `POST /auth/reset-password`
 - frontend role-model recovery for `Admin/HR/Manager/Developer`
 - frontend recovery work for onboarding, reset-password, and copy/alignment cleanup
 
 Implemented foundation for the approved recovery scope:
 - authenticated `mustChangePassword` support across login/session contracts and cookie claims
 - `POST /auth/change-password` with current-password verification, onboarding-state clearing, and password-change auditing
+- anonymous `POST /auth/forgot-password` and `POST /auth/reset-password` with hashed single-use reset tokens, 1-hour expiry, no-reply reset email delivery, and active-session revocation on successful reset
 - authenticated business-route blocking while `mustChangePassword = true`, with allowlisted auth bootstrap/logout/renew/change-password routes
 - `POST /users` with role/linking rule enforcement, 24-hour temporary-password issuance, no-reply onboarding email composition/delivery, and `UserCreated` / `TemporaryPasswordIssued` auditing
 - `POST /users/{userId}/resend-temporary-password` with onboarding-state validation, credential rotation, active-session revocation, resend email delivery, and `TemporaryPasswordResent` auditing

@@ -28,6 +28,10 @@ public sealed class User
 
     public DateTimeOffset? LastTemporaryPasswordIssuedAtUtc { get; set; }
 
+    public string? PasswordResetTokenHash { get; set; }
+
+    public DateTimeOffset? PasswordResetTokenExpiresAtUtc { get; set; }
+
     public bool IsLockedOut(DateTimeOffset nowUtc)
     {
         return LockoutEndUtc.HasValue && LockoutEndUtc.Value > nowUtc;
@@ -60,5 +64,17 @@ public sealed class User
     {
         MustChangePassword = false;
         TemporaryPasswordExpiresAtUtc = null;
+    }
+
+    public void SetPasswordResetState(string tokenHash, DateTimeOffset expiresAtUtc)
+    {
+        PasswordResetTokenHash = tokenHash;
+        PasswordResetTokenExpiresAtUtc = expiresAtUtc;
+    }
+
+    public void ClearPasswordResetState()
+    {
+        PasswordResetTokenHash = null;
+        PasswordResetTokenExpiresAtUtc = null;
     }
 }

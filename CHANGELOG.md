@@ -35,6 +35,8 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Lower-environment Mailpit email-capture service in Compose for onboarding and reset verification
 - Production-safe HTML and plain-text email templates for temporary-password invites, invite resends, and password-reset emails
 - Authenticated password-change endpoint `POST /auth/change-password`
+- Anonymous forgot-password endpoint `POST /auth/forgot-password`
+- Anonymous reset-password endpoint `POST /auth/reset-password`
 - Frontend static container moved from Alpine nginx to Chainguard nginx
 - Reverse-proxy container moved from Alpine nginx to Chainguard nginx
 - PostgreSQL container moved from `postgres:17-alpine` to `postgres:17-bookworm`
@@ -91,6 +93,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Added onboarding-state fields to users, surfaced `mustChangePassword` in auth/session responses, and blocked business endpoints until password change is completed
 - Added backend user provisioning with temporary-password invite delivery, onboarding-state fields on `GET /users`, and explicit frontend base-url configuration for email links
 - Added onboarding temporary-password resend with active-session revocation and replacement invite delivery
+- Added self-service password reset with hashed reset tokens, no-reply reset emails, and active-session revocation on successful reset
 - Verified the real UI through the Docker reverse-proxy path, including login, session bootstrap, and anti-forgery bootstrap
 - Verified employee create plus admin address create/update through the Docker reverse-proxy path on a throwaway runtime stack
 

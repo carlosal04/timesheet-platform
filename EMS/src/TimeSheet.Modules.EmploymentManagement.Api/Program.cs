@@ -19,6 +19,7 @@ using GetSessionQuery = TimeSheet.Modules.EmploymentManagement.Application.Authe
 using GetSessionResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.GetSession.Result;
 using ChangePasswordCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.ChangePassword.Command;
 using ChangePasswordResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.ChangePassword.Result;
+using ForgotPasswordCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.ForgotPassword.Command;
 using ListAuditLogsQuery = TimeSheet.Modules.EmploymentManagement.Application.AuditLogs.List.Query;
 using ListAuditLogsResult = TimeSheet.Modules.EmploymentManagement.Application.AuditLogs.List.Result;
 using CreateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Create.Command;
@@ -29,6 +30,7 @@ using LoginCommand = TimeSheet.Modules.EmploymentManagement.Application.Authenti
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using LoginResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Login.Result;
 using LogoutCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Logout.Command;
+using ResetPasswordCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.ResetPassword.Command;
 using RenewCommand = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Renew.Command;
 using RenewResult = TimeSheet.Modules.EmploymentManagement.Application.Authentication.Renew.Result;
 using GetEmployeeAddressByIdQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.GetById.Query;
@@ -361,6 +363,31 @@ app.MapPost("/auth/change-password", async Task<IResult> (
 
     return TypedResults.NoContent();
 }).RequireAuthorization(PolicyNames.AuthenticatedUser);
+
+app.MapPost("/auth/forgot-password", async Task<IResult> (
+    ForgotPasswordRequest request,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    await bus.InvokeAsync(new ForgotPasswordCommand(request.Email));
+    return TypedResults.Accepted((string?)null);
+}).AllowAnonymous();
+
+app.MapPost("/auth/reset-password", async Task<IResult> (
+    ResetPasswordRequest request,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var succeeded = await bus.InvokeAsync<bool>(new ResetPasswordCommand(request.Token, request.NewPassword));
+    if (!succeeded)
+    {
+        return TypedResults.Problem(
+            statusCode: StatusCodes.Status400BadRequest,
+            title: "Invalid or expired reset token");
+    }
+
+    return TypedResults.NoContent();
+}).AllowAnonymous();
 
 app.MapGet("/employees", async Task<IResult> (
     ClaimsPrincipal principal,

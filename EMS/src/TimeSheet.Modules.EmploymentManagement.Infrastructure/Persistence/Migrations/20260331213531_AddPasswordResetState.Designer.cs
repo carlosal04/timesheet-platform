@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 namespace TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EmploymentManagementDbContext))]
-    partial class EmploymentManagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331213531_AddPasswordResetState")]
+    partial class AddPasswordResetState
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

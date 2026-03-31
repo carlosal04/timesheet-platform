@@ -42,6 +42,7 @@ public sealed class EmploymentManagementDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Email).HasMaxLength(256).IsRequired();
             entity.Property(x => x.PasswordHash).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.PasswordResetTokenHash).HasMaxLength(256);
             entity.Property(x => x.MustChangePassword).HasDefaultValue(false);
             entity.HasIndex(x => x.Email).IsUnique();
             entity.HasIndex(x => x.EmployeeId).IsUnique().HasFilter("\"EmployeeId\" IS NOT NULL");
