@@ -42,6 +42,8 @@ using CreateUserCommand = TimeSheet.Modules.EmploymentManagement.Application.Use
 using CreateUserResult = TimeSheet.Modules.EmploymentManagement.Application.Users.Create.Result;
 using ListUsersQuery = TimeSheet.Modules.EmploymentManagement.Application.Users.List.Query;
 using ListUsersResult = TimeSheet.Modules.EmploymentManagement.Application.Users.List.Result;
+using ResendTemporaryPasswordCommand = TimeSheet.Modules.EmploymentManagement.Application.Users.ResendTemporaryPassword.Command;
+using ResendTemporaryPasswordResult = TimeSheet.Modules.EmploymentManagement.Application.Users.ResendTemporaryPassword.Result;
 using SetMyEmployeeAddressPrimaryCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.SetOwnPrimary.Command;
 using SetEmployeeAddressPrimaryCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.SetPrimary.Command;
 using UpdateEmployeeAddressCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.Update.Command;
@@ -575,6 +577,18 @@ app.MapPost("/users", async Task<IResult> (
             result.EmployeeId,
             result.MustChangePassword,
             result.TemporaryPasswordExpiresAtUtc));
+}).RequireAuthorization(PolicyNames.UserCreate);
+
+app.MapPost("/users/{userId:guid}/resend-temporary-password", async Task<IResult> (
+    Guid userId,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<ResendTemporaryPasswordResult>(new ResendTemporaryPasswordCommand(userId));
+
+    return TypedResults.Ok(new ResendTemporaryPasswordResponse(
+        result.UserId,
+        result.TemporaryPasswordExpiresAtUtc));
 }).RequireAuthorization(PolicyNames.UserCreate);
 
 app.MapMethods("/users/{userId:guid}/role", ["PATCH"], async Task<IResult> (

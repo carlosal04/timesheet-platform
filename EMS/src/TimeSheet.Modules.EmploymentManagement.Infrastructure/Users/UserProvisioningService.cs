@@ -13,6 +13,7 @@ using TimeSheet.Modules.EmploymentManagement.Infrastructure.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Persistence;
 using Command = TimeSheet.Modules.EmploymentManagement.Application.Users.Create.Command;
 using Result = TimeSheet.Modules.EmploymentManagement.Application.Users.Create.Result;
+using ResendResult = TimeSheet.Modules.EmploymentManagement.Application.Users.ResendTemporaryPassword.Result;
 
 namespace TimeSheet.Modules.EmploymentManagement.Infrastructure.Users;
 
@@ -30,6 +31,7 @@ public sealed class UserProvisioningService : IUserProvisioningService
     private readonly IUserAccessEmailComposer _userAccessEmailComposer;
     private readonly IEmailSender _emailSender;
     private readonly IAuditLogService _auditLogService;
+    private readonly IUserSessionAuthenticationService _userSessionAuthenticationService;
     private readonly FrontendOptions _frontendOptions;
 
     public UserProvisioningService(
@@ -39,6 +41,7 @@ public sealed class UserProvisioningService : IUserProvisioningService
         IUserAccessEmailComposer userAccessEmailComposer,
         IEmailSender emailSender,
         IAuditLogService auditLogService,
+        IUserSessionAuthenticationService userSessionAuthenticationService,
         IOptions<FrontendOptions> frontendOptions)
     {
         _dbContext = dbContext;
@@ -47,6 +50,7 @@ public sealed class UserProvisioningService : IUserProvisioningService
         _userAccessEmailComposer = userAccessEmailComposer;
         _emailSender = emailSender;
         _auditLogService = auditLogService;
+        _userSessionAuthenticationService = userSessionAuthenticationService;
         _frontendOptions = frontendOptions.Value;
     }
 
@@ -189,6 +193,64 @@ public sealed class UserProvisioningService : IUserProvisioningService
             expiresAtUtc);
     }
 
+    public async Task<ResendResult> ResendTemporaryPasswordAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await _dbContext.Users
+            .Include(x => x.Role)
+            .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+        if (user is null || user.Role is null)
+        {
+            await WriteTemporaryPasswordResentAuditAsync(userId, AuditResults.NotFound, "UserNotFound", cancellationToken);
+            throw ProblemExceptions.NotFound("User was not found.");
+        }
+
+        if (!user.IsActive || !user.MustChangePassword || !user.TemporaryPasswordExpiresAtUtc.HasValue)
+        {
+            await WriteTemporaryPasswordResentAuditAsync(user.Id, AuditResults.Rejected, "NotInOnboardingState", cancellationToken);
+            throw new AppProblemException(StatusCodes.Status400BadRequest, "User is not in onboarding state.");
+        }
+
+        var temporaryPassword = GenerateTemporaryPassword();
+        var nowUtc = _clock.UtcNow;
+        var expiresAtUtc = nowUtc.AddHours(24);
+
+        user.PasswordHash = _passwordHashingService.HashPassword(user, temporaryPassword);
+        user.MustChangePassword = true;
+        user.TemporaryPasswordExpiresAtUtc = expiresAtUtc;
+        user.LastTemporaryPasswordIssuedAtUtc = nowUtc;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var loginUrl = new Uri(new Uri(_frontendOptions.BaseUrl.TrimEnd('/') + "/"), "login").ToString();
+        var emailMessage = _userAccessEmailComposer.ComposeTemporaryPasswordResend(
+            new TemporaryPasswordEmailModel(
+                new EmailRecipient(user.Email),
+                loginUrl,
+                temporaryPassword,
+                expiresAtUtc,
+                user.Role.Name));
+
+        var sessionsRevoked = await _userSessionAuthenticationService.RevokeActiveSessionsAsync(user.Id, "TemporaryPasswordResend", cancellationToken);
+        await _emailSender.SendAsync(emailMessage, cancellationToken);
+
+        await _auditLogService.WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.TemporaryPasswordResent,
+                AuditEntityTypes.User,
+                AuditResults.Success,
+                user.Id,
+                new
+                {
+                    ExpiresAtUtc = expiresAtUtc,
+                    SessionsRevoked = sessionsRevoked,
+                    user.Email
+                }),
+            cancellationToken);
+
+        return new ResendResult(user.Id, expiresAtUtc);
+    }
+
     private Task WriteUserCreatedAuditAsync(
         Guid? userId,
         Guid roleId,
@@ -209,6 +271,22 @@ public sealed class UserProvisioningService : IUserProvisioningService
                     EmployeeId = employeeId,
                     Reason = reason
                 }),
+            cancellationToken);
+    }
+
+    private Task WriteTemporaryPasswordResentAuditAsync(
+        Guid userId,
+        string result,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        return _auditLogService.WriteAsync(
+            new AuditWriteEntry(
+                AuditActionTypes.TemporaryPasswordResent,
+                AuditEntityTypes.User,
+                result,
+                userId,
+                new { Reason = reason }),
             cancellationToken);
     }
 

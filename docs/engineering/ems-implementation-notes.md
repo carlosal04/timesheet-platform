@@ -21,6 +21,7 @@ The current EMS foundation checkpoint implements the previously approved Phase 1
 - role list endpoint `GET /roles`
 - user list endpoint `GET /users`
 - admin user creation endpoint `POST /users`
+- onboarding resend endpoint `POST /users/{userId}/resend-temporary-password`
 - user-role assignment endpoint `PATCH /users/{userId}/role`
 - audit log read endpoint `GET /audit-logs`
 - authenticated session bootstrap endpoint `GET /auth/session`
@@ -47,11 +48,10 @@ The current EMS foundation checkpoint implements the previously approved Phase 1
 The approved current EMS spec set now goes beyond the fully shipped code baseline on this branch.
 
 Newly approved but not yet implemented:
-- onboarding resend via `POST /users/{userId}/resend-temporary-password`
 - self-service reset flow via `POST /auth/forgot-password` and `POST /auth/reset-password`
 - frontend role-model migration from `Admin/Basic` to `Admin/HR/Manager/Developer`
 
-The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture, the auth foundation now exposes `mustChangePassword` plus `POST /auth/change-password`, and `POST /users` now provisions onboarding accounts with temporary-password email delivery. The remaining resend/reset contracts and the frontend role-aware UX still need to be brought up to the corrected current spec set.
+The backend authorization and seeding baseline now run on `Admin/HR/Manager/Developer`, the mail-delivery infrastructure is in place through SMTP plus lower-environment Mailpit capture, the auth foundation now exposes `mustChangePassword` plus `POST /auth/change-password`, `POST /users` now provisions onboarding accounts with temporary-password email delivery, and `POST /users/{userId}/resend-temporary-password` now rotates onboarding credentials and revokes active sessions. The remaining reset contracts and the frontend role-aware UX still need to be brought up to the corrected current spec set.
 
 ## Verified runtime baseline
 
@@ -115,11 +115,11 @@ Implemented and verified:
 - `GET /roles`
 - `GET /users`
 - `POST /users`
+- `POST /users/{userId}/resend-temporary-password`
 - `PATCH /users/{userId}/role`
 - `GET /audit-logs`
 
 Pending:
-- `POST /users/{userId}/resend-temporary-password`
 - `POST /auth/forgot-password`
 - `POST /auth/reset-password`
 - frontend role-model recovery for `Admin/HR/Manager/Developer`
@@ -130,6 +130,7 @@ Implemented foundation for the approved recovery scope:
 - `POST /auth/change-password` with current-password verification, onboarding-state clearing, and password-change auditing
 - authenticated business-route blocking while `mustChangePassword = true`, with allowlisted auth bootstrap/logout/renew/change-password routes
 - `POST /users` with role/linking rule enforcement, 24-hour temporary-password issuance, no-reply onboarding email composition/delivery, and `UserCreated` / `TemporaryPasswordIssued` auditing
+- `POST /users/{userId}/resend-temporary-password` with onboarding-state validation, credential rotation, active-session revocation, resend email delivery, and `TemporaryPasswordResent` auditing
 - explicit frontend-base-url configuration for onboarding/reset email links through `Frontend:BaseUrl`
 - SMTP email delivery registration via `MailKit` with no-reply sender configuration from `Email:*`
 - lower-environment email capture via the pinned `Mailpit` Compose service on `http://localhost:8025/`
