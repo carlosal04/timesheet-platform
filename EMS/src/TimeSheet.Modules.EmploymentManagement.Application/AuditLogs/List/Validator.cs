@@ -41,6 +41,10 @@ public sealed class Validator : AbstractValidator<Query>
             or AuditActionTypes.AccessDenied
             or AuditActionTypes.AccountLockedOut
             or AuditActionTypes.PasswordChanged
+            or AuditActionTypes.UserCreated
+            or AuditActionTypes.TemporaryPasswordIssued
+            or AuditActionTypes.TemporaryPasswordResent
+            or AuditActionTypes.PasswordResetRequested
             or AuditActionTypes.UserRoleAssigned
             or AuditActionTypes.RoleAssignmentRejected
             or AuditActionTypes.EmployeeCreated

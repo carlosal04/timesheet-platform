@@ -101,6 +101,9 @@ public sealed class UserEndpointsTests : IClassFixture<AuthApiFactory>
         var linkedUser = payload.Items.Single(x => x.Email == "brenda.user@example.com");
         Assert.Equal("Brenda Stone", linkedUser.EmployeeName);
         Assert.True(linkedUser.IsActive);
+        Assert.False(linkedUser.MustChangePassword);
+        Assert.Null(linkedUser.TemporaryPasswordExpiresAtUtc);
+        Assert.Null(linkedUser.LastTemporaryPasswordIssuedAtUtc);
     }
 
     [Fact]

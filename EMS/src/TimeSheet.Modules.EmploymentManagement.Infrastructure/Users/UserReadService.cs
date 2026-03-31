@@ -65,7 +65,10 @@ public sealed class UserReadService : IUserReadService
                 x.User.EmployeeId,
                 x.EmployeeFirstName,
                 x.EmployeeLastName,
-                x.User.IsActive
+                x.User.IsActive,
+                x.User.MustChangePassword,
+                x.User.TemporaryPasswordExpiresAtUtc,
+                x.User.LastTemporaryPasswordIssuedAtUtc
             })
             .ToListAsync(cancellationToken);
 
@@ -78,7 +81,10 @@ public sealed class UserReadService : IUserReadService
                 x.RoleName,
                 x.EmployeeId,
                 BuildEmployeeName(x.EmployeeFirstName, x.EmployeeLastName),
-                x.IsActive))
+                x.IsActive,
+                x.MustChangePassword,
+                x.TemporaryPasswordExpiresAtUtc,
+                x.LastTemporaryPasswordIssuedAtUtc))
             .ToList();
 
         return new Result(items, request.Page, request.PageSize, totalCount);

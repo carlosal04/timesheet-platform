@@ -14,6 +14,7 @@ using TimeSheet.Modules.EmploymentManagement.Application.Abstractions.Users;
 using TimeSheet.Modules.EmploymentManagement.Application.Authentication.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Authentication;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Auditing;
+using TimeSheet.Modules.EmploymentManagement.Infrastructure.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Email;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Email.Configuration;
 using TimeSheet.Modules.EmploymentManagement.Infrastructure.Employees;
@@ -30,9 +31,13 @@ public static class DependencyInjection
     {
         services.Configure<AuthOptions>(configuration.GetSection(AuthOptions.SectionName));
         services.Configure<BootstrapAdminOptions>(configuration.GetSection(BootstrapAdminOptions.SectionName));
+        services.AddOptions<FrontendOptions>()
+            .Bind(configuration.GetSection(FrontendOptions.SectionName))
+            .ValidateOnStart();
         services.AddOptions<EmailOptions>()
             .Bind(configuration.GetSection(EmailOptions.SectionName))
             .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<FrontendOptions>, FrontendOptionsValidator>();
         services.AddSingleton<IValidateOptions<EmailOptions>, EmailOptionsValidator>();
 
         services.AddDbContext<EmploymentManagementDbContext>(options =>
@@ -63,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeWriteService, EmployeeWriteService>();
         services.AddScoped<IEmployeeAddressService, EmployeeAddressService>();
         services.AddScoped<IRoleReadService, RoleReadService>();
+        services.AddScoped<IUserProvisioningService, UserProvisioningService>();
         services.AddScoped<IUserReadService, UserReadService>();
         services.AddScoped<IUserRoleService, UserRoleService>();
         services.AddScoped<DatabaseInitializer>();

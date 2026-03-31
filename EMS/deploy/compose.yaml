@@ -28,6 +28,7 @@ services:
       BootstrapAdmin__Email: ${EMS_BOOTSTRAP_ADMIN_EMAIL:-}
       BootstrapAdmin__Password: ${EMS_BOOTSTRAP_ADMIN_PASSWORD:-}
       BootstrapAdmin__Name: ${EMS_BOOTSTRAP_ADMIN_NAME:-Bootstrap Admin}
+      Frontend__BaseUrl: ${EMS_FRONTEND_BASE_URL:-http://localhost:8088}
       Email__FromAddress: ${EMS_EMAIL_FROM_ADDRESS:-no-reply@ems.local}
       Email__FromDisplayName: ${EMS_EMAIL_FROM_DISPLAY_NAME:-Employment Management System}
       Email__SupportEmail: ${EMS_EMAIL_SUPPORT_EMAIL:-support@ems.local}

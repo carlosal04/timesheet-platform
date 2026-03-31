@@ -22,6 +22,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Self-service address delete endpoint `DELETE /me/addresses/{addressId}`
 - Role list endpoint `GET /roles`
 - User list endpoint `GET /users`
+- User creation endpoint `POST /users`
 - User-role assignment endpoint `PATCH /users/{userId}/role`
 - Audit log read endpoint `GET /audit-logs`
 - Authenticated session bootstrap endpoint `GET /auth/session`
@@ -87,6 +88,7 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Migrated the EMS backend authorization and seed baseline from `Admin/Basic` to `Admin/HR/Manager/Developer`, including the self-service address policies required by `Manager` and `Developer`
 - Pinned the lower-environment Mailpit image by digest to keep the email-capture baseline deterministic
 - Added onboarding-state fields to users, surfaced `mustChangePassword` in auth/session responses, and blocked business endpoints until password change is completed
+- Added backend user provisioning with temporary-password invite delivery, onboarding-state fields on `GET /users`, and explicit frontend base-url configuration for email links
 - Verified the real UI through the Docker reverse-proxy path, including login, session bootstrap, and anti-forgery bootstrap
 - Verified employee create plus admin address create/update through the Docker reverse-proxy path on a throwaway runtime stack
 

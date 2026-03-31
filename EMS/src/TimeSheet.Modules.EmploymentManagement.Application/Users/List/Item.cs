@@ -8,4 +8,7 @@ public sealed record Item(
     string RoleName,
     Guid? EmployeeId,
     string? EmployeeName,
-    bool IsActive);
+    bool IsActive,
+    bool MustChangePassword,
+    DateTimeOffset? TemporaryPasswordExpiresAtUtc,
+    DateTimeOffset? LastTemporaryPasswordIssuedAtUtc);

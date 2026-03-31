@@ -38,6 +38,8 @@ using ListEmployeeAddressesResult = TimeSheet.Modules.EmploymentManagement.Appli
 using ListMyEmployeeAddressesQuery = TimeSheet.Modules.EmploymentManagement.Application.Addresses.ListMine.Query;
 using ListRolesQuery = TimeSheet.Modules.EmploymentManagement.Application.Roles.List.Query;
 using ListRolesResult = TimeSheet.Modules.EmploymentManagement.Application.Roles.List.Result;
+using CreateUserCommand = TimeSheet.Modules.EmploymentManagement.Application.Users.Create.Command;
+using CreateUserResult = TimeSheet.Modules.EmploymentManagement.Application.Users.Create.Result;
 using ListUsersQuery = TimeSheet.Modules.EmploymentManagement.Application.Users.List.Query;
 using ListUsersResult = TimeSheet.Modules.EmploymentManagement.Application.Users.List.Result;
 using SetMyEmployeeAddressPrimaryCommand = TimeSheet.Modules.EmploymentManagement.Application.Addresses.SetOwnPrimary.Command;
@@ -157,6 +159,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(PolicyNames.OwnAddressDelete, policy => policy.RequireRole(RoleCodes.Manager, RoleCodes.Developer))
     .AddPolicy(PolicyNames.OwnAddressPrimaryManage, policy => policy.RequireRole(RoleCodes.Manager, RoleCodes.Developer))
     .AddPolicy(PolicyNames.RoleRead, policy => policy.RequireRole(RoleCodes.Admin))
+    .AddPolicy(PolicyNames.UserCreate, policy => policy.RequireRole(RoleCodes.Admin))
     .AddPolicy(PolicyNames.UserRead, policy => policy.RequireRole(RoleCodes.Admin))
     .AddPolicy(PolicyNames.UserRoleAssign, policy => policy.RequireRole(RoleCodes.Admin))
     .AddPolicy(PolicyNames.AuditLogRead, policy => policy.RequireRole(RoleCodes.Admin))
@@ -550,6 +553,29 @@ app.MapGet("/users", async Task<IResult> (
 
     return TypedResults.Ok(result);
 }).RequireAuthorization(PolicyNames.UserRead);
+
+app.MapPost("/users", async Task<IResult> (
+    CreateUserRequest request,
+    IMessageBus bus,
+    CancellationToken cancellationToken) =>
+{
+    var result = await bus.InvokeAsync<CreateUserResult>(
+        new CreateUserCommand(
+            request.RoleId,
+            request.EmployeeId,
+            request.Email));
+
+    return TypedResults.Created(
+        $"/users/{result.UserId}",
+        new CreateUserResponse(
+            result.UserId,
+            result.Email,
+            result.RoleId,
+            result.RoleCode,
+            result.EmployeeId,
+            result.MustChangePassword,
+            result.TemporaryPasswordExpiresAtUtc));
+}).RequireAuthorization(PolicyNames.UserCreate);
 
 app.MapMethods("/users/{userId:guid}/role", ["PATCH"], async Task<IResult> (
     Guid userId,
