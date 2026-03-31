@@ -29,7 +29,19 @@ User role assignment must be stored through a `Role` table and a foreign key fro
 Only active roles are assignable to users.
 Role assignment is an Admin-only security operation.
 
-## 2.6 Renewal model
+## 2.6 Onboarding and reset model
+Phase 1 uses two distinct credential-recovery paths:
+- onboarding uses Admin-issued temporary passwords delivered by email
+- activated accounts use self-service reset tokens delivered by email
+
+Rules:
+- onboarding temporary passwords expire after 24 hours
+- self-service reset tokens expire after 1 hour
+- onboarding resend is Admin-only and only valid for onboarding or still-unactivated accounts
+- temporary-password users must change their password before using normal business routes
+- password-reset requests must not reveal whether an email exists
+
+## 2.7 Renewal model
 Phase 1 uses frontend-driven session renewal for active users only.
 
 Rules:
@@ -103,7 +115,9 @@ The `Role` entity must include at least:
 
 Canonical seeded role codes for Phase 1:
 - `Admin`
-- `Basic`
+- `HR`
+- `Manager`
+- `Developer`
 
 Recommended additional field:
 - `IsSystem` to protect seeded roles from destructive mutation
@@ -116,6 +130,11 @@ The `User` entity must include:
 - `AccessFailedCount`
 - `LockoutEndUtc`
 - `SessionVersion`
+- `MustChangePassword`
+- `TemporaryPasswordExpiresAtUtc`
+- `LastTemporaryPasswordIssuedAtUtc`
+- `PasswordResetTokenHash`
+- `PasswordResetTokenExpiresAtUtc`
 
 ## 4.3 UserSession
 A `UserSession` table is required with at least:
@@ -145,6 +164,7 @@ On successful login the system must:
 9. write a `LoginSucceeded` audit event
 
 The login response does not need to expose session timing if a dedicated authenticated session-bootstrap endpoint exists.
+The login response must expose whether `mustChangePassword` is currently required.
 
 ## 5.2 Failed login
 On failed login the system must:
@@ -153,6 +173,32 @@ On failed login the system must:
 3. lock the user temporarily when threshold is reached
 
 The API must not reveal whether the email or password was wrong.
+
+## 5.3 Temporary-password login
+If the submitted password matches a still-valid onboarding temporary password, login may succeed only when:
+1. the user is active
+2. the temporary password has not expired
+3. the account is still in the onboarding state
+
+The resulting authenticated session must carry `mustChangePassword = true`.
+Business endpoints other than logout, session bootstrap, anti-forgery bootstrap, session renew, and password change must reject access until the password is changed.
+
+## 5.4 Forgot-password request
+On `POST /auth/forgot-password` the system must:
+1. return a generic success posture regardless of whether the email exists
+2. issue a new random reset token only for active, activated users
+3. hash the token before persistence
+4. set a 1-hour expiry
+5. send the reset email through the configured no-reply sender
+
+## 5.5 Reset-password completion
+On `POST /auth/reset-password` the system must:
+1. validate the token hash and expiry
+2. reject used, invalid, or expired tokens
+3. set the new password hash
+4. clear reset-token state
+5. revoke active sessions for that user
+6. write a `PasswordChanged` audit event
 
 ---
 
@@ -196,6 +242,7 @@ Minimum payload:
 - email
 - role code
 - employee id when linked
+- `mustChangePassword`
 - session id
 - current `ExpiresAtUtc`
 - configured idle timeout minutes
@@ -223,6 +270,8 @@ The current session must be revoked when:
 - the user logs out
 - the user account is disabled
 - the user password changes
+- the user receives a new onboarding temporary password
+- the user completes a self-service password reset
 - the user role changes
 - an Admin reassigns the user to another role
 - the user is locked out
@@ -232,6 +281,7 @@ Recommended revoke reasons:
 - `ReLogin`
 - `UserLogout`
 - `PasswordChanged`
+- `TemporaryPasswordReissued`
 - `RoleChanged`
 - `UserDisabled`
 - `Lockout`
@@ -337,7 +387,7 @@ Exact duration is environment-configurable and must not be hard-coded in busines
 
 # 12. Self-service authorization note
 
-Basic users may perform self-service address actions only if:
+Manager and Developer users may perform self-service address actions only if:
 - `User.EmployeeId` is not null
 - the targeted address belongs to that employee
 - the resource-based authorization check succeeds

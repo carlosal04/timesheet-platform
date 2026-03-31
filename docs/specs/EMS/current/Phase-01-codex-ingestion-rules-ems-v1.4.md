@@ -102,8 +102,10 @@ Codex must implement these domain rules exactly:
 - employee must be 21 years old or older on the current date
 - `HireDate` is required and is a date-only value
 - `HireDate` cannot be earlier than `DateOfBirth + 14 years`
-- roles must come from the `Role` table with canonical codes `Admin` and `Basic`
-- `User.EmployeeId` is the ownership link for Basic self-service address actions
+- roles must come from the `Role` table with canonical codes `Admin`, `HR`, `Manager`, and `Developer`
+- `User.EmployeeId` is the ownership link for Manager/Developer self-service address actions
+- temporary-password onboarding is separate from employee creation
+- activated-account password reset uses single-use email tokens, not replacement passwords in API responses
 
 ---
 
@@ -117,7 +119,9 @@ Codex should:
 - return address collections with primary first
 - keep employee update separate from address CRUD
 - use dedicated endpoints for changing the primary address
-- include self-service endpoints under `/me/addresses` for Basic users
+- include self-service endpoints under `/me/addresses` for Manager/Developer users
+- expose Admin-only user onboarding endpoints separately from employee CRUD
+- expose anonymous forgot-password and reset-password endpoints with generic forgot-password responses
 
 ---
 
@@ -134,6 +138,9 @@ Codex must:
 - persist data-protection keys
 - keep security settings in configuration, not hard-coded literals
 - revoke active sessions when a user role changes
+- revoke active sessions when temporary passwords are reissued or passwords are reset
+- prevent business-route access while `mustChangePassword` is true
+- send system email through a configured no-reply SMTP path in production and a local capture sink in lower environments
 
 ---
 

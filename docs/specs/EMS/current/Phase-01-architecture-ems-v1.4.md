@@ -183,25 +183,35 @@ That is out of scope for Phase 1.
 - `AddressPrimaryManageAny`
 - `OwnAddressDelete`
 - `OwnAddressPrimaryManage`
+- `RoleRead`
+- `UserRead`
+- `UserCreate`
+- `UserResendTemporaryPassword`
+- `UserRoleAssign`
 - `AuditLogRead`
 
 ## 6.3 Policy mapping
 | Policy | Allowed roles | Notes |
 |---|---|---|
-| `AuthenticatedUser` | Admin, Basic | global authenticated usage |
-| `EmployeeRead` | Admin, Basic | static read access |
-| `EmployeeWrite` | Admin | create/update employees |
-| `EmployeeDelete` | Admin | soft delete employees |
-| `AddressRead` | Admin, Basic | visible address reads |
-| `AddressWrite` | Admin | create/update addresses |
-| `AddressDeleteAny` | Admin | soft delete any address |
-| `AddressPrimaryManageAny` | Admin | set primary for any employee |
-| `OwnAddressDelete` | Basic | requires resource-based ownership check |
-| `OwnAddressPrimaryManage` | Basic | requires resource-based ownership check |
+| `AuthenticatedUser` | Admin, HR, Manager, Developer | global authenticated usage |
+| `EmployeeRead` | Admin, HR, Manager | static read access |
+| `EmployeeWrite` | Admin, HR | create/update employees |
+| `EmployeeDelete` | Admin, HR | soft delete employees |
+| `AddressRead` | Admin, HR, Manager | visible address reads |
+| `AddressWrite` | Admin, HR | create/update addresses |
+| `AddressDeleteAny` | Admin, HR | soft delete any address |
+| `AddressPrimaryManageAny` | Admin, HR | set primary for any employee |
+| `OwnAddressDelete` | Manager, Developer | requires resource-based ownership check |
+| `OwnAddressPrimaryManage` | Manager, Developer | requires resource-based ownership check |
+| `RoleRead` | Admin | list canonical roles |
+| `UserRead` | Admin | list users and onboarding state |
+| `UserCreate` | Admin | create users and send onboarding invite |
+| `UserResendTemporaryPassword` | Admin | reissue onboarding temporary password |
+| `UserRoleAssign` | Admin | assign or change user roles |
 | `AuditLogRead` | Admin | audit list/read |
 
 ## 6.4 Ownership model for self-service
-Basic self-service address actions are allowed only when:
+Manager and Developer self-service address actions are allowed only when:
 - `User.EmployeeId` is populated
 - the targeted address belongs to that employee
 - the address is active and visible
@@ -281,11 +291,13 @@ Users reference roles through `User.RoleId`.
 
 Canonical seeded role codes:
 - `Admin`
-- `Basic`
+- `HR`
+- `Manager`
+- `Developer`
 
 Role codes are canonical application values and must be unique.
 Only active roles are assignable to users.
-Phase 1 exposes Admin-only role listing and user-role assignment APIs, but not role CRUD APIs.
+Phase 1 exposes Admin-only role listing, user listing, user creation, onboarding resend, and user-role assignment APIs, but not role CRUD APIs.
 
 ## 9.2 Role-assignment architecture
 Role assignment is an Admin-only security-sensitive command.
@@ -308,10 +320,22 @@ Suggested commands/queries:
 `User.EmployeeId` is nullable and supports self-service ownership rules.
 
 Expected usage:
-- Admin users may have `EmployeeId = null`
-- Basic users that need self-service address actions must have a non-null `EmployeeId`
+- `Manager` and `Developer` require a non-null `EmployeeId`
+- `Admin` and `HR` may have `EmployeeId = null`
+- if `EmployeeId` is supplied during user creation, the user email is derived from the linked employee record
 
 A user must not point to more than one employee, and an employee must not be linked to more than one user.
+
+## 9.4 Onboarding and reset architecture
+User onboarding and reset are explicit flows separate from employee CRUD.
+
+Required behavior:
+- Admin creates a user separately from the employee record when login access is needed
+- onboarding issues a temporary password with a 24-hour expiry
+- onboarding resend invalidates the previous temporary password immediately
+- self-service reset is available only for activated accounts and uses a single-use email token
+- temporary-password users must change their password before using normal business routes
+- outbound email is sent through a configurable no-reply SMTP sender
 
 ---
 

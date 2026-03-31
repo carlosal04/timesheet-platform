@@ -2,7 +2,7 @@
 
 ## Current checkpoint status
 
-The current EMS foundation checkpoint implements the approved Phase 1 backend contract under `EMS/`:
+The current EMS foundation checkpoint implements the previously approved Phase 1 backend contract under `EMS/`:
 - backend solution skeleton under `EMS/`
 - Docker-based local runtime baseline
 - cookie authentication with persisted user sessions
@@ -39,9 +39,24 @@ The current EMS foundation checkpoint implements the approved Phase 1 backend co
 - central package management, shared build props, and `*.slnx`
 - local secret handling through `EMS/.env` with committed placeholders in `EMS/.env.example`
 
+## Approved recovery scope now pending
+
+The approved current EMS spec set now goes beyond the code currently on this branch.
+
+Newly approved but not yet implemented:
+- canonical role-model expansion from `Admin/Basic` to `Admin/HR/Manager/Developer`
+- separate Admin user provisioning via `POST /users`
+- onboarding resend via `POST /users/{userId}/resend-temporary-password`
+- forced first-login password change via `POST /auth/change-password`
+- self-service reset flow via `POST /auth/forgot-password` and `POST /auth/reset-password`
+- secure outbound email delivery from a no-reply sender
+- lower-environment email capture for onboarding and reset verification
+
+Until those slices land, the current codebase still runs on the older `Admin/Basic` implementation baseline even though the current spec set has been corrected.
+
 ## Verified runtime baseline
 
-- the current approved endpoint set in `docs/specs/EMS/current/Phase-01-api-contracts-ems-v1.4.md` matches the endpoint surface in `EMS/src/TimeSheet.Modules.EmploymentManagement.Api/Program.cs`
+- the last shipped endpoint set matched the endpoint surface in `EMS/src/TimeSheet.Modules.EmploymentManagement.Api/Program.cs` before the newly approved access-recovery contract was added
 - Docker CVE remediation is complete for the current approved baseline
 - `03737bd` is the checkpoint that finalized the current Docker CVE remediation baseline
 - `deploy-api` passes the High/Critical image gate
@@ -104,15 +119,21 @@ Implemented and verified:
 - `GET /audit-logs`
 
 Pending:
-- no remaining approved Phase 1 endpoint-surface gaps are pending in the current EMS frontend/backend baseline
-- remaining work is now demo polish, optional UX refinement, and any new scope beyond the current approved Phase 1 contract
-- after those slices are green, resume cross-cutting hardening and backend freeze/handoff work
+- role-model migration from `Admin/Basic` to `Admin/HR/Manager/Developer`
+- `POST /users`
+- `POST /users/{userId}/resend-temporary-password`
+- `POST /auth/change-password`
+- `POST /auth/forgot-password`
+- `POST /auth/reset-password`
+- outbound email infrastructure and lower-environment email capture
+- frontend recovery work for new roles, onboarding, reset-password, and copy/alignment cleanup
 
-## Backend-ready summary for UI planning
+## Last shipped backend-ready summary for UI planning
 
-Use `docs/specs/EMS/current/Phase-01-api-contracts-ems-v1.4.md` as the canonical frontend contract.
+This section describes the last shipped frontend/backend baseline before the approved access-recovery scope.
+Do not treat it as a statement that the new onboarding/reset endpoints are already implemented.
 
-Current backend-ready summary:
+Last shipped backend-ready summary:
 - implemented endpoint surface:
   - auth: `POST /auth/login`, `POST /auth/logout`, `GET /auth/antiforgery`, `GET /auth/session`, `POST /auth/renew`
   - employees: `GET /employees`, `GET /employees/{id}`, `POST /employees`, `PUT /employees/{id}`, `DELETE /employees/{id}`
@@ -251,8 +272,8 @@ Verified frontend foundation baseline:
 - the built frontend container passes `/healthz` and the nginx healthcheck
 
 Current frontend pending work:
-- no approved Phase 1 endpoint-surface gaps remain for the current EMS UI demo baseline
-- optional next work is demo polish, additional UX refinements, and any scope added beyond the current approved contract
+- approved current specs now require access-recovery work beyond the current UI baseline
+- the next frontend slices are role-model migration, user provisioning, onboarding resend, forced password change, self-service reset, and relevant copy/alignment cleanup
 
 ## Review checklist for future EMS changes
 

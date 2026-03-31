@@ -107,3 +107,5 @@ The format follows Keep a Changelog and the versioning model follows Semantic Ve
 - Updated EMS notes to reflect that the roles screen now uses the real role catalog, user list, and role-assignment action, leaving address create/edit as the remaining major frontend slice
 - Updated EMS notes to reflect successful reverse-proxy verification of `GET /users` and a real role change through `PATCH /users/{userId}/role` in a throwaway runtime stack
 - Updated EMS notes to reflect that the admin address screen now supports live create/edit flows, that the current shell-level .NET verification issue is resolved, and that the current EMS demo baseline no longer has an approved endpoint-surface gap
+- Corrected the current EMS spec set to the approved access-recovery scope with `Admin/HR/Manager/Developer`, separate user onboarding, password-reset flows, and email-delivery requirements
+- Updated EMS implementation notes to distinguish the current shipped `Admin/Basic` code baseline from the newly approved but still-pending access-recovery slices

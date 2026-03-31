@@ -122,7 +122,9 @@ Suggested fields:
 
 Seeded canonical role codes:
 - `Admin`
-- `Basic`
+- `HR`
+- `Manager`
+- `Developer`
 
 ## 3.2 User
 Purpose:
@@ -138,6 +140,11 @@ Suggested fields:
 - `AccessFailedCount : int`
 - `LockoutEndUtc : DateTimeOffset?`
 - `SessionVersion : int`
+- `MustChangePassword : bool`
+- `TemporaryPasswordExpiresAtUtc : DateTimeOffset?`
+- `LastTemporaryPasswordIssuedAtUtc : DateTimeOffset?`
+- `PasswordResetTokenHash : string?`
+- `PasswordResetTokenExpiresAtUtc : DateTimeOffset?`
 - `CreatedAtUtc : DateTimeOffset`
 - `UpdatedAtUtc : DateTimeOffset`
 
@@ -271,7 +278,9 @@ UNIQUE (EmployeeId) WHERE IsPrimary = true AND IsDeleted = false
 
 ## 6.1 Role codes
 - `Admin`
-- `Basic`
+- `HR`
+- `Manager`
+- `Developer`
 
 Role-state rules:
 - only active roles are assignable

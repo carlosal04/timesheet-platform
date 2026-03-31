@@ -54,7 +54,8 @@ Authenticates a user and issues the session cookie.
 {
   "userId": "guid",
   "email": "admin@company.com",
-  "roleCode": "Admin"
+  "roleCode": "Admin",
+  "mustChangePassword": false
 }
 ```
 
@@ -106,6 +107,7 @@ Returns the current authenticated user/session snapshot for frontend bootstrap a
   "email": "admin@company.com",
   "roleCode": "Admin",
   "employeeId": "guid or null",
+  "mustChangePassword": false,
   "sessionId": "guid",
   "expiresAtUtc": "2026-03-18T15:30:00Z",
   "idleTimeoutMinutes": 480
@@ -144,6 +146,70 @@ No body required.
 - renewal extends the session idle timeout from the current time
 - renewal reissues the authentication cookie with the new expiry
 - expired sessions are not silently recovered; the user must log in again
+
+## 2.6 POST `/auth/change-password`
+Changes the current authenticated user's password. This endpoint is used for both normal password change and the forced first-login password change after temporary-password onboarding.
+
+### Request
+```json
+{
+  "currentPassword": "CurrentOrTemporaryPassword",
+  "newPassword": "NewStrongPassword123!"
+}
+```
+
+### Success
+- Status: `204 No Content`
+
+### Errors
+- `400` invalid payload, invalid current password, or password-policy failure
+- `401` session missing, expired, revoked, or otherwise invalid
+
+### Required behavior
+- anti-forgery validation is required
+- a successful change clears `mustChangePassword`
+- password change revokes any older active sessions for the user
+
+## 2.7 POST `/auth/forgot-password`
+Starts a self-service password reset for an activated user account.
+
+### Request
+```json
+{
+  "email": "user@company.com"
+}
+```
+
+### Success
+- Status: `202 Accepted`
+
+### Required behavior
+- this endpoint is anonymous
+- the response must not reveal whether the email exists
+- only activated accounts may receive self-service reset emails
+- reset delivery happens through a side-channel email, not in the response body
+
+## 2.8 POST `/auth/reset-password`
+Consumes a single-use password-reset token and sets a new password.
+
+### Request
+```json
+{
+  "token": "opaque-reset-token",
+  "newPassword": "NewStrongPassword123!"
+}
+```
+
+### Success
+- Status: `204 No Content`
+
+### Errors
+- `400` invalid payload, invalid token, expired token, or password-policy failure
+
+### Required behavior
+- this endpoint is anonymous
+- reset tokens are single-use and short-lived
+- successful reset clears any pending reset state and revokes existing active sessions
 
 ---
 
@@ -496,7 +562,7 @@ Soft deletes an address for any employee. Admin only.
 
 # 5. Self-service address endpoints
 
-These endpoints exist so Basic users can manage their own linked employee addresses without supplying or guessing their employee ID.
+These endpoints exist so linked self-service users can manage their own employee addresses without supplying or guessing their employee ID.
 
 ## 5.1 GET `/me/addresses`
 Returns active addresses for the authenticated user's linked employee profile, ordered primary first.
@@ -558,7 +624,7 @@ Soft deletes one of the authenticated user's own addresses.
 
 ---
 
-# 6. Role and user-role endpoints
+# 6. User and role endpoints
 
 ## 6.1 GET `/roles`
 Returns canonical roles from the `Role` table. Admin only.
@@ -582,8 +648,22 @@ Returns canonical roles from the `Role` table. Admin only.
     },
     {
       "id": "guid",
-      "code": "Basic",
-      "name": "Basic User",
+      "code": "HR",
+      "name": "Human Resources",
+      "isActive": true,
+      "isSystem": true
+    },
+    {
+      "id": "guid",
+      "code": "Manager",
+      "name": "Manager",
+      "isActive": true,
+      "isSystem": true
+    },
+    {
+      "id": "guid",
+      "code": "Developer",
+      "name": "Developer",
       "isActive": true,
       "isSystem": true
     }
@@ -592,7 +672,7 @@ Returns canonical roles from the `Role` table. Admin only.
 ```
 
 ## 6.2 GET `/users`
-Returns paginated users for admin user-management and role-assignment screens. Admin only.
+Returns paginated users for admin user-management, onboarding, and role-assignment screens. Admin only.
 
 ### Query parameters
 | Name | Type | Notes |
@@ -612,11 +692,14 @@ Returns paginated users for admin user-management and role-assignment screens. A
       "id": "guid",
       "email": "user@example.com",
       "roleId": "guid",
-      "roleCode": "Admin",
-      "roleName": "Administrator",
+      "roleCode": "Developer",
+      "roleName": "Developer",
       "employeeId": "guid or null",
       "employeeName": "Ana Lopez or null",
-      "isActive": true
+      "isActive": true,
+      "mustChangePassword": true,
+      "temporaryPasswordExpiresAtUtc": "2026-03-31T19:00:00Z",
+      "lastTemporaryPasswordIssuedAtUtc": "2026-03-30T19:00:00Z"
     }
   ],
   "page": 1,
@@ -632,8 +715,78 @@ Returns paginated users for admin user-management and role-assignment screens. A
 - results are sorted by `email ASC`
 - `employeeName` is derived from the linked employee record when `employeeId` exists; otherwise `null`
 - this endpoint exists so the frontend can select a trustworthy role-assignment target without inventing a manual user ID flow
+- onboarding status fields are returned so Admin can track invite and activation posture
 
-## 6.3 PATCH `/users/{userId}/role`
+## 6.3 POST `/users`
+Creates a login user separately from employee creation and sends a temporary-password onboarding email. Admin only.
+
+### Request
+```json
+{
+  "roleId": "guid",
+  "employeeId": "guid or null",
+  "email": "user@company.com or null"
+}
+```
+
+### Success
+- Status: `201 Created`
+```json
+{
+  "userId": "guid",
+  "email": "user@company.com",
+  "roleId": "guid",
+  "roleCode": "Developer",
+  "employeeId": "guid or null",
+  "mustChangePassword": true,
+  "temporaryPasswordExpiresAtUtc": "2026-03-31T19:00:00Z"
+}
+```
+
+### Errors
+- `400` invalid payload
+- `404` employee not found
+- `404` role not found
+- `409` target role is inactive
+- `409` employee is already linked to another user
+- `409` role/linking rule violation
+
+### Required behavior
+- only Admin may call this endpoint
+- employee creation and user creation remain separate workflows
+- `Manager` and `Developer` require a linked employee
+- if `employeeId` is supplied, the user email is derived from the employee record and `email` must be omitted
+- if `employeeId` is omitted, `email` is required and only `Admin` or `HR` may be created that way
+- creation issues a new temporary password with a 24-hour expiry and sets `mustChangePassword=true`
+- onboarding email is sent from the configured no-reply sender
+
+## 6.4 POST `/users/{userId}/resend-temporary-password`
+Issues a new onboarding temporary password and re-sends the invite email. Admin only.
+
+### Request
+No body required.
+
+### Success
+- Status: `200 OK`
+```json
+{
+  "userId": "guid",
+  "temporaryPasswordExpiresAtUtc": "2026-04-01T19:00:00Z"
+}
+```
+
+### Errors
+- `400` user is not in an onboarding state
+- `404` user not found
+
+### Required behavior
+- only Admin may call this endpoint
+- this flow is only for onboarding or still-unactivated accounts
+- a resend invalidates any previous temporary password immediately
+- active sessions for the affected user are revoked immediately
+- the replacement invite email is sent from the configured no-reply sender
+
+## 6.5 PATCH `/users/{userId}/role`
 Assigns or changes the role of a user. Admin only.
 
 ### Request

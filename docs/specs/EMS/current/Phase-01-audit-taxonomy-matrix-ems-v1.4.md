@@ -57,6 +57,10 @@ Any implementation, code generator, or later documentation must reuse these valu
 | `AccessDenied` | `Authentication` | `Denied` |
 | `AccountLockedOut` | `User` | `Rejected`, `Success` |
 | `AccountDisabled` | `User` | `Success` |
+| `UserCreated` | `User` | `Success`, `Conflict`, `NotFound`, `Rejected` |
+| `TemporaryPasswordIssued` | `User` | `Success`, `Conflict`, `NotFound`, `Rejected` |
+| `TemporaryPasswordResent` | `User` | `Success`, `Conflict`, `NotFound`, `Rejected` |
+| `PasswordResetRequested` | `User` | `Success` |
 | `UserRoleAssigned` | `User` | `Success`, `Conflict`, `NotFound`, `Denied` |
 | `RoleAssignmentRejected` | `User` | `Rejected`, `Conflict`, `Denied`, `NotFound` |
 | `PasswordChanged` | `User` | `Success` |

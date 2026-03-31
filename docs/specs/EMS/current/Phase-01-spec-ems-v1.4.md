@@ -84,7 +84,12 @@ Phase 1 focuses on:
 - login using email and password
 - logout
 - one active session per user
-- Admin and Basic roles backed by a Roles table
+- Admin, HR, Manager, and Developer roles backed by a Roles table
+- separate user provisioning from employee creation
+- Admin-created onboarding emails with temporary passwords that expire after 24 hours
+- Admin resend of onboarding temporary passwords for still-unactivated accounts
+- forced password change on first login after temporary-password onboarding
+- self-service forgot-password and reset-password for activated accounts
 - employee create
 - employee update
 - employee list with pagination
@@ -95,12 +100,14 @@ Phase 1 focuses on:
 - address update
 - address soft delete
 - one primary address per employee
-- Basic self-service address actions for the authenticated user’s own employee profile
+- Manager and Developer self-service address actions for the authenticated user’s own employee profile
 - audit log write for critical security and business actions
 - audit log read for Admin only
-- minimal browser UI for login and employee browsing/editing
+- minimal browser UI for login, employee browsing/editing, and Admin user-access management
 - CORS policy for Vue frontend integration
 - structured application logging
+- secure SMTP-backed system email delivery from a no-reply sender
+- lower-environment email capture for onboarding and reset verification
 - resilient outbound HTTP client registration baseline
 - Docker Compose runtime for frontend, backend, reverse proxy, and PostgreSQL
 - service health checks for runtime containers
@@ -110,11 +117,10 @@ Phase 1 focuses on:
 - employee restore/undelete endpoint
 - address restore/undelete endpoint
 - self-service user registration
-- user management UI
 - MFA
 - external identity providers
 - file uploads
-- notifications
+- general notification center beyond onboarding/reset emails
 - reporting
 - payroll
 - time entry and time approval workflows
@@ -131,14 +137,29 @@ Can:
 - create employees
 - update employees
 - soft delete employees
-- create addresses for any employee
-- read addresses for any visible employee
-- update addresses for any employee
-- soft delete addresses for any employee
-- set or change the primary address for any employee
+- create, update, delete, and reprioritize addresses for any employee
 - view audit logs
+- create users
+- resend onboarding temporary passwords
+- assign or change user roles
 
-## 5.2 Basic
+## 5.2 HR
+Can:
+- log in and log out
+- list employees
+- view employee details
+- create employees
+- update employees
+- soft delete employees
+- create, update, delete, and reprioritize addresses for any employee
+
+Cannot:
+- view audit logs
+- create users
+- resend onboarding temporary passwords
+- assign or change user roles
+
+## 5.3 Manager
 Can:
 - log in and log out
 - list employees
@@ -151,9 +172,21 @@ Cannot:
 - create employees
 - update employees
 - soft delete employees
-- create addresses for other employees
-- update addresses for other employees
+- create or update addresses for other employees
 - view audit logs
+- create users or assign roles
+
+## 5.4 Developer
+Can:
+- log in and log out
+- view and manage self-service addresses only for the employee profile linked to the authenticated user
+
+Cannot:
+- list employees
+- view other employee details
+- administer employees or addresses
+- view audit logs
+- create users or assign roles
 
 ---
 
@@ -201,7 +234,7 @@ Cannot:
 6. Write audit events.
 
 **Acceptance criteria:**
-- Basic users cannot call this operation
+- only Admin and HR can call this operation
 - duplicate employee email is rejected
 - employee is persisted only if validation passes
 - create action is audited
@@ -216,7 +249,7 @@ Cannot:
 4. Write audit events.
 
 **Acceptance criteria:**
-- Basic users cannot call this operation
+- only Admin and HR can call this operation
 - soft-deleted employees cannot be updated
 - update action is audited
 
@@ -232,7 +265,7 @@ Cannot:
 
 **Acceptance criteria:**
 - no physical delete happens in Phase 1
-- Basic users cannot call this operation
+- only Admin and HR can call this operation
 - repeated delete requests do not physically remove data
 - soft delete is audited
 
@@ -247,9 +280,9 @@ Cannot:
 5. Return the primary address first when address data is included.
 
 **Acceptance criteria:**
-- Basic and Admin can use the endpoint
+- Admin, HR, and Manager can use the endpoint
 - deleted employees are hidden by default
-- non-Admin cannot request deleted records
+- only Admin can request deleted records
 
 ## UC-07: View employee details
 **Trigger:** Authenticated user selects an employee.
@@ -260,8 +293,8 @@ Cannot:
 3. Exclude soft-deleted employees unless Admin explicitly requests deleted data.
 
 **Acceptance criteria:**
-- Basic and Admin can view non-deleted employees
-- deleted employees are not exposed to Basic users
+- Admin, HR, and Manager can view non-deleted employees
+- deleted employees are not exposed to non-Admin users
 - address list is deterministic and primary-first
 
 ## UC-08: Create address
@@ -274,7 +307,7 @@ Cannot:
 4. Write audit events.
 
 **Acceptance criteria:**
-- Basic users cannot call this operation
+- only Admin and HR can call this operation
 - only one active primary address can exist per employee
 - create action is audited
 
@@ -288,12 +321,12 @@ Cannot:
 4. Write audit events.
 
 **Acceptance criteria:**
-- Basic users cannot call this operation
+- only Admin and HR can call this operation
 - soft-deleted addresses cannot be updated
 - update action is audited
 
 ## UC-10: Soft delete address
-**Trigger:** Admin deletes any address, or Basic deletes an address belonging to the authenticated user’s own employee profile.
+**Trigger:** Admin or HR deletes any address, or Manager/Developer deletes an address belonging to the authenticated user’s own employee profile.
 
 **System behavior:**
 1. Mark the address as deleted without removing the row.
@@ -303,12 +336,12 @@ Cannot:
 
 **Acceptance criteria:**
 - no physical delete happens in Phase 1
-- Admin can soft delete any visible address
-- Basic can soft delete only their own linked employee address
+- Admin and HR can soft delete any visible address
+- Manager and Developer can soft delete only their own linked employee address
 - delete action is audited
 
 ## UC-11: Change primary address
-**Trigger:** Admin changes any employee primary address, or Basic changes the primary address for the authenticated user’s own employee profile.
+**Trigger:** Admin or HR changes any employee primary address, or Manager/Developer changes the primary address for the authenticated user’s own employee profile.
 
 **System behavior:**
 1. Validate that the target address is active.
@@ -318,8 +351,8 @@ Cannot:
 
 **Acceptance criteria:**
 - exactly zero or one active primary address exists after the operation
-- Admin can change any employee primary address
-- Basic can change primary only for their own linked employee profile
+- Admin and HR can change any employee primary address
+- Manager and Developer can change primary only for their own linked employee profile
 - primary change is audited
 
 
@@ -365,6 +398,55 @@ Cannot:
 - only Admin can access audit logs
 - audit events are append-only from the application perspective
 
+## UC-15: Create user and send onboarding email
+**Trigger:** Admin provisions login access for a person who needs EMS access.
+
+**System behavior:**
+1. Validate the target role and linking rules.
+2. Validate that the employee link is present when required.
+3. Create the user separately from the employee record.
+4. Generate a temporary password that expires in 24 hours.
+5. Mark `MustChangePassword=true`.
+6. Send the onboarding email from the configured no-reply sender.
+7. Write audit events.
+
+**Acceptance criteria:**
+- only Admin can create a user
+- Manager and Developer require a linked employee
+- temporary-password onboarding is audited
+- onboarding email is sent through the configured secure email path
+
+## UC-16: Resend onboarding temporary password
+**Trigger:** Admin resends access for a still-unactivated account.
+
+**System behavior:**
+1. Validate the target user exists and is still in onboarding state.
+2. Generate a new temporary password.
+3. Invalidate the previous temporary password immediately.
+4. Revoke active sessions.
+5. Send the replacement email from the configured no-reply sender.
+6. Write audit events.
+
+**Acceptance criteria:**
+- only Admin can resend onboarding credentials
+- resend is rejected for fully activated accounts
+- the previous temporary password stops working immediately
+
+## UC-17: Forgot and reset password
+**Trigger:** Activated user requests a password reset.
+
+**System behavior:**
+1. Accept the forgot-password request with a generic response posture.
+2. Generate a single-use reset token with a short expiry.
+3. Send the reset email from the configured no-reply sender.
+4. Accept the reset token and new password through the reset endpoint.
+5. Clear reset state and revoke active sessions after success.
+
+**Acceptance criteria:**
+- forgot-password does not reveal whether the email exists
+- reset tokens are single-use and expire
+- successful reset revokes active sessions and is audited through password-change events
+
 ---
 
 # 7. Business rules and invariants
@@ -376,15 +458,19 @@ Cannot:
 4. A locked-out user cannot log in.
 5. An inactive user cannot log in.
 6. User role is stored through a foreign key to the `Role` table, not a freeform string.
-7. Only approved canonical role codes are valid in Phase 1: `Admin`, `Basic`.
-8. A Basic user that needs self-service address actions must be linked to exactly one employee through `User.EmployeeId`.
-9. Only Admin can assign or change the role of a user.
-10. A role assignment target must exist in the `Role` table.
-11. An inactive role cannot be assigned to a user.
-12. A role change must revoke any active session for the affected user.
-13. The application must not allow a role change that would leave the system with zero active users assigned to the `Admin` role.
-14. Role assignments and role-change denials must be audited.
-15. Phase 1 exposes role listing and role assignment APIs, but does not expose role create, update, activate, deactivate, or delete APIs.
+7. Only approved canonical role codes are valid in Phase 1: `Admin`, `HR`, `Manager`, `Developer`.
+8. `Manager` and `Developer` must be linked to exactly one employee through `User.EmployeeId`.
+9. `Admin` and `HR` may exist without a linked employee.
+10. Only Admin can create a user, resend onboarding temporary passwords, or assign/change user roles.
+11. A role assignment target must exist in the `Role` table.
+12. An inactive role cannot be assigned to a user.
+13. A role change must revoke any active session for the affected user.
+14. The application must not allow a role change that would leave the system with zero active users assigned to the `Admin` role.
+15. Temporary passwords expire after 24 hours and require first-login password change.
+16. Activated users use self-service reset tokens rather than Admin-issued replacement passwords.
+17. Password-reset requests must not reveal whether an email exists.
+18. Role assignments, onboarding actions, and password changes must be audited.
+19. Phase 1 exposes role listing, user listing, user creation, onboarding resend, and role assignment APIs, but does not expose role create, update, activate, deactivate, or delete APIs.
 
 ## 7.2 Employee rules
 1. First name is required.
@@ -413,7 +499,7 @@ Cannot:
 6. An employee may have zero active primary addresses.
 7. Soft-deleted addresses are immutable in Phase 1.
 8. If the active primary address is soft-deleted and another active address exists, the system promotes the oldest active non-deleted address by `CreatedAtUtc`.
-9. Basic self-service address operations are limited to the addresses that belong to the employee linked to `User.EmployeeId`.
+9. Manager and Developer self-service address operations are limited to the addresses that belong to the employee linked to `User.EmployeeId`.
 
 ## 7.4 Audit rules
 1. Audit records are append-only.
